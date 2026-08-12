@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAppDispatch } from 'store/hooks'
 import { requestPlay } from 'store/modules/status'
 import ColorCycle from './ColorCycle/ColorCycle'
@@ -13,14 +13,40 @@ interface PlayerTextOverlayProps {
   isAtQueueEnd: boolean
   isQueueEmpty: boolean
   isErrored: boolean
+  intermissionEndsAt?: number | null
   width: number
   height: number
+}
+
+// mounted when the intermission starts, so `now` is seeded correctly (keyed on endsAt by the parent)
+const Intermission = ({ endsAt, nextQueueItem }: { endsAt: number, nextQueueItem?: QueueItem }) => {
+  const [offset] = useState(() => Math.random() * -300)
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const intervalID = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(intervalID)
+  }, [])
+
+  const secondsLeft = Math.max(0, Math.ceil((endsAt - now) / 1000))
+
+  return (
+    <>
+      <ColorCycle
+        text={nextQueueItem ? `UP NEXT: ${nextQueueItem.userDisplayName.toUpperCase()}` : 'UP NEXT...'}
+        offset={offset}
+        className={styles.backdrop}
+      />
+      <ColorCycle text={`${secondsLeft}`} offset={offset} className={styles.backdrop} />
+    </>
+  )
 }
 
 const PlayerTextOverlay = ({
   isQueueEmpty,
   isAtQueueEnd,
   isErrored,
+  intermissionEndsAt,
   nextQueueItem,
   queueItem,
   width,
@@ -57,6 +83,8 @@ const PlayerTextOverlay = ({
         <ColorCycle text='SEE QUEUE FOR DETAILS' offset={errorOffset} className={styles.backdrop} />
       </>
     )
+  } else if (intermissionEndsAt) {
+    Component = <Intermission key={intermissionEndsAt} endsAt={intermissionEndsAt} nextQueueItem={nextQueueItem} />
   } else {
     Component = <UpNow queueItem={queueItem} />
   }

@@ -1,0 +1,328 @@
+{
+  "version": 1,
+  "jobId": "5d45f2bb-e946-4073-806c-dd60ad2e1b68",
+  "sessionId": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+  "scopeKey": "a108d3b9f031bc140d53356dd168a4fa7d1cd567458f1ec0f066d051bc7e1ae6",
+  "revision": 41,
+  "createdAt": "2026-08-12T06:47:03.580Z",
+  "updatedAt": "2026-08-12T06:47:04.391Z",
+  "producerGraceExpiresAt": "2026-08-12T06:47:33.580Z",
+  "bestEffortDeadlineAt": "2026-08-12T06:48:24.580Z",
+  "producers": {
+    "core": {
+      "state": "sealed",
+      "intentKey": "8d29006bc80896116e18a61ececb68ad41dfea3fa626549fd5ee315cbeb35775",
+      "payloadDigest": "8d29006bc80896116e18a61ececb68ad41dfea3fa626549fd5ee315cbeb35775",
+      "sealedAt": "2026-08-12T06:47:03.614Z",
+      "sealedBy": "foreground"
+    },
+    "wiki": {
+      "state": "no-op",
+      "sealedAt": "2026-08-12T06:47:03.580Z",
+      "sealedBy": "wiki-producer"
+    }
+  },
+  "actions": {
+    "foreground-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 0,
+      "idempotencyKey": "febf6dba2f2536433960a07f7cedce72e946b43ced0896570df80f017b8914d2",
+      "payload": {
+        "transcriptPath": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+        "cwd": "/Users/matthewantone/Development/KaraokeParty",
+        "reason": "other",
+        "input": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "transcript_path": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+          "cwd": "/Users/matthewantone/Development/KaraokeParty",
+          "prompt_id": "34a5c7d4-3e43-49ad-bd24-6330c48dc09c",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "metrics": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "ended_at": "2026-08-12T06:47:03.575Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        },
+        "initialTeamNames": [],
+        "openClawEnabled": false,
+        "openClawRouting": {},
+        "foregroundResult": {
+          "removedTransientFiles": 3,
+          "completedAt": "2026-08-12T06:47:03.614Z"
+        }
+      },
+      "budgetMs": 9000,
+      "completedAt": "2026-08-12T06:47:03.614Z",
+      "lastOutcomeCode": "completed"
+    },
+    "wiki-capture": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 0,
+      "idempotencyKey": "1719cd1ef5b51e0269b78c4cb8c9308c9c1f7b82fd1c067fc034c060f23863f5",
+      "payload": {},
+      "budgetMs": 9000,
+      "completedAt": "2026-08-12T06:47:03.580Z"
+    },
+    "team-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "cee6ac31df545408e1e822247ac249b3f8182a98a5fe8e448ae3b251e55bdee1",
+      "payload": {
+        "transcriptPath": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+        "cwd": "/Users/matthewantone/Development/KaraokeParty",
+        "reason": "other",
+        "input": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "transcript_path": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+          "cwd": "/Users/matthewantone/Development/KaraokeParty",
+          "prompt_id": "34a5c7d4-3e43-49ad-bd24-6330c48dc09c",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "metrics": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "ended_at": "2026-08-12T06:47:03.575Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        },
+        "initialTeamNames": [],
+        "openClawEnabled": false,
+        "openClawRouting": {}
+      },
+      "budgetMs": 9000,
+      "claimedAt": "2026-08-12T06:47:03.658Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "ee1beb0d-36b6-49b6-984b-fb29668ff714",
+        "phase": "terminal",
+        "deadlineAt": "2026-08-12T06:47:13.630Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-08-12T06:47:03.764Z"
+    },
+    "python-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "1f1370c4ac056606059d517e2f106b602d8cbcb04587b3fcc5f3b9f89e649cd0",
+      "payload": {
+        "transcriptPath": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+        "cwd": "/Users/matthewantone/Development/KaraokeParty",
+        "reason": "other",
+        "input": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "transcript_path": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+          "cwd": "/Users/matthewantone/Development/KaraokeParty",
+          "prompt_id": "34a5c7d4-3e43-49ad-bd24-6330c48dc09c",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "metrics": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "ended_at": "2026-08-12T06:47:03.575Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        },
+        "initialTeamNames": [],
+        "openClawEnabled": false,
+        "openClawRouting": {}
+      },
+      "budgetMs": 9000,
+      "claimedAt": "2026-08-12T06:47:03.778Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "8de5c215-3d59-4348-8345-f1fa4caed5bf",
+        "phase": "terminal",
+        "deadlineAt": "2026-08-12T06:47:13.630Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-08-12T06:47:03.896Z"
+    },
+    "reply-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "0b3a8b47c28b26d56aca004d4f572b96c118f16819c0d35162418816f9a5420a",
+      "payload": {
+        "transcriptPath": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+        "cwd": "/Users/matthewantone/Development/KaraokeParty",
+        "reason": "other",
+        "input": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "transcript_path": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+          "cwd": "/Users/matthewantone/Development/KaraokeParty",
+          "prompt_id": "34a5c7d4-3e43-49ad-bd24-6330c48dc09c",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "metrics": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "ended_at": "2026-08-12T06:47:03.575Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        },
+        "initialTeamNames": [],
+        "openClawEnabled": false,
+        "openClawRouting": {}
+      },
+      "budgetMs": 9000,
+      "claimedAt": "2026-08-12T06:47:03.912Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "d2c46b64-8f2a-4110-8f87-468898bd9382",
+        "phase": "terminal",
+        "deadlineAt": "2026-08-12T06:47:13.630Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-08-12T06:47:04.023Z"
+    },
+    "callback": {
+      "class": "best-effort",
+      "phase": "deferred-best-effort",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "d068ede2655bf89e0c0950e087d0603d7dcf45538e94f20a654d08c6f4841895",
+      "payload": {
+        "transcriptPath": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+        "cwd": "/Users/matthewantone/Development/KaraokeParty",
+        "reason": "other",
+        "input": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "transcript_path": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+          "cwd": "/Users/matthewantone/Development/KaraokeParty",
+          "prompt_id": "34a5c7d4-3e43-49ad-bd24-6330c48dc09c",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "metrics": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "ended_at": "2026-08-12T06:47:03.575Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        },
+        "initialTeamNames": [],
+        "openClawEnabled": false,
+        "openClawRouting": {}
+      },
+      "budgetMs": 2000,
+      "claimedAt": "2026-08-12T06:47:04.040Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "6df77351-0540-43d9-bb3b-fd5bc96fb98d",
+        "phase": "terminal",
+        "deadlineAt": "2026-08-12T06:47:13.630Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-08-12T06:47:04.144Z"
+    },
+    "notification": {
+      "class": "best-effort",
+      "phase": "deferred-best-effort",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "89c0438ff63097ce04beb60efb87292ff68a7af350a0ee331f3de9dbf42d62fc",
+      "payload": {
+        "transcriptPath": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+        "cwd": "/Users/matthewantone/Development/KaraokeParty",
+        "reason": "other",
+        "input": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "transcript_path": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+          "cwd": "/Users/matthewantone/Development/KaraokeParty",
+          "prompt_id": "34a5c7d4-3e43-49ad-bd24-6330c48dc09c",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "metrics": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "ended_at": "2026-08-12T06:47:03.575Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        },
+        "initialTeamNames": [],
+        "openClawEnabled": false,
+        "openClawRouting": {}
+      },
+      "budgetMs": 2000,
+      "claimedAt": "2026-08-12T06:47:04.160Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "088c9254-4664-44bb-a099-c36ef21a1164",
+        "phase": "terminal",
+        "deadlineAt": "2026-08-12T06:47:13.630Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-08-12T06:47:04.263Z"
+    },
+    "openclaw": {
+      "class": "best-effort",
+      "phase": "deferred-best-effort",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "31fe8f6e1cf204e27006de511df257326fdd98655122ca437013e8779ffc735b",
+      "payload": {
+        "transcriptPath": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+        "cwd": "/Users/matthewantone/Development/KaraokeParty",
+        "reason": "other",
+        "input": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "transcript_path": "/Users/matthewantone/.claude/projects/-Users-matthewantone-Development-KaraokeParty/493c0bc4-ff9e-49e9-97aa-38cd881ff52c.jsonl",
+          "cwd": "/Users/matthewantone/Development/KaraokeParty",
+          "prompt_id": "34a5c7d4-3e43-49ad-bd24-6330c48dc09c",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "metrics": {
+          "session_id": "493c0bc4-ff9e-49e9-97aa-38cd881ff52c",
+          "ended_at": "2026-08-12T06:47:03.575Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        },
+        "initialTeamNames": [],
+        "openClawEnabled": false,
+        "openClawRouting": {}
+      },
+      "budgetMs": 2000,
+      "claimedAt": "2026-08-12T06:47:04.277Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "294671af-76c4-4d3c-bb1b-488d8992908a",
+        "phase": "terminal",
+        "deadlineAt": "2026-08-12T06:47:13.630Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-08-12T06:47:04.367Z"
+    }
+  },
+  "owner": null,
+  "phase": "complete",
+  "completion": {
+    "completedAt": "2026-08-12T06:47:04.379Z",
+    "terminalDigest": "60d534c420bf8af6815ad83680cde3cb0e404d9c3db26638d37fa5e8b78a9fef",
+    "terminalRevision": 40
+  }
+}

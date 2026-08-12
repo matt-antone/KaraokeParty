@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import Player from '../Player/Player'
 import PlayerTextOverlay from '../PlayerTextOverlay/PlayerTextOverlay'
@@ -13,6 +13,9 @@ interface PlayerControllerProps {
   height: number
 }
 
+// ponytail: fixed pause between songs; make it a room pref if hosts want to tune it
+const INTERMISSION_MS = 30000
+
 const PlayerController = (props: PlayerControllerProps) => {
   const queue = useAppSelector(getRoundRobinQueue)
   const player = useAppSelector(state => state.player)
@@ -23,6 +26,24 @@ const PlayerController = (props: PlayerControllerProps) => {
   const nextQueueItem = queue.entities[queue.result[queue.result.indexOf(player.queueId) + 1]]
 
   const dispatch = useAppDispatch()
+  // set only when a song ends on its own; stays until the next one does. It's stamped with what
+  // was playing so it can be *derived* away below instead of cleared (setState in an effect)
+  const [intermission, setIntermission] = useState<{
+    endsAt: number
+    queueId: number
+    replayTime: number
+  } | null>(null)
+  const intermissionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isIntermission = !!intermission
+    && intermission.queueId === player.queueId
+    && intermission.replayTime === player._lastReplayTime
+
+  const clearIntermission = useCallback(() => {
+    if (intermissionTimer.current) clearTimeout(intermissionTimer.current)
+    intermissionTimer.current = null
+  }, [])
+
   const handleStatus = useCallback((status?: Partial<PlayerState>) => dispatch(playerStatus(status)), [dispatch])
   const handleLoad = () => dispatch(playerLoad())
   const handlePlay = () => dispatch(playerPlay())
@@ -34,6 +55,8 @@ const PlayerController = (props: PlayerControllerProps) => {
   const handleReplay = useCallback((queueId: number) => {
     const nextItem = queue.entities[queueId]
     if (!nextItem) return
+
+    clearIntermission()
 
     const history = JSON.parse(player.historyJSON)
 
@@ -54,9 +77,11 @@ const PlayerController = (props: PlayerControllerProps) => {
       nextUserId: null,
       _isReplayingQueueId: null,
     })
-  }, [handleStatus, player.historyJSON, player.queueId, queue.entities])
+  }, [clearIntermission, handleStatus, player.historyJSON, player.queueId, queue.entities])
 
   const handleLoadNext = useCallback(() => {
+    clearIntermission()
+
     const history = JSON.parse(player.historyJSON)
 
     // add current item to history (once)
@@ -88,7 +113,32 @@ const PlayerController = (props: PlayerControllerProps) => {
       nextUserId: null,
       _isPlayingNext: false,
     })
-  }, [handleStatus, nextQueueItem, player.historyJSON, queueItem])
+  }, [clearIntermission, handleStatus, nextQueueItem, player.historyJSON, queueItem])
+
+  // the queue can change while we're waiting, so the timer calls the latest handleLoadNext
+  const loadNextRef = useRef(handleLoadNext)
+  useEffect(() => {
+    loadNextRef.current = handleLoadNext
+  }, [handleLoadNext])
+
+  // song finished on its own: hold for the intermission before loading the next one
+  const handleMediaEnd = useCallback(() => {
+    clearIntermission()
+
+    // nothing to wait for at the end of the queue
+    if (!nextQueueItem) {
+      handleLoadNext()
+      return
+    }
+
+    setIntermission({
+      endsAt: Date.now() + INTERMISSION_MS,
+      queueId: player.queueId,
+      replayTime: player._lastReplayTime,
+    })
+
+    intermissionTimer.current = setTimeout(() => loadNextRef.current(), INTERMISSION_MS)
+  }, [clearIntermission, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
 
   // "lock in" the next user that isn't the currently up user, if possible
   useEffect(() => {
@@ -115,7 +165,10 @@ const PlayerController = (props: PlayerControllerProps) => {
   ])
 
   // on unmount
-  useEffect(() => () => dispatch(playerLeave()), [dispatch])
+  useEffect(() => () => {
+    if (intermissionTimer.current) clearTimeout(intermissionTimer.current)
+    dispatch(playerLeave())
+  }, [dispatch])
 
   // playing for first time or playing next?
   useEffect(() => {
@@ -160,7 +213,7 @@ const PlayerController = (props: PlayerControllerProps) => {
         mediaReplayKey={player._lastReplayTime}
         mediaType={queueItem ? queueItem.mediaType : null}
         mp4Alpha={player.mp4Alpha}
-        onEnd={handleLoadNext}
+        onEnd={handleMediaEnd}
         onError={handleError}
         onLoad={handleLoad}
         onPlay={handlePlay}
@@ -177,6 +230,7 @@ const PlayerController = (props: PlayerControllerProps) => {
         nextQueueItem={nextQueueItem as QueueItem}
         isAtQueueEnd={player.isAtQueueEnd}
         isQueueEmpty={!queue.result.length}
+        intermissionEndsAt={isIntermission ? intermission.endsAt : null}
         isErrored={player.isErrored}
         width={props.width}
         height={props.height}
