@@ -1,0 +1,7 @@
+{
+  "tool_name": "mcp__Claude_Browser__preview_stop",
+  "tool_input_preview": "{\"serverId\":\"6639f1cb-740e-4a0b-9fc8-d39ff148ace7\"}",
+  "error": "Server 6639f1cb-740e-4a0b-9fc8-d39ff148ace7 not found",
+  "timestamp": "2026-08-12T06:13:18.633Z",
+  "retry_count": 1
+}

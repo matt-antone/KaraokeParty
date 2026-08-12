@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "serve",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "KES_PORT=$PORT npm run serve"
+      ],
+      "port": 3737,
+      "autoPort": true
+    }
+  ]
+}

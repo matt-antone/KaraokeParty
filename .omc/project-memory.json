@@ -1,0 +1,375 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1786511194489,
+  "projectRoot": "/Users/matthewantone/Development/KaraokeParty",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": ">=24",
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "koa",
+        "version": "3.1.1",
+        "category": "backend"
+      },
+      {
+        "name": "react",
+        "version": "18.3.1",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.3.1",
+        "category": "frontend"
+      },
+      {
+        "name": "vitest",
+        "version": "4.0.18",
+        "category": "testing"
+      },
+      {
+        "name": "webpack",
+        "version": "5.105.2",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": "Node.js 24"
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "docs:serve": "hugo serve --source docs -b http://localhost:1313 --bind 0.0.0.0",
+      "dev": "NODE_ENV=development tsx watch server/main.ts -p 3000",
+      "lint": "eslint .",
+      "lint:fix": "npm run lint -- --fix",
+      "test": "vitest run --config config/vitest.config.ts",
+      "typecheck": "tsc -b --noEmit",
+      "build": "npm run build:server ; npm run build:client",
+      "build:client": "webpack --config config/webpack.config.js",
+      "build:server": "rm -rf build/server ; tsc -p config/tsconfig.server.json --noEmitOnError false ; mkdir -p build/server/lib ; cp -R server/lib/schemas build/server/lib/",
+      "serve": "node build/server/main.js",
+      "server": "npm run serve"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "assets",
+      "docs",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 8,
+      "lastAccessed": 1786511194474,
+      "keyFiles": [
+        "app.ico",
+        "app.png",
+        "favicon.ico",
+        "mic-blackTemplate.png",
+        "mic-blackTemplate@2x.png"
+      ]
+    },
+    "config": {
+      "path": "config",
+      "purpose": "Configuration files",
+      "fileCount": 7,
+      "lastAccessed": 1786511194474,
+      "keyFiles": [
+        "babel.config.js",
+        "declarations.d.ts",
+        "tsconfig.client.json",
+        "tsconfig.server.json",
+        "vitest.config.ts"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1786511194478,
+      "keyFiles": [
+        "config.yaml"
+      ]
+    },
+    "server": {
+      "path": "server",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1786511194479,
+      "keyFiles": [
+        "main.ts",
+        "scannerWorker.ts",
+        "serverWorker.ts",
+        "socket.ts",
+        "watcherWorker.ts"
+      ]
+    },
+    "shared": {
+      "path": "shared",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1786511194479,
+      "keyFiles": [
+        "actionTypes.ts",
+        "types.ts"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1786511194480,
+      "keyFiles": [
+        "index.html",
+        "main.tsx"
+      ]
+    },
+    "docs/assets": {
+      "path": "docs/assets",
+      "purpose": "Static assets",
+      "fileCount": 0,
+      "lastAccessed": 1786511194481,
+      "keyFiles": []
+    },
+    "server/lib": {
+      "path": "server/lib",
+      "purpose": "Library code",
+      "fileCount": 17,
+      "lastAccessed": 1786511194482,
+      "keyFiles": [
+        "Database.ts",
+        "Errors.ts",
+        "IPCBridge.ts"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1786511194483,
+      "keyFiles": []
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 6,
+      "lastAccessed": 1786511194483,
+      "keyFiles": [
+        "AppRouter.tsx",
+        "HttpApi.ts",
+        "dateTime.ts"
+      ]
+    },
+    "src/routes": {
+      "path": "src/routes",
+      "purpose": "Route handlers",
+      "fileCount": 0,
+      "lastAccessed": 1786511194484,
+      "keyFiles": []
+    },
+    "src/types": {
+      "path": "src/types",
+      "purpose": "Type definitions",
+      "fileCount": 2,
+      "lastAccessed": 1786511194484,
+      "keyFiles": [
+        "butterchurn.d.ts",
+        "redux-throttle.d.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/routes/Player/components/PlayerController/PlayerController.tsx",
+      "accessCount": 28,
+      "lastAccessed": 1786514877915,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/components/Player/Player.tsx",
+      "accessCount": 17,
+      "lastAccessed": 1786514342320,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/modules/player.ts",
+      "accessCount": 14,
+      "lastAccessed": 1786514560366,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/components/PlayerTextOverlay/PlayerTextOverlay.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1786514841596,
+      "type": "file"
+    },
+    {
+      "path": "server/socket.ts",
+      "accessCount": 5,
+      "lastAccessed": 1786513747158,
+      "type": "file"
+    },
+    {
+      "path": "docs/content/faq/recommended-audio-microphone-setup.md",
+      "accessCount": 5,
+      "lastAccessed": 1786518021819,
+      "type": "file"
+    },
+    {
+      "path": "server/Rooms/Rooms.ts",
+      "accessCount": 4,
+      "lastAccessed": 1786514432974,
+      "type": "file"
+    },
+    {
+      "path": ".claude/launch.json",
+      "accessCount": 4,
+      "lastAccessed": 1786515080352,
+      "type": "file"
+    },
+    {
+      "path": "server/Player/socket.ts",
+      "accessCount": 3,
+      "lastAccessed": 1786513724786,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/views/PlayerView.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1786513987379,
+      "type": "file"
+    },
+    {
+      "path": "shared/actionTypes.ts",
+      "accessCount": 2,
+      "lastAccessed": 1786513687794,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Header/Header.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1786513969730,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/components/Player/CDGPlayer/CDGPlayer.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1786514143665,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/components/Player/MP4Player/MP4Player.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1786512944799,
+      "type": "file"
+    },
+    {
+      "path": "src/store/modules/status.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786512955654,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Header/PlaybackCtrl/PlaybackCtrl.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1786512958555,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/components/Player/MP4Player/MP4AlphaPlayer.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1786513570703,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/socket.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786513604863,
+      "type": "file"
+    },
+    {
+      "path": "src/store/socketMiddleware.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786513612484,
+      "type": "file"
+    },
+    {
+      "path": "src/store/modules/ui.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786513620011,
+      "type": "file"
+    },
+    {
+      "path": "config/vitest.config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786513638945,
+      "type": "file"
+    },
+    {
+      "path": "server/lib/test-setup.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786513644237,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/mediaSync.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786513816936,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/mediaSync.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1786513831007,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/Player/components/PlayerTextOverlay/UpNow/UpNow.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1786514684980,
+      "type": "file"
+    },
+    {
+      "path": ".nvmrc",
+      "accessCount": 1,
+      "lastAccessed": 1786516543525,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
