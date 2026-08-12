@@ -1,6 +1,6 @@
 .container {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   padding: var(--space-xs);
 
   button {
@@ -45,4 +45,38 @@
   svg {
     height: 3rem;
   }
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+}
+
+/* three facets won't fit beside the search box on a phone, so give them a row */
+.facetRow {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+/* tags are stored lowercased; capitalize for display only */
+.facetSelect,
+.facetSelect option {
+  text-transform: capitalize;
+}
+
+.facetSelect {
+  flex: 1;
+  min-width: 0; /* let them shrink evenly rather than overflow */
+  padding: var(--space-xs) !important;
+  font-size: var(--font-size-s) !important;
+  color: var(--btn-bg-color) !important;
+  cursor: pointer;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.facetSelect.activeSelect {
+  color: var(--btn-active-bg-color) !important;
 }

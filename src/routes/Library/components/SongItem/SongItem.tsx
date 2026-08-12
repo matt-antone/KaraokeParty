@@ -16,6 +16,7 @@ interface SongItemProps {
   songId: number
   artist?: string
   title: string
+  tags: string[]
   duration: number
   onSongQueue(songId: number): void
   onSongStarClick(songId: number): void
@@ -33,6 +34,7 @@ const SongItem = ({
   songId,
   artist,
   title,
+  tags,
   duration,
   onSongQueue,
   onSongStarClick,
@@ -94,7 +96,12 @@ const SongItem = ({
                 )
               </i>
             )}
-            {artist && <div className={styles.artist}>{artist}</div>}
+            {(artist || tags.length > 0) && (
+              <div className={styles.artist}>
+                {artist && <span>{artist}</span>}
+                {tags.length > 0 && <span className={styles.tags}>{tags.join(' · ')}</span>}
+              </div>
+            )}
           </div>
         </div>
       </ToggleAnimation>
