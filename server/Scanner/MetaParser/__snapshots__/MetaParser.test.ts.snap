@@ -7,6 +7,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Beatles, The",
       "artistNorm": "Beatles",
+      "tags": [],
       "title": "Day In The Life, A",
       "titleNorm": "Day In The Life",
     },
@@ -16,6 +17,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Beatles, The",
       "artistNorm": "Beatles",
+      "tags": [],
       "title": "Day In The Life, A",
       "titleNorm": "Day In The Life",
     },
@@ -25,6 +27,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Lion King, The",
       "artistNorm": "Lion King",
+      "tags": [],
       "title": "Warthog Rhapsody",
       "titleNorm": "Warthog Rhapsody",
     },
@@ -34,6 +37,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "ABC-1234-THE LIFE OF RILEY",
       "artistNorm": "ABC1234THE LIFE OF RILEY",
+      "tags": [],
       "title": "LIGHTNING SEEDS, THE",
       "titleNorm": "LIGHTNING SEEDS",
     },
@@ -43,8 +47,11 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Temp",
       "artistNorm": "Temp",
-      "title": "Beat Goes On, The [duet]",
-      "titleNorm": "Beat Goes On The duet",
+      "tags": [
+        "duet",
+      ],
+      "title": "Beat Goes On, The",
+      "titleNorm": "Beat Goes On",
     },
   },
   {
@@ -52,6 +59,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Tyler, The Creator",
       "artistNorm": "Tyler The Creator",
+      "tags": [],
       "title": "See You Again",
       "titleNorm": "See You Again",
     },
@@ -61,6 +69,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Calvin Harris ft. Florence Welch",
       "artistNorm": "Calvin Harris ft Florence Welch",
+      "tags": [],
       "title": "Sweet Nothing",
       "titleNorm": "Sweet Nothing",
     },
@@ -70,6 +79,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Britney Spears ft. Will.I.Am",
       "artistNorm": "Britney Spears ft WillIAm",
+      "tags": [],
       "title": "It Should Be Easy",
       "titleNorm": "It Should Be Easy",
     },
@@ -79,6 +89,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Lloyd ft. Andre 3000 & Lil Wayne",
       "artistNorm": "Lloyd ft Andre 3000 and Lil Wayne",
+      "tags": [],
       "title": "Dedication To My Ex (Miss That)",
       "titleNorm": "Dedication To My Ex Miss That",
     },
@@ -88,6 +99,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Britney Spears ft. G-Eazy",
       "artistNorm": "Britney Spears ft GEazy",
+      "tags": [],
       "title": "Make Me",
       "titleNorm": "Make Me",
     },
@@ -97,6 +109,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Charli Xcx ft. Lil Yachty",
       "artistNorm": "Charli Xcx ft Lil Yachty",
+      "tags": [],
       "title": "After The Afterparty",
       "titleNorm": "After The Afterparty",
     },
@@ -106,6 +119,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Sinatra, Nancy & Frank",
       "artistNorm": "Sinatra Nancy and Frank",
+      "tags": [],
       "title": "Something Stupid",
       "titleNorm": "Something Stupid",
     },
@@ -115,6 +129,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Knight, Gladys & The Pips",
       "artistNorm": "Knight Gladys and The Pips",
+      "tags": [],
       "title": "Way We Were, The",
       "titleNorm": "Way We Were",
     },
@@ -124,6 +139,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Pickett, Bobby Boris & Crypt Kickers",
       "artistNorm": "Pickett Bobby Boris and Crypt Kickers",
+      "tags": [],
       "title": "Monster Mash",
       "titleNorm": "Monster Mash",
     },
@@ -133,6 +149,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Camper Van Beethoven",
       "artistNorm": "Camper Van Beethoven",
+      "tags": [],
       "title": "Take The Skinheads Bowling",
       "titleNorm": "Take The Skinheads Bowling",
     },
@@ -142,6 +159,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Camper Van Beethoven",
       "artistNorm": "Camper Van Beethoven",
+      "tags": [],
       "title": "Take The Skinheads Bowling",
       "titleNorm": "Take The Skinheads Bowling",
     },
@@ -151,6 +169,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Linda Scott",
       "artistNorm": "Linda Scott",
+      "tags": [],
       "title": "I've Told Every Little Star",
       "titleNorm": "Ive Told Every Little Star",
     },
@@ -160,6 +179,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Bird & The Bee, The",
       "artistNorm": "Bird and The Bee",
+      "tags": [],
       "title": "Something & Something (test)",
       "titleNorm": "Something and Something test",
     },
@@ -169,6 +189,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "'Britney Spears' karaoke video with lyrics",
       "artistNorm": "Britney Spears karaoke video with lyrics",
+      "tags": [],
       "title": "(You Drive Me) Crazy",
       "titleNorm": "You Drive Me Crazy",
     },
@@ -178,6 +199,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Alison Krauss & Union Station",
       "artistNorm": "Alison Krauss and Union Station",
+      "tags": [],
       "title": "When You Say Nothing At All",
       "titleNorm": "When You Say Nothing At All",
     },
@@ -187,6 +209,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Rolling Stones - karaoke video with lyrics, The",
       "artistNorm": "Rolling Stones  karaoke video with lyrics",
+      "tags": [],
       "title": "Ain't Too Proud To Beg",
       "titleNorm": "Aint Too Proud To Beg",
     },
@@ -196,6 +219,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Hello Goodbye",
       "artistNorm": "Hello Goodbye",
+      "tags": [],
       "title": "Beatles Karaoke with Lyrics, The",
       "titleNorm": "Beatles Karaoke with Lyrics",
     },
@@ -205,6 +229,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Williamsndy",
       "artistNorm": "Williamsndy",
+      "tags": [],
       "title": "Speak Softly, Love (Godfather Theme)",
       "titleNorm": "Speak Softly Love Godfather Theme",
     },
@@ -214,6 +239,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Craig McLachlan & Check 1-2",
       "artistNorm": "Craig McLachlan and Check 12",
+      "tags": [],
       "title": "Mona",
       "titleNorm": "Mona",
     },
@@ -223,6 +249,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Blue (Eurovision 2011)",
       "artistNorm": "Blue Eurovision 2011",
+      "tags": [],
       "title": "I Can",
       "titleNorm": "I Can",
     },
@@ -232,6 +259,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Len Barry",
       "artistNorm": "Len Barry",
+      "tags": [],
       "title": "1-2-3",
       "titleNorm": "123",
     },
@@ -241,6 +269,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "10,000 Maniacs",
       "artistNorm": "10000 Maniacs",
+      "tags": [],
       "title": "Trouble Me",
       "titleNorm": "Trouble Me",
     },
@@ -250,6 +279,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Vanessa Carlton",
       "artistNorm": "Vanessa Carlton",
+      "tags": [],
       "title": "Thousand Miles, A",
       "titleNorm": "Thousand Miles",
     },
@@ -259,6 +289,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Level42",
       "artistNorm": "Level42",
+      "tags": [],
       "title": "Something About You",
       "titleNorm": "Something About You",
     },
@@ -268,6 +299,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Boney-M",
       "artistNorm": "BoneyM",
+      "tags": [],
       "title": "Daddy Cool",
       "titleNorm": "Daddy Cool",
     },
@@ -277,6 +309,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "UB40",
       "artistNorm": "UB40",
+      "tags": [],
       "title": "Homely Girl",
       "titleNorm": "Homely Girl",
     },
@@ -286,8 +319,48 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "Disney-101 Dalmations",
       "artistNorm": "Disney101 Dalmations",
+      "tags": [],
       "title": "Cruella De Vil",
       "titleNorm": "Cruella De Vil",
+    },
+  },
+  {
+    "input": "Cher - Believe [pop, 90s]",
+    "output": {
+      "artist": "Cher",
+      "artistNorm": "Cher",
+      "tags": [
+        "pop",
+        "90s",
+      ],
+      "title": "Believe",
+      "titleNorm": "Believe",
+    },
+  },
+  {
+    "input": "Blink-182 - All The Small Things [punk, 90s, upbeat]",
+    "output": {
+      "artist": "Blink-182",
+      "artistNorm": "Blink182",
+      "tags": [
+        "punk",
+        "90s",
+        "upbeat",
+      ],
+      "title": "All The Small Things",
+      "titleNorm": "All The Small Things",
+    },
+  },
+  {
+    "input": "Cher - Believe (Karaoke Version) [pop]",
+    "output": {
+      "artist": "Cher",
+      "artistNorm": "Cher",
+      "tags": [
+        "pop",
+      ],
+      "title": "Believe",
+      "titleNorm": "Believe",
     },
   },
   {
@@ -295,6 +368,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "ちゃんみな",
       "artistNorm": "ちゃんみな",
+      "tags": [],
       "title": "「ハレンチ」",
       "titleNorm": "ハレンチ",
     },
@@ -304,6 +378,7 @@ exports[`MetaParser > should parse all test filenames correctly 1`] = `
     "output": {
       "artist": "ちゃんみな",
       "artistNorm": "ちゃんみな",
+      "tags": [],
       "title": "花火",
       "titleNorm": "花火",
     },
@@ -315,6 +390,7 @@ exports[`MetaParser > should parse: (You Drive Me) Crazy in the Style of 'Britne
 {
   "artist": "'Britney Spears' karaoke video with lyrics",
   "artistNorm": "Britney Spears karaoke video with lyrics",
+  "tags": [],
   "title": "(You Drive Me) Crazy",
   "titleNorm": "You Drive Me Crazy",
 }
@@ -324,6 +400,7 @@ exports[`MetaParser > should parse: 01 - Pickett, Bobby Boris & Crypt Kickers - 
 {
   "artist": "Pickett, Bobby Boris & Crypt Kickers",
   "artistNorm": "Pickett Bobby Boris and Crypt Kickers",
+  "tags": [],
   "title": "Monster Mash",
   "titleNorm": "Monster Mash",
 }
@@ -333,6 +410,7 @@ exports[`MetaParser > should parse: 01 - Sinatra, Nancy & Frank - Something Stup
 {
   "artist": "Sinatra, Nancy & Frank",
   "artistNorm": "Sinatra Nancy and Frank",
+  "tags": [],
   "title": "Something Stupid",
   "titleNorm": "Something Stupid",
 }
@@ -342,6 +420,7 @@ exports[`MetaParser > should parse: 1 - Level42 - Something About You 1`] = `
 {
   "artist": "Level42",
   "artistNorm": "Level42",
+  "tags": [],
   "title": "Something About You",
   "titleNorm": "Something About You",
 }
@@ -351,6 +430,7 @@ exports[`MetaParser > should parse: AB1234Z-01 - Scott, Linda - I've Told Every 
 {
   "artist": "Linda Scott",
   "artistNorm": "Linda Scott",
+  "tags": [],
   "title": "I've Told Every Little Star",
   "titleNorm": "Ive Told Every Little Star",
 }
@@ -360,6 +440,7 @@ exports[`MetaParser > should parse: ABC-1234-THE LIFE OF RILEY-LIGHTNING SEEDS, 
 {
   "artist": "ABC-1234-THE LIFE OF RILEY",
   "artistNorm": "ABC1234THE LIFE OF RILEY",
+  "tags": [],
   "title": "LIGHTNING SEEDS, THE",
   "titleNorm": "LIGHTNING SEEDS",
 }
@@ -369,6 +450,7 @@ exports[`MetaParser > should parse: ABC12345-01_-_Lion_King,_The_-_Warthog_Rhaps
 {
   "artist": "Lion King, The",
   "artistNorm": "Lion King",
+  "tags": [],
   "title": "Warthog Rhapsody",
   "titleNorm": "Warthog Rhapsody",
 }
@@ -378,6 +460,7 @@ exports[`MetaParser > should parse: ABCD2-1-01 - Vanessa Carlton - A Thousand Mi
 {
   "artist": "Vanessa Carlton",
   "artistNorm": "Vanessa Carlton",
+  "tags": [],
   "title": "Thousand Miles, A",
   "titleNorm": "Thousand Miles",
 }
@@ -387,6 +470,7 @@ exports[`MetaParser > should parse: AZ1234-01 - 10,000 Maniacs - Trouble Me 1`] 
 {
   "artist": "10,000 Maniacs",
   "artistNorm": "10000 Maniacs",
+  "tags": [],
   "title": "Trouble Me",
   "titleNorm": "Trouble Me",
 }
@@ -396,6 +480,7 @@ exports[`MetaParser > should parse: AZ1234-01 - Van Beethoven, Camper - Take The
 {
   "artist": "Camper Van Beethoven",
   "artistNorm": "Camper Van Beethoven",
+  "tags": [],
   "title": "Take The Skinheads Bowling",
   "titleNorm": "Take The Skinheads Bowling",
 }
@@ -405,6 +490,7 @@ exports[`MetaParser > should parse: Ain't Too Proud To Beg in the style of The R
 {
   "artist": "Rolling Stones - karaoke video with lyrics, The",
   "artistNorm": "Rolling Stones  karaoke video with lyrics",
+  "tags": [],
   "title": "Ain't Too Proud To Beg",
   "titleNorm": "Aint Too Proud To Beg",
 }
@@ -414,6 +500,7 @@ exports[`MetaParser > should parse: Az 1234-01 - Boney-M - Daddy Cool 1`] = `
 {
   "artist": "Boney-M",
   "artistNorm": "BoneyM",
+  "tags": [],
   "title": "Daddy Cool",
   "titleNorm": "Daddy Cool",
 }
@@ -423,6 +510,7 @@ exports[`MetaParser > should parse: Az123-01 - Knight, Gladys & The Pips - Way W
 {
   "artist": "Knight, Gladys & The Pips",
   "artistNorm": "Knight Gladys and The Pips",
+  "tags": [],
   "title": "Way We Were, The",
   "titleNorm": "Way We Were",
 }
@@ -432,8 +520,23 @@ exports[`MetaParser > should parse: Beatles, The - Day In The Life, A 1`] = `
 {
   "artist": "Beatles, The",
   "artistNorm": "Beatles",
+  "tags": [],
   "title": "Day In The Life, A",
   "titleNorm": "Day In The Life",
+}
+`;
+
+exports[`MetaParser > should parse: Blink-182 - All The Small Things [punk, 90s, upbeat] 1`] = `
+{
+  "artist": "Blink-182",
+  "artistNorm": "Blink182",
+  "tags": [
+    "punk",
+    "90s",
+    "upbeat",
+  ],
+  "title": "All The Small Things",
+  "titleNorm": "All The Small Things",
 }
 `;
 
@@ -441,6 +544,7 @@ exports[`MetaParser > should parse: Blue (Eurovision 2011) - I Can [ABC Karaoke]
 {
   "artist": "Blue (Eurovision 2011)",
   "artistNorm": "Blue Eurovision 2011",
+  "tags": [],
   "title": "I Can",
   "titleNorm": "I Can",
 }
@@ -450,6 +554,7 @@ exports[`MetaParser > should parse: Britney Spears Feat. G-Eazy - Make Me [AZ Ka
 {
   "artist": "Britney Spears ft. G-Eazy",
   "artistNorm": "Britney Spears ft GEazy",
+  "tags": [],
   "title": "Make Me",
   "titleNorm": "Make Me",
 }
@@ -459,6 +564,7 @@ exports[`MetaParser > should parse: Britney Spears Ft Will.I.Am - It Should Be E
 {
   "artist": "Britney Spears ft. Will.I.Am",
   "artistNorm": "Britney Spears ft WillIAm",
+  "tags": [],
   "title": "It Should Be Easy",
   "titleNorm": "It Should Be Easy",
 }
@@ -468,6 +574,7 @@ exports[`MetaParser > should parse: Calvin Harris ft. Florence Welch - Sweet Not
 {
   "artist": "Calvin Harris ft. Florence Welch",
   "artistNorm": "Calvin Harris ft Florence Welch",
+  "tags": [],
   "title": "Sweet Nothing",
   "titleNorm": "Sweet Nothing",
 }
@@ -477,6 +584,7 @@ exports[`MetaParser > should parse: Camper Van Beethoven - Take The Skinheads Bo
 {
   "artist": "Camper Van Beethoven",
   "artistNorm": "Camper Van Beethoven",
+  "tags": [],
   "title": "Take The Skinheads Bowling",
   "titleNorm": "Take The Skinheads Bowling",
 }
@@ -486,8 +594,34 @@ exports[`MetaParser > should parse: Charli Xcx Feat Lil Yachty - After The After
 {
   "artist": "Charli Xcx ft. Lil Yachty",
   "artistNorm": "Charli Xcx ft Lil Yachty",
+  "tags": [],
   "title": "After The Afterparty",
   "titleNorm": "After The Afterparty",
+}
+`;
+
+exports[`MetaParser > should parse: Cher - Believe (Karaoke Version) [pop] 1`] = `
+{
+  "artist": "Cher",
+  "artistNorm": "Cher",
+  "tags": [
+    "pop",
+  ],
+  "title": "Believe",
+  "titleNorm": "Believe",
+}
+`;
+
+exports[`MetaParser > should parse: Cher - Believe [pop, 90s] 1`] = `
+{
+  "artist": "Cher",
+  "artistNorm": "Cher",
+  "tags": [
+    "pop",
+    "90s",
+  ],
+  "title": "Believe",
+  "titleNorm": "Believe",
 }
 `;
 
@@ -495,6 +629,7 @@ exports[`MetaParser > should parse: Craig McLachlan & Check 1-2 - Mona [ABC Kara
 {
   "artist": "Craig McLachlan & Check 1-2",
   "artistNorm": "Craig McLachlan and Check 12",
+  "tags": [],
   "title": "Mona",
   "titleNorm": "Mona",
 }
@@ -504,6 +639,7 @@ exports[`MetaParser > should parse: Disney - 101 Dalmations - Cruella De Vil 1`]
 {
   "artist": "Disney-101 Dalmations",
   "artistNorm": "Disney101 Dalmations",
+  "tags": [],
   "title": "Cruella De Vil",
   "titleNorm": "Cruella De Vil",
 }
@@ -513,6 +649,7 @@ exports[`MetaParser > should parse: Hello Goodbye - The Beatles _ Karaoke with L
 {
   "artist": "Hello Goodbye",
   "artistNorm": "Hello Goodbye",
+  "tags": [],
   "title": "Beatles Karaoke with Lyrics, The",
   "titleNorm": "Beatles Karaoke with Lyrics",
 }
@@ -522,6 +659,7 @@ exports[`MetaParser > should parse: Len Barry - 1-2-3 [Karaoke] 1`] = `
 {
   "artist": "Len Barry",
   "artistNorm": "Len Barry",
+  "tags": [],
   "title": "1-2-3",
   "titleNorm": "123",
 }
@@ -531,6 +669,7 @@ exports[`MetaParser > should parse: Lloyd Ft Andre 3000 & Lil Wayne - Dedication
 {
   "artist": "Lloyd ft. Andre 3000 & Lil Wayne",
   "artistNorm": "Lloyd ft Andre 3000 and Lil Wayne",
+  "tags": [],
   "title": "Dedication To My Ex (Miss That)",
   "titleNorm": "Dedication To My Ex Miss That",
 }
@@ -540,8 +679,11 @@ exports[`MetaParser > should parse: MJM10-01 - Temp - The Beat Goes On [duet] 1`
 {
   "artist": "Temp",
   "artistNorm": "Temp",
-  "title": "Beat Goes On, The [duet]",
-  "titleNorm": "Beat Goes On The duet",
+  "tags": [
+    "duet",
+  ],
+  "title": "Beat Goes On, The",
+  "titleNorm": "Beat Goes On",
 }
 `;
 
@@ -549,6 +691,7 @@ exports[`MetaParser > should parse: The Beatles - A Day In The Life 1`] = `
 {
   "artist": "Beatles, The",
   "artistNorm": "Beatles",
+  "tags": [],
   "title": "Day In The Life, A",
   "titleNorm": "Day In The Life",
 }
@@ -558,6 +701,7 @@ exports[`MetaParser > should parse: The Bird & The Bee - Something & Something (
 {
   "artist": "Bird & The Bee, The",
   "artistNorm": "Bird and The Bee",
+  "tags": [],
   "title": "Something & Something (test)",
   "titleNorm": "Something and Something test",
 }
@@ -567,6 +711,7 @@ exports[`MetaParser > should parse: Tyler, The Creator - See You Again [AZ Karao
 {
   "artist": "Tyler, The Creator",
   "artistNorm": "Tyler The Creator",
+  "tags": [],
   "title": "See You Again",
   "titleNorm": "See You Again",
 }
@@ -576,6 +721,7 @@ exports[`MetaParser > should parse: UB40 - Homely Girl 1`] = `
 {
   "artist": "UB40",
   "artistNorm": "UB40",
+  "tags": [],
   "title": "Homely Girl",
   "titleNorm": "Homely Girl",
 }
@@ -585,6 +731,7 @@ exports[`MetaParser > should parse: When You Say Nothing At All in the Style of 
 {
   "artist": "Alison Krauss & Union Station",
   "artistNorm": "Alison Krauss and Union Station",
+  "tags": [],
   "title": "When You Say Nothing At All",
   "titleNorm": "When You Say Nothing At All",
 }
@@ -594,6 +741,7 @@ exports[`MetaParser > should parse: Williamsndy - Speak Softly, Love (Godfather 
 {
   "artist": "Williamsndy",
   "artistNorm": "Williamsndy",
+  "tags": [],
   "title": "Speak Softly, Love (Godfather Theme)",
   "titleNorm": "Speak Softly Love Godfather Theme",
 }
@@ -603,6 +751,7 @@ exports[`MetaParser > should parse: ちゃんみな - 「ハレンチ」 1`] = `
 {
   "artist": "ちゃんみな",
   "artistNorm": "ちゃんみな",
+  "tags": [],
   "title": "「ハレンチ」",
   "titleNorm": "ハレンチ",
 }
@@ -612,6 +761,7 @@ exports[`MetaParser > should parse: ちゃんみな - 花火 1`] = `
 {
   "artist": "ちゃんみな",
   "artistNorm": "ちゃんみな",
+  "tags": [],
   "title": "花火",
   "titleNorm": "花火",
 }

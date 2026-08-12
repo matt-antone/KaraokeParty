@@ -9,11 +9,11 @@ import styles from './LibraryView.css'
 
 const LibraryView = () => {
   const { isAdmin } = useAppSelector(state => state.user)
-  const { isLoading, filterStr, filterStarred } = useAppSelector(state => state.library)
+  const { isLoading, filterStr, filterStarred, filterTags } = useAppSelector(state => state.library)
   const songsResult = useAppSelector(state => state.songs.result)
   const ui = useAppSelector(state => state.ui)
 
-  const isSearching = !!filterStr.trim().length || filterStarred
+  const isSearching = !!filterStr.trim().length || filterStarred || filterTags.some(Boolean)
   const [initialHeaderHeight] = useState(ui.headerHeight)
   const [finalHeaderHeight, setFinalHeaderHeight] = useState(null)
 

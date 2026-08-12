@@ -1,5 +1,6 @@
 import { createAction, createReducer } from '@reduxjs/toolkit'
 import {
+  LIBRARY_FILTER_TAG,
   LIBRARY_FILTER_STRING,
   LIBRARY_FILTER_STRING_RESET,
   LIBRARY_FILTER_TOGGLE_STARRED,
@@ -8,6 +9,9 @@ import {
   TOGGLE_ARTIST_RESULT_EXPANDED,
   SCROLL_ARTISTS,
 } from 'shared/actionTypes'
+
+// filename taxonomy is positional: Artist - Title [genre, decade, vibe]
+export const SONG_FACETS = ['genre', 'decade', 'vibe']
 
 // ------------------------------------
 // Actions
@@ -19,6 +23,7 @@ const libraryPush = createAction<LibraryState>(LIBRARY_PUSH)
 
 export const resetFilterStr = createAction(LIBRARY_FILTER_STRING_RESET)
 export const toggleFilterStarred = createAction<void>(LIBRARY_FILTER_TOGGLE_STARRED)
+export const setFilterTag = createAction<{ index: number, value: string }>(LIBRARY_FILTER_TAG)
 export const setFilterStr = createAction(LIBRARY_FILTER_STRING, (payload: string) => ({
   payload,
   meta: {
@@ -37,6 +42,7 @@ interface LibraryState {
   version: number
   filterStr: string
   filterStarred: boolean
+  filterTags: string[] // by SONG_FACETS index; '' = any
   scrollRow: number
   expandedArtists: number[]
   expandedArtistResults: number[]
@@ -47,6 +53,7 @@ const initialState: LibraryState = {
   version: 0,
   filterStr: '',
   filterStarred: false,
+  filterTags: SONG_FACETS.map(() => ''),
   scrollRow: 0,
   expandedArtists: [],
   expandedArtistResults: [],
@@ -62,6 +69,9 @@ const libraryReducer = createReducer(initialState, (builder) => {
     })
     .addCase(toggleFilterStarred, (state) => {
       state.filterStarred = !state.filterStarred
+    })
+    .addCase(setFilterTag, (state, { payload }) => {
+      state.filterTags[payload.index] = payload.value
     })
     .addCase(scrollArtists, (state, { payload }) => {
       state.scrollRow = payload

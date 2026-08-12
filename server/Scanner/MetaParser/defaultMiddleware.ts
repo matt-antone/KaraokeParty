@@ -12,6 +12,24 @@ m.set('normalize whitespace', (ctx, next) => {
   next()
 })
 
+// trailing [genre, tag, tag] group; must run before de-karaoke, whose
+// regex also matches [] and would eat a tag named 'vocal'
+m.set('extract taxonomy', (ctx, next) => {
+  const match = ctx.name.match(/\s*\[([^[\]]+)\]\s*$/)
+  if (!match) return next()
+
+  const tags = match[1].split(',')
+    .map(tag => tag.trim().toLowerCase())
+    .filter(tag => tag && !/karaoke|vocal/i.test(tag))
+
+  // nothing left: it was a karaoke marker, not taxonomy; leave it for de-karaoke
+  if (!tags.length) return next()
+
+  ctx.tags = tags
+  ctx.name = ctx.name.slice(0, match.index)
+  next()
+})
+
 m.set('de-karaoke', (ctx, next) => {
   // 'karaoke' or 'vocal' surrounded by (), [], or {}
   ctx.name = ctx.name.replace(/[([{](?=[^([{]*$).*(?:karaoke|vocal).*[)\]}]/i, '')

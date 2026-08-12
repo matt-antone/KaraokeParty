@@ -1,13 +1,21 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
-import { setFilterStr, resetFilterStr, toggleFilterStarred } from '../../modules/library'
+import { setFilterStr, resetFilterStr, toggleFilterStarred, setFilterTag, SONG_FACETS } from '../../modules/library'
 import Button from 'components/Button/Button'
 import styles from './LibraryHeader.css'
 
 const LibraryHeader = () => {
   const dispatch = useAppDispatch()
-  const { filterStr, filterStarred } = useAppSelector(state => state.library)
+  const { filterStr, filterStarred, filterTags } = useAppSelector(state => state.library)
+  const songs = useAppSelector(state => state.songs)
+
+  // distinct values present in the library, per facet position
+  const facetValues = useMemo(
+    () => SONG_FACETS.map((_, i) =>
+      [...new Set(songs.result.map(songId => songs.entities[songId].tags[i]).filter(Boolean))].sort()),
+    [songs],
+  )
 
   const searchInput = useRef<HTMLInputElement>(null)
   const [value, setValue] = useState(filterStr)
@@ -29,31 +37,53 @@ const LibraryHeader = () => {
 
   return (
     <div className={styles.container}>
-      <Button
-        className={clsx(styles.btnMagnifier, filterStr && styles.active)}
-        icon='MAGNIFIER'
-        onClick={handleMagnifierClick}
-      />
-      <input
-        type='search'
-        className={styles.searchInput}
-        placeholder='search'
-        value={value}
-        onChange={handleChange}
-        ref={searchInput}
-      />
-      {filterStr && (
+      <div className={styles.searchRow}>
         <Button
-          icon='CLEAR'
-          onClick={clearSearch}
-          className={clsx(styles.btnClear, styles.active)}
+          className={clsx(styles.btnMagnifier, filterStr && styles.active)}
+          icon='MAGNIFIER'
+          onClick={handleMagnifierClick}
         />
+        <input
+          type='search'
+          className={styles.searchInput}
+          placeholder='search'
+          value={value}
+          onChange={handleChange}
+          ref={searchInput}
+        />
+        {filterStr && (
+          <Button
+            icon='CLEAR'
+            onClick={clearSearch}
+            className={clsx(styles.btnClear, styles.active)}
+          />
+        )}
+        <Button
+          className={clsx(styles.btnStar, filterStarred && styles.active)}
+          icon='STAR_FULL'
+          onClick={() => dispatch(toggleFilterStarred())}
+        />
+      </div>
+
+      {facetValues.some(values => values.length > 0) && (
+        <div className={styles.facetRow}>
+          {SONG_FACETS.map((facet, i) => facetValues[i].length > 0 && (
+            <select
+              key={facet}
+              className={clsx(styles.facetSelect, filterTags[i] && styles.activeSelect)}
+              value={filterTags[i]}
+              onChange={event => dispatch(setFilterTag({ index: i, value: event.target.value }))}
+            >
+              <option value=''>
+                any
+                {' '}
+                {facet}
+              </option>
+              {facetValues[i].map(tag => <option key={tag} value={tag}>{tag}</option>)}
+            </select>
+          ))}
+        </div>
       )}
-      <Button
-        className={clsx(styles.btnStar, filterStarred && styles.active)}
-        icon='STAR_FULL'
-        onClick={() => dispatch(toggleFilterStarred())}
-      />
     </div>
   )
 }

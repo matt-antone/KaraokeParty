@@ -9,6 +9,7 @@ export interface Song {
   duration: number
   songId: number
   title: string
+  tags: string[]
   numMedia: number
 }
 

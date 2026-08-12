@@ -44,6 +44,7 @@ class Library {
     {
       const query = sql`
         SELECT duration, songs.artistId AS artistId, songs.songId AS songId, songs.title AS title,
+          songs.tags AS tags,
           MAX(isPreferred) AS isPreferred, COUNT(DISTINCT media.mediaId) AS numMedia
         FROM media
           INNER JOIN songs USING (songId)
@@ -55,6 +56,7 @@ class Library {
 
       for (const row of rows) {
         delete row.isPreferred
+        row.tags = JSON.parse(row.tags as unknown as string)
         songs.entities[row.songId] = row
         songs.result.push(row.songId)
 
@@ -118,6 +120,7 @@ class Library {
         duration: media.duration,
         songId: media.songId,
         title: media.title,
+        tags: JSON.parse(media.tags),
         numMedia: result.length,
       },
     }
@@ -126,7 +129,7 @@ class Library {
   /**
   * Matches or creates artist and song
   */
-  static matchSong (parsed: { artist: string, artistNorm: string, title: string, titleNorm: string }): {
+  static matchSong (parsed: { artist: string, artistNorm: string, title: string, titleNorm: string, tags?: string[] }): {
     artistId?: number
     artist?: string
     artistNorm?: string
@@ -182,11 +185,21 @@ class Library {
       `
       const row = db.get<{ songId: number, title: string, titleNorm: string }>(String(query), query.parameters)
 
+      const tags = JSON.stringify(parsed.tags ?? [])
+
       if (row) {
         log.debug('matched song: %s', row.title)
         match.songId = row.songId
         match.title = row.title
         match.titleNorm = row.titleNorm
+
+        // a rename can change taxonomy without adding media, so always write it back
+        const query = sql`
+          UPDATE songs
+          SET tags = ${tags}
+          WHERE songId = ${row.songId}
+        `
+        db.run(String(query), query.parameters)
       } else {
         log.debug('new song: %s', parsed.title)
 
@@ -194,6 +207,7 @@ class Library {
         fields.set('artistId', match.artistId)
         fields.set('title', parsed.title)
         fields.set('titleNorm', parsed.titleNorm)
+        fields.set('tags', tags)
 
         const query = sql`
           INSERT INTO songs ${sql.tuple(Array.from(fields.keys()).map(sql.column))}

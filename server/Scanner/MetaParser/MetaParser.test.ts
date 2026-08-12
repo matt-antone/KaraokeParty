@@ -43,6 +43,10 @@ describe('MetaParser', () => {
     'Az 1234-01 - Boney-M - Daddy Cool',
     `UB40 - Homely Girl`,
     `Disney - 101 Dalmations - Cruella De Vil`,
+    // filename taxonomy: trailing [genre, tag, tag]
+    'Cher - Believe [pop, 90s]',
+    'Blink-182 - All The Small Things [punk, 90s, upbeat]',
+    'Cher - Believe (Karaoke Version) [pop]',
     // ensure unicode is being passed through correctly
     `ちゃんみな - 「ハレンチ」`,
     `ちゃんみな - 花火`,
