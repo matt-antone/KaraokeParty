@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
+import clsx from 'clsx'
 import { useAppDispatch } from 'store/hooks'
 import { requestPlay } from 'store/modules/status'
 import ColorCycle from './ColorCycle/ColorCycle'
 import UpNow from './UpNow/UpNow'
 import Icon from 'components/Icon/Icon'
+import UserImage from 'components/UserImage/UserImage'
 import type { QueueItem } from 'shared/types'
 import styles from './PlayerTextOverlay.css'
 
@@ -32,6 +34,13 @@ const Intermission = ({ endsAt, nextQueueItem }: { endsAt: number, nextQueueItem
 
   return (
     <>
+      {nextQueueItem && (
+        <UserImage
+          userId={nextQueueItem.userId}
+          dateUpdated={nextQueueItem.userDateUpdated}
+          className={styles.nextUserImage}
+        />
+      )}
       <ColorCycle
         text={nextQueueItem ? `UP NEXT: ${nextQueueItem.userDisplayName.toUpperCase()}` : 'UP NEXT...'}
         offset={offset}
@@ -90,7 +99,7 @@ const PlayerTextOverlay = ({
   }
 
   return (
-    <div style={{ width, height }} className={styles.container}>
+    <div style={{ width, height }} className={clsx(styles.container, intermissionEndsAt && styles.intermission)}>
       {Component}
     </div>
   )
