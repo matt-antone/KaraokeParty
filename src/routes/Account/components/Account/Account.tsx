@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { requestLogout, updateAccount } from 'store/modules/user'
 import { removeItem } from 'routes/Queue/modules/queue'
@@ -10,6 +11,7 @@ import styles from './Account.css'
 
 const Account = () => {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const user = useAppSelector(state => state.user)
   const upcomingQueueIds = useAppSelector(state => getUpcoming(state, user.userId))
 
@@ -37,6 +39,7 @@ const Account = () => {
     }
 
     dispatch(requestLogout())
+    navigate('/', { replace: true })
   }
 
   const handleSubmit = (data: FormData) => {

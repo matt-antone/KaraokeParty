@@ -11,7 +11,11 @@ const SONGS = {
   5: { songId: 5, artistId: 4, title: 'Bohemian Rhapsody', tags: [], duration: 355, numMedia: 1 },
 }
 
-const state = (filterTags: string[]) => ({
+const state = (filterTags: string[], stars: {
+  filterStarred?: boolean
+  starredArtists?: number[]
+  starredSongs?: number[]
+} = {}) => ({
   artists: {
     result: [1, 2, 3, 4],
     entities: {
@@ -22,13 +26,40 @@ const state = (filterTags: string[]) => ({
     },
   },
   songs: { result: [1, 2, 3, 4, 5], entities: SONGS },
-  library: { filterStr: '', filterStarred: false, filterTags },
-  userStars: { starredArtists: [], starredSongs: [] },
+  library: { filterStr: '', filterStarred: !!stars.filterStarred, filterTags },
+  userStars: {
+    starredArtists: stars.starredArtists ?? [],
+    starredSongs: stars.starredSongs ?? [],
+  },
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }) as any
 
 const songsFor = (filterTags: string[]) => getSearchResults(state(filterTags)).songsResult
 const artistsFor = (filterTags: string[]) => getSearchResults(state(filterTags)).artistsResult
+
+describe('starred filter', () => {
+  const NONE = SONG_FACETS.map(() => '')
+  const starred = (starredSongs: number[]) =>
+    getSearchResults(state(NONE, { filterStarred: true, starredSongs }))
+
+  it('keeps only starred songs', () => {
+    expect(starred([2, 4]).songsResult).toEqual([2, 4])
+  })
+
+  // nothing in the UI stars an artist, so artist stars are always empty in practice
+  it('keeps artists whose songs are starred, without any artist star', () => {
+    expect(starred([2]).artistsResult).toEqual([1])
+  })
+
+  it('still honors an explicit artist star', () => {
+    const s = state(NONE, { filterStarred: true, starredArtists: [2], starredSongs: [] })
+    expect(getSearchResults(s).artistsResult).toEqual([2])
+  })
+
+  it('shows nothing when the user has starred nothing', () => {
+    expect(starred([])).toEqual({ artistsResult: [], songsResult: [] })
+  })
+})
 
 describe('taxonomy filters', () => {
   it('returns everything when no facet is selected', () => {

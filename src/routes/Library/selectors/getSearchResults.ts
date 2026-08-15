@@ -69,11 +69,16 @@ const getArtistsByTags = createSelector(
   })
 
 // #3: starred/hidden filters
+// nothing in the UI stars an artist, so an artist also counts as starred when
+// any of its songs is; matching starredArtists alone would filter to nothing
 const getArtistsByView = createSelector(
-  [getArtistsByTags, getFilterStarred, getStarredArtists],
-  (artistsWithTags, filterStarred, starredArtists) =>
+  [getArtistsByTags, getArtists, getFilterStarred, getStarredArtists, getStarredSongs],
+  (artistsWithTags, artists, filterStarred, starredArtists, starredSongs) =>
     artistsWithTags.filter((artistId) => {
-      return filterStarred ? starredArtists.includes(artistId) : true
+      if (!filterStarred) return true
+
+      return starredArtists.includes(artistId)
+        || artists.entities[artistId].songIds.some(songId => starredSongs.includes(songId))
     }),
 )
 
