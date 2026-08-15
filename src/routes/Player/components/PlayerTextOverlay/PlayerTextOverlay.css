@@ -22,6 +22,11 @@
   margin-bottom: var(--space-m);
 }
 
+/* the fallback avatar icon's default color vanishes against the black intermission backdrop */
+.container .nextUserImage svg {
+  color: var(--color-gray-5);
+}
+
 .playButton {
   cursor: pointer;
   background: transparent;
