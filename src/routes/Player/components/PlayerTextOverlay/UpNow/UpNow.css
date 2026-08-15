@@ -38,16 +38,13 @@
 }
 
 .user {
-  font-size: 6vh;
+  font-size: 1rem;
   text-rendering: optimizeLegibility;
   text-shadow: 1px 1px 5px #000;
   text-overflow: ellipsis;
   overflow: hidden;
-  max-width: 33vw;
-}
-
-.userImage {
-  height: 20vh;
+  white-space: nowrap;
+  max-width: 50vw;
 }
 
 @keyframes slide-in {

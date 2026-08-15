@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { CSSTransition } from 'react-transition-group'
-import UserImage from 'components/UserImage/UserImage'
 import type { QueueItem } from 'shared/types'
 import styles from './UpNow.css'
 
@@ -9,37 +8,26 @@ interface UpNowProps {
 }
 
 const UpNow = ({ queueItem }: UpNowProps) => {
-  const [show, setShow] = useState(false)
-  const timeoutID = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [show, setShow] = useState(true)
   const nodeRef = useRef<HTMLDivElement | null>(null)
 
+  // shown on mount via `appear` (the parent keys us on queueId): requestAnimationFrame
+  // doesn't run while the player's tab is hidden, so gating the reveal on one could
+  // outlive the timer that hides it, leaving the overlay stuck up for the whole song
   useEffect(() => {
-    if (timeoutID.current) {
-      clearTimeout(timeoutID.current)
-    }
-
-    requestAnimationFrame(() => {
-      setShow(true)
-    })
-
-    timeoutID.current = setTimeout(() => {
-      setShow(false)
-    }, 5000)
-
-    // Cleanup the timeout when component unmounts or queueItem changes
-    return () => {
-      if (timeoutID.current) {
-        clearTimeout(timeoutID.current)
-      }
-    }
-  }, [queueItem.queueId])
+    const timeoutID = setTimeout(() => setShow(false), 5000)
+    return () => clearTimeout(timeoutID)
+  }, [])
 
   return (
     <CSSTransition
+      appear
       nodeRef={nodeRef}
       in={show}
       timeout={500}
       classNames={{
+        appearActive: styles.enterActive,
+        appearDone: styles.enterDone,
         enterActive: styles.enterActive,
         enterDone: styles.enterDone,
         exitActive: styles.exitActive,
@@ -47,11 +35,6 @@ const UpNow = ({ queueItem }: UpNowProps) => {
     >
       <div ref={nodeRef} className={styles.container} translate='no'>
         <div className={styles.innerContainer}>
-          <UserImage
-            userId={queueItem.userId}
-            dateUpdated={queueItem.userDateUpdated}
-            className={styles.userImage}
-          />
           <div className={styles.user}>
             {queueItem.userDisplayName}
           </div>
