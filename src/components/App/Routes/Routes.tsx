@@ -75,16 +75,18 @@ const RequireAuth = ({
   const { isAdmin, userId } = useAppSelector(state => state.user)
   const location = useLocation()
 
-  if ((path === '/player' || path === '/settings') && !isAdmin) {
-    return <Navigate to='/' replace />
-  }
-
+  // signed out: sign in first (checked before the admin-only paths below so
+  // the desired location isn't lost on the way to the sign-in view)
   if (userId === null) {
     // set their originally-desired location in query parameter
     const params = new URLSearchParams(location.search)
     params.set('redirect', path)
 
     return <Navigate to={redirectTo + '?' + params.toString()} replace />
+  }
+
+  if ((path === '/player' || path === '/settings') && !isAdmin) {
+    return <Navigate to='/' replace />
   }
 
   return children
