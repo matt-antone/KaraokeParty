@@ -1,9 +1,10 @@
 .container {
-  aspect-ratio: 4/3;
+  aspect-ratio: 1;
   margin: 0 auto;
 
   img {
     border-radius: var(--border-radius);
+    object-fit: cover; /* center-crops images stored before the square switch */
   }
 
   svg {

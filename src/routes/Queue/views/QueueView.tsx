@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { useAppSelector } from 'store/hooks'
 import { ensureState } from 'redux-optimistic-ui'
 import { Link } from 'react-router'
+import getQueueSections from '../selectors/getQueueSections'
 import getRoundRobinQueue from '../selectors/getRoundRobinQueue'
 import QueueList from '../components/QueueList/QueueList'
 import Spinner from 'components/Spinner/Spinner'
@@ -16,6 +17,11 @@ const QueueView = () => {
   const isLoading = useAppSelector(state => ensureState(state.queue).isLoading)
   const queue = useAppSelector(getRoundRobinQueue)
   const queueId = useAppSelector(state => state.status.queueId)
+  const queueTab = useAppSelector(state => state.ui.queueTab)
+  const userId = useAppSelector(state => state.user.userId)
+  const { played, upcoming } = useAppSelector(getQueueSections)
+  const isMineEmpty = queueTab === 'me'
+    && !upcoming.some(qId => queue.entities[qId].userId === userId)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // ensure current song is in view on first mount only
@@ -50,9 +56,29 @@ const QueueView = () => {
 
       {isLoading && <Spinner />}
 
-      {!isLoading && queue.result.length === 0 && (
+      {!isLoading && queueTab === 'history' && played.length === 0 && (
+        <TextOverlay>
+          <h1>Nothing Sung Yet</h1>
+          <p>Songs land here once they&rsquo;ve been played.</p>
+        </TextOverlay>
+      )}
+
+      {!isLoading && queueTab !== 'history' && upcoming.length === 0 && (
         <TextOverlay>
           <h1>Queue Empty</h1>
+          <p>
+            Tap a song in the
+            {' '}
+            <Link to='/library'>library</Link>
+            {' '}
+            to queue it.
+          </p>
+        </TextOverlay>
+      )}
+
+      {!isLoading && upcoming.length > 0 && isMineEmpty && (
+        <TextOverlay>
+          <h1>Nothing Queued</h1>
           <p>
             Tap a song in the
             {' '}

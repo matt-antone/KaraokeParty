@@ -4,6 +4,7 @@ import {
   FOOTER_HEIGHT_CHANGE,
   HEADER_HEIGHT_CHANGE,
   SHOW_ERROR_MESSAGE,
+  UI_SET_QUEUE_TAB,
   UI_WINDOW_RESIZE,
 } from 'shared/actionTypes'
 import { RootState } from 'store/store'
@@ -16,6 +17,7 @@ let scrollLockTimer: ReturnType<typeof setTimeout> | null
 // ------------------------------------
 export const clearErrorMessage = createAction(CLEAR_ERROR_MESSAGE)
 export const showErrorMessage = createAction<string>(SHOW_ERROR_MESSAGE)
+export const setQueueTab = createAction<QueueTab>(UI_SET_QUEUE_TAB)
 
 export const setHeaderHeight = createAsyncThunk<void, number, { state: RootState }>('ui/SET_HEADER_HEIGHT', async (height: number, { dispatch, getState }) => {
   if (getState().ui.headerHeight === height) return
@@ -62,6 +64,8 @@ const headerHeightChange = createAction<number>(HEADER_HEIGHT_CHANGE)
 // ------------------------------------
 // Reducer
 // ------------------------------------
+export type QueueTab = 'queue' | 'me' | 'history'
+
 export interface UIState {
   isErrored: boolean
   errorMessage: string | null
@@ -70,6 +74,7 @@ export interface UIState {
   innerWidth: number
   innerHeight: number
   contentWidth: number
+  queueTab: QueueTab
 }
 
 const initialState: UIState = {
@@ -80,6 +85,7 @@ const initialState: UIState = {
   innerWidth: window.innerWidth,
   innerHeight: window.innerHeight,
   contentWidth: Math.min(window.innerWidth, MAX_CONTENT_WIDTH),
+  queueTab: 'queue',
 }
 
 const uiReducer = createReducer(initialState, (builder) => {
@@ -93,6 +99,9 @@ const uiReducer = createReducer(initialState, (builder) => {
     .addCase(showErrorMessage, (state, { payload }) => {
       state.isErrored = true
       state.errorMessage = payload
+    })
+    .addCase(setQueueTab, (state, { payload }) => {
+      state.queueTab = payload
     })
     .addCase(clearErrorMessage, (state) => {
       state.isErrored = false

@@ -88,7 +88,7 @@ const QRPrefs = ({ onChange, prefs = {}, roomPassword, roomPasswordDirty }: QRPr
             min={0.25}
             max={1}
             step={0.075}
-            value={prefs?.qr?.opacity ?? 0.625}
+            value={prefs?.qr?.opacity ?? 1}
             onChange={(val: number) => handleSetPref({ qr: { ...prefs.qr, opacity: val } })}
             aria-labelledby='label-qr-opacity'
           />

@@ -3,7 +3,7 @@ import { useAppDispatch } from 'store/hooks'
 import { createUser, removeUser, updateUser } from '../../../modules/users'
 import Button from 'components/Button/Button'
 import Modal from 'components/Modal/Modal'
-import AccountForm from '../../AccountForm/AccountForm'
+import AccountForm from 'routes/Account/components/AccountForm/AccountForm'
 import { UserWithRole } from 'shared/types'
 import styles from './EditUser.css'
 

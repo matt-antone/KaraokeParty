@@ -17,23 +17,24 @@
   --font-weight-normal: 400;
   --font-weight-bold: 600;
 
-  --font-size-xs: 0.75rem;
-  --font-size-s: 1rem;
-  --font-size-m: 1.25rem;
-  --font-size-l: 1.5rem;
-  --font-size-xl: 2rem;
+  /* scale is tuned for phones first; everything else keys off these */
+  --font-size-xs: 0.6875rem;
+  --font-size-s: 0.875rem;
+  --font-size-m: 1.0625rem;
+  --font-size-l: 1.25rem;
+  --font-size-xl: 1.625rem;
 
-  --icon-size-s: 1rem;
-  --icon-size-m: 1.5rem;
-  --icon-size-l: 2rem;
-  --icon-size-xl: 3rem;
+  --icon-size-s: 0.875rem;
+  --icon-size-m: 1.25rem;
+  --icon-size-l: 1.625rem;
+  --icon-size-xl: 2.25rem;
 
   --space-xs: 4px;
   --space-s: 8px;
-  --space-m: 16px;
-  --space-l: 24px;
-  --space-xl: 32px;
-  --container-padding: 12px;
+  --space-m: 12px;
+  --space-l: 18px;
+  --space-xl: 24px;
+  --container-padding: 10px;
 
   --bg-color: hsl(var(--hue-blue), 40%, 2%);
   --text-color: var(--color-gray-8);

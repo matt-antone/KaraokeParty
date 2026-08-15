@@ -157,7 +157,7 @@ const QueueItem = ({
           </div>
         </div>
 
-        <Buttons btnWidth={56} isExpanded={isExpanded} className={styles.btnContainer}>
+        <Buttons btnWidth={52} isExpanded={isExpanded} className={styles.btnContainer}>
           {isErrored && (
             <Button
               className={styles.danger}

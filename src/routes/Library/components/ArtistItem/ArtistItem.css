@@ -1,16 +1,17 @@
 .container {
-  --artist-item-height: 48px;
+  --artist-item-height: 40px;
 
   display: flex;
   height: var(--artist-item-height);
   align-items: center;
+  margin-bottom: var(--space-xs);
   overflow: hidden;
 }
 
 .name {
   color: var(--artist-name-color);
   flex: 1;
-  font-size: 20px;
+  font-size: 17px;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -27,7 +28,7 @@
   }
 
   .iconChevronContainer svg {
-    height: 24px;
+    height: 20px;
   }
 
   div {

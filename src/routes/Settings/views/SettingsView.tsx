@@ -1,0 +1,43 @@
+import React, { useEffect } from 'react'
+import combinedReducer from 'store/reducers'
+import { useAppDispatch, useAppSelector } from 'store/hooks'
+import { fetchPrefs } from 'store/modules/prefs'
+import usersReducer, { sliceInjectNoOp } from '../modules/users'
+import Prefs from '../components/Prefs/Prefs'
+import Rooms from '../components/Rooms/Rooms'
+import Users from '../components/Users/Users'
+import styles from './SettingsView.css'
+
+const SettingsView = () => {
+  const sliceExists = !!useAppSelector(state => state.users)
+  const ui = useAppSelector(state => state.ui)
+  const dispatch = useAppDispatch()
+
+  if (!sliceExists) {
+    combinedReducer.inject({ reducerPath: 'users', reducer: usersReducer })
+    dispatch(sliceInjectNoOp()) // update store with new slice
+  }
+
+  // once per mount
+  useEffect(() => {
+    dispatch(fetchPrefs())
+  }, [dispatch])
+
+  return (
+    <div
+      className={styles.container}
+      style={{
+        paddingTop: ui.headerHeight,
+        paddingBottom: ui.footerHeight,
+        width: ui.contentWidth,
+        height: ui.innerHeight,
+      }}
+    >
+      <Rooms />
+      <Users />
+      <Prefs />
+    </div>
+  )
+}
+
+export default SettingsView
