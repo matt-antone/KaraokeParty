@@ -97,6 +97,7 @@ export function playerLeave (): AppThunk {
 export interface PlayerState {
   cdgAlpha: number
   cdgSize: number
+  duration: number
   errorMessage: string
   historyJSON: string
   isAtQueueEnd: boolean
@@ -121,6 +122,7 @@ export interface PlayerState {
 const initialState: PlayerState = {
   cdgAlpha: 0.5,
   cdgSize: 0.65,
+  duration: 0,
   errorMessage: '',
   historyJSON: '[]', // queueIds (JSON string is hack to pass selector equality check on clients)
   isAtQueueEnd: false,

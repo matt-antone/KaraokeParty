@@ -12,6 +12,8 @@ import styles from './PlayerTextOverlay.css'
 interface PlayerTextOverlayProps {
   queueItem?: QueueItem
   nextQueueItem?: QueueItem
+  comingUpQueueItems?: QueueItem[]
+  isSongEnding?: boolean
   isAtQueueEnd: boolean
   isQueueEmpty: boolean
   isErrored: boolean
@@ -21,7 +23,11 @@ interface PlayerTextOverlayProps {
 }
 
 // mounted when the intermission starts, so `now` is seeded correctly (keyed on endsAt by the parent)
-const Intermission = ({ endsAt, nextQueueItem }: { endsAt: number, nextQueueItem?: QueueItem }) => {
+const Intermission = ({ endsAt, nextQueueItem, comingUpQueueItems = [] }: {
+  endsAt: number
+  nextQueueItem?: QueueItem
+  comingUpQueueItems?: QueueItem[]
+}) => {
   const [offset] = useState(() => Math.random() * -300)
   const [now, setNow] = useState(() => Date.now())
 
@@ -47,6 +53,14 @@ const Intermission = ({ endsAt, nextQueueItem }: { endsAt: number, nextQueueItem
         className={styles.backdrop}
       />
       <ColorCycle text={`${secondsLeft}`} offset={offset} className={styles.backdrop} />
+      {comingUpQueueItems.length > 0 && (
+        <div className={styles.comingUp} translate='no'>
+          <div className={styles.comingUpHeading}>Coming Up</div>
+          {comingUpQueueItems.map(item => (
+            <div key={item.queueId} className={styles.comingUpSinger}>{item.userDisplayName}</div>
+          ))}
+        </div>
+      )}
     </>
   )
 }
@@ -57,6 +71,8 @@ const PlayerTextOverlay = ({
   isErrored,
   intermissionEndsAt,
   nextQueueItem,
+  comingUpQueueItems,
+  isSongEnding,
   queueItem,
   width,
   height,
@@ -93,9 +109,25 @@ const PlayerTextOverlay = ({
       </>
     )
   } else if (intermissionEndsAt) {
-    Component = <Intermission key={intermissionEndsAt} endsAt={intermissionEndsAt} nextQueueItem={nextQueueItem} />
+    Component = (
+      <Intermission
+        key={intermissionEndsAt}
+        endsAt={intermissionEndsAt}
+        nextQueueItem={nextQueueItem}
+        comingUpQueueItems={comingUpQueueItems}
+      />
+    )
   } else {
-    Component = <UpNow queueItem={queueItem} />
+    Component = (
+      <>
+        <UpNow queueItem={queueItem} />
+        {isSongEnding && nextQueueItem && (
+          <div className={styles.upNext} translate='no'>
+            {`Up Next: ${nextQueueItem.userDisplayName}`}
+          </div>
+        )}
+      </>
+    )
   }
 
   return (
