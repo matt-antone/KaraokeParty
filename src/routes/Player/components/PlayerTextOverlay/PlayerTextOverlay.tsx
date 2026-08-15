@@ -42,7 +42,7 @@ const Intermission = ({ endsAt, nextQueueItem }: { endsAt: number, nextQueueItem
         />
       )}
       <ColorCycle
-        text={nextQueueItem ? `UP NEXT: ${nextQueueItem.userDisplayName.toUpperCase()}` : 'UP NEXT...'}
+        text={nextQueueItem ? nextQueueItem.userDisplayName.toUpperCase() : 'UP NEXT...'}
         offset={offset}
         className={styles.backdrop}
       />
