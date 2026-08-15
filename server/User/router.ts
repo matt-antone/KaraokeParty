@@ -34,6 +34,21 @@ const readFile = promisify(fs.readFile)
 const deleteFile = promisify(fs.unlink)
 const { sign: jwtSign } = jsonWebToken
 
+// The JWT carries the room association (see createUserCtx), so a session-scoped
+// cookie would drop the user's room whenever the browser/window is closed.
+const SESSION_MAX_AGE = 30 * 24 * 60 * 60 * 1000 // 30 days
+
+// Signs userCtx and sets it as the httpOnly session cookie
+const setSessionCookie = (ctx, userCtx) => {
+  const token = jwtSign(userCtx, ctx.jwtKey, { expiresIn: SESSION_MAX_AGE / 1000 })
+
+  ctx.cookies.set('keToken', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: SESSION_MAX_AGE,
+  })
+}
+
 // Takes the "raw" object returned by the User class and massages it
 // into the shape used by the client (state.user) and in server-side
 // routers. Should be used to generate the JWT.
@@ -83,14 +98,7 @@ router.post('/login', async (ctx) => {
 
   const userCtx = createUserCtx(user, roomId)
 
-  // create JWT
-  const token = jwtSign(userCtx, ctx.jwtKey)
-
-  // set JWT as an httpOnly cookie
-  ctx.cookies.set('keToken', token, {
-    httpOnly: true,
-    sameSite: 'lax',
-  })
+  setSessionCookie(ctx, userCtx)
 
   ctx.body = userCtx
 })
@@ -330,15 +338,8 @@ router.put('/user/:userId', async (ctx) => {
 
   const userCtx = createUserCtx(updatedUser, ctx.user.roomId || null)
 
-  // create JWT
   // @todo: this should not extend the JWT expiry date
-  const token = jwtSign(userCtx, ctx.jwtKey)
-
-  // set JWT as an httpOnly cookie
-  ctx.cookies.set('keToken', token, {
-    sameSite: 'lax',
-    httpOnly: true,
-  })
+  setSessionCookie(ctx, userCtx)
 
   ctx.body = userCtx
 })
@@ -402,14 +403,7 @@ router.post('/user', async (ctx) => {
 
     const userCtx = createUserCtx(user, req.body.roomId || null)
 
-    // create JWT
-    const token = jwtSign(userCtx, ctx.jwtKey)
-
-    // set JWT as an httpOnly cookie
-    ctx.cookies.set('keToken', token, {
-      sameSite: 'lax',
-      httpOnly: true,
-    })
+    setSessionCookie(ctx, userCtx)
 
     ctx.body = userCtx
   } catch (err) {
@@ -453,15 +447,9 @@ router.post('/setup', async (ctx) => {
       ctx.throw(500, 'Invalid default room lastID')
     }
 
-    // create JWT
     const userCtx = createUserCtx(user, roomRes.lastID)
-    const token = jwtSign(userCtx, ctx.jwtKey)
 
-    // set JWT as an httpOnly cookie
-    ctx.cookies.set('keToken', token, {
-      sameSite: 'lax',
-      httpOnly: true,
-    })
+    setSessionCookie(ctx, userCtx)
 
     // unset isFirstRun
     const query = sql`

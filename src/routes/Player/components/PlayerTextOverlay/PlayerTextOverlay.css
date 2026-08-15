@@ -13,6 +13,15 @@
   --color-blue-glow: hsla(var(--hue-blue), 90%, 50%, 0.8);
 }
 
+.intermission {
+  background-color: #000;
+}
+
+.nextUserImage {
+  height: 25vh;
+  margin-bottom: var(--space-m);
+}
+
 .playButton {
   cursor: pointer;
   background: transparent;
