@@ -2,6 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "dev",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "NODE_ENV=development npx tsx watch server/main.ts -p $PORT"
+      ],
+      "port": 3738,
+      "autoPort": true
+    },
+    {
       "name": "serve",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

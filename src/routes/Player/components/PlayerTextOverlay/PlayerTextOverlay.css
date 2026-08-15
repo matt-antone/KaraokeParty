@@ -27,6 +27,56 @@
   color: var(--color-gray-5);
 }
 
+/* centered in the lower third of the intermission screen */
+.comingUp {
+  position: absolute;
+  top: 72%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--color-gray-8);
+  text-shadow: 1px 1px 5px #000;
+}
+
+.comingUpHeading {
+  font-size: 3vh;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-6);
+  margin-bottom: var(--space-xs);
+}
+
+.comingUpSinger {
+  font-size: 4vh;
+  line-height: 1.2;
+}
+
+/* teased in the last seconds of a song; kept out of the video's lower two-thirds */
+.upNext {
+  position: absolute;
+  top: 2vh;
+  right: 2vh;
+  max-width: 40vw;
+  padding: var(--space-xs) var(--space-m);
+  font-size: 3.5vh;
+  color: var(--color-gray-9);
+  text-shadow: 1px 1px 5px #000;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: var(--chrome-bg-color);
+  border: 1px solid var(--chrome-border-color);
+  border-radius: var(--border-radius);
+}
+
+@supports (backdrop-filter: blur(20px) brightness(50%) saturate(50%)) or (-webkit-backdrop-filter: blur(20px) brightness(50%) saturate(50%)) {
+  .upNext {
+    background-color: transparent !important;
+    -webkit-backdrop-filter: blur(20px) brightness(50%) saturate(50%);
+    backdrop-filter: blur(20px) brightness(50%) saturate(50%);
+  }
+}
+
 .playButton {
   cursor: pointer;
   background: transparent;

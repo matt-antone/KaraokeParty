@@ -16,6 +16,9 @@ interface PlayerControllerProps {
 // ponytail: fixed pause between songs; make it a room pref if hosts want to tune it
 const INTERMISSION_MS = 30000
 
+// how long before a song ends to tease the next singer
+const UP_NEXT_SECS = 15
+
 const PlayerController = (props: PlayerControllerProps) => {
   const queue = useAppSelector(getRoundRobinQueue)
   const player = useAppSelector(state => state.player)
@@ -23,7 +26,10 @@ const PlayerController = (props: PlayerControllerProps) => {
   const prefs = useAppSelector(state => state.prefs)
   const roomPrefs = useAppSelector(getRoomPrefs)
   const queueItem = queue.entities[player.queueId]
-  const nextQueueItem = queue.entities[queue.result[queue.result.indexOf(player.queueId) + 1]]
+  const nextIdx = queue.result.indexOf(player.queueId) + 1
+  const nextQueueItem = queue.entities[queue.result[nextIdx]]
+  // the two singers after the next one, shown during the intermission
+  const comingUpQueueItems = queue.result.slice(nextIdx + 1, nextIdx + 3).map(id => queue.entities[id])
 
   const dispatch = useAppDispatch()
   // set only when a song ends on its own; stays until the next one does. It's stamped with what
@@ -228,6 +234,8 @@ const PlayerController = (props: PlayerControllerProps) => {
       <PlayerTextOverlay
         queueItem={queueItem as QueueItem}
         nextQueueItem={nextQueueItem as QueueItem}
+        comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+        isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
         isAtQueueEnd={player.isAtQueueEnd}
         isQueueEmpty={!queue.result.length}
         intermissionEndsAt={isIntermission ? intermission.endsAt : null}
