@@ -10,8 +10,8 @@ import AlphaPicker from '../AlphaPicker/AlphaPicker'
 import ArtistItem from '../ArtistItem/ArtistItem'
 import type { ListImperativeAPI, RowComponentProps } from 'react-window'
 
-const ROW_HEIGHT_ARTIST = 48
-const ROW_HEIGHT_SONG = 56
+const ROW_HEIGHT_ARTIST = 44 // 40px + 4px margin
+const ROW_HEIGHT_SONG = 52 // 44px + 8px margin
 
 interface ArtistListProps {
   ui: RootState['ui']

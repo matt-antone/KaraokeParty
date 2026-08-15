@@ -116,7 +116,7 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
           ecLevel='L'
           size={size}
           quietZone={quietZoneSize}
-          style={{ opacity: prefs.opacity ?? 0.625 }}
+          style={{ opacity: prefs.opacity ?? 1 }}
           logoImage={`${document.baseURI}assets/app.png`}
           logoWidth={size * 0.5}
           logoHeight={size * 0.5}

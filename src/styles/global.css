@@ -40,8 +40,8 @@ input[type="password"],
 input[type="search"] {
   display: block;
   width: 100%;
-  padding: 8px;
-  font-size: 18px;
+  padding: 6px 8px;
+  font-size: 16px; /* don't go below 16px: iOS zooms the viewport on focus */
   box-shadow: inset 1px 1px 3px 0px rgba(50, 50, 50, 0.75);
   border: none;
   border-radius: var(--border-radius);

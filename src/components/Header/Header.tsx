@@ -9,6 +9,7 @@ import { requestScanStop } from 'store/modules/prefs'
 import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
 import getWaits from 'routes/Queue/selectors/getWaits'
 import LibraryHeader from 'routes/Library/components/LibraryHeader/LibraryHeader'
+import QueueHeader from 'routes/Queue/components/QueueHeader/QueueHeader'
 import PlaybackCtrl from './PlaybackCtrl/PlaybackCtrl'
 import ProgressBar from './ProgressBar/ProgressBar'
 import UpNext from './UpNext/UpNext'
@@ -82,6 +83,7 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
 
       <Routes>
         <Route path='/library' element={<LibraryHeader />} />
+        <Route path='/queue' element={<QueueHeader />} />
       </Routes>
     </div>
   )

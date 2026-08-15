@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import getSearchResults from './getSearchResults'
-import libraryReducer, { setFilterTag, SONG_FACETS } from '../modules/library'
+import getSearchResults, { getFacetValues } from './getSearchResults'
+import libraryReducer, { setFilterTag, SONG_FACETS, FILTER_FACETS } from '../modules/library'
 
 // [genre, decade, vibe]
 const SONGS = {
@@ -61,11 +61,39 @@ describe('taxonomy filters', () => {
   })
 })
 
+describe('facet options', () => {
+  const valuesFor = (filterTags: string[]) => getFacetValues(state(filterTags))
+
+  it('offers every value present when nothing is selected', () => {
+    expect(valuesFor(['', '', ''])).toEqual([['grunge', 'jazz', 'pop'], ['60s', '90s'], ['dance', 'mellow']])
+  })
+
+  it('narrows the other facets to what the selection allows', () => {
+    // pop songs are 90s only, and their only vibe is dance
+    expect(valuesFor(['pop', '', ''])[1]).toEqual(['90s'])
+    expect(valuesFor(['pop', '', ''])[2]).toEqual(['dance'])
+  })
+
+  it('keeps a facet its own full option list so the selection can be changed', () => {
+    expect(valuesFor(['pop', '', ''])[0]).toEqual(['grunge', 'jazz', 'pop'])
+  })
+})
+
+describe('filterable facets', () => {
+  it('offers every filter facet as a real taxonomy position', () => {
+    expect(FILTER_FACETS.map(facet => SONG_FACETS.indexOf(facet))).not.toContain(-1)
+  })
+
+  it('does not offer vocal', () => {
+    expect(FILTER_FACETS).not.toContain('vocal')
+  })
+})
+
 describe('filterTags reducer', () => {
   it('starts with one empty slot per facet', () => {
     const { filterTags } = libraryReducer(undefined, { type: '@@INIT' })
 
-    expect(filterTags).toEqual(['', '', ''])
+    expect(filterTags).toEqual(SONG_FACETS.map(() => ''))
     expect(filterTags).toHaveLength(SONG_FACETS.length)
   })
 
@@ -73,13 +101,17 @@ describe('filterTags reducer', () => {
     let s = libraryReducer(undefined, setFilterTag({ index: 0, value: 'pop' }))
     s = libraryReducer(s, setFilterTag({ index: 2, value: 'dance' }))
 
-    expect(s.filterTags).toEqual(['pop', '', 'dance'])
+    const expected = SONG_FACETS.map(() => '')
+    expected[0] = 'pop'
+    expected[2] = 'dance'
+
+    expect(s.filterTags).toEqual(expected)
   })
 
   it('clears a facet back to any', () => {
     let s = libraryReducer(undefined, setFilterTag({ index: 0, value: 'pop' }))
     s = libraryReducer(s, setFilterTag({ index: 0, value: '' }))
 
-    expect(s.filterTags).toEqual(['', '', ''])
+    expect(s.filterTags).toEqual(SONG_FACETS.map(() => ''))
   })
 })

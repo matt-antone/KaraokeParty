@@ -4,14 +4,18 @@ import {
   LIBRARY_FILTER_STRING,
   LIBRARY_FILTER_STRING_RESET,
   LIBRARY_FILTER_TOGGLE_STARRED,
+  LIBRARY_SET_TAB,
   LIBRARY_PUSH,
   TOGGLE_ARTIST_EXPANDED,
   TOGGLE_ARTIST_RESULT_EXPANDED,
   SCROLL_ARTISTS,
 } from 'shared/actionTypes'
 
-// filename taxonomy is positional: Artist - Title [genre, decade, vibe]
-export const SONG_FACETS = ['genre', 'decade', 'vibe']
+// filename taxonomy is positional: Artist - Title [genre, decade, vocal, vibe, subgenre]
+export const SONG_FACETS = ['genre', 'decade', 'vocal', 'vibe', 'subgenre']
+
+// offered as filters, in display order; vocal is parsed but not filterable
+export const FILTER_FACETS = ['genre', 'subgenre', 'decade', 'vibe']
 
 // ------------------------------------
 // Actions
@@ -24,6 +28,7 @@ const libraryPush = createAction<LibraryState>(LIBRARY_PUSH)
 export const resetFilterStr = createAction(LIBRARY_FILTER_STRING_RESET)
 export const toggleFilterStarred = createAction<void>(LIBRARY_FILTER_TOGGLE_STARRED)
 export const setFilterTag = createAction<{ index: number, value: string }>(LIBRARY_FILTER_TAG)
+export const setTab = createAction<LibraryTab>(LIBRARY_SET_TAB)
 export const setFilterStr = createAction(LIBRARY_FILTER_STRING, (payload: string) => ({
   payload,
   meta: {
@@ -37,12 +42,15 @@ export const setFilterStr = createAction(LIBRARY_FILTER_STRING, (payload: string
 // ------------------------------------
 // Reducer
 // ------------------------------------
+export type LibraryTab = 'artists' | 'songs'
+
 interface LibraryState {
   isLoading: boolean
   version: number
   filterStr: string
   filterStarred: boolean
   filterTags: string[] // by SONG_FACETS index; '' = any
+  tab: LibraryTab
   scrollRow: number
   expandedArtists: number[]
   expandedArtistResults: number[]
@@ -54,6 +62,7 @@ const initialState: LibraryState = {
   filterStr: '',
   filterStarred: false,
   filterTags: SONG_FACETS.map(() => ''),
+  tab: 'artists',
   scrollRow: 0,
   expandedArtists: [],
   expandedArtistResults: [],
@@ -72,6 +81,9 @@ const libraryReducer = createReducer(initialState, (builder) => {
     })
     .addCase(setFilterTag, (state, { payload }) => {
       state.filterTags[payload.index] = payload.value
+    })
+    .addCase(setTab, (state, { payload }) => {
+      state.tab = payload
     })
     .addCase(scrollArtists, (state, { payload }) => {
       state.scrollRow = payload

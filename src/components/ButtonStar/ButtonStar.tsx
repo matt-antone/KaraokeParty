@@ -1,7 +1,6 @@
 import React from 'react'
 import clsx from 'clsx'
 import Button from 'components/Button/Button'
-import Icon from 'components/Icon/Icon'
 import ToggleAnimation from 'components/ToggleAnimation/ToggleAnimation'
 import styles from './ButtonStar.css'
 
@@ -21,14 +20,13 @@ const ButtonStar = ({
   return (
     <Button
       onClick={onClick}
+      aria-label={isStarred ? 'unstar' : 'star'}
       className={clsx(styles.container, isStarred && styles.starred, className)}
     >
       <ToggleAnimation toggle={isStarred} className={styles.animateStar}>
-        <Icon icon='STAR_FULL' />
+        <span className={styles.star}>⭐</span>
       </ToggleAnimation>
-      <div className={styles.starCount}>
-        {count || ''}
-      </div>
+      {count > 0 && <span className={styles.starCount}>{count}</span>}
     </Button>
   )
 }

@@ -1,16 +1,16 @@
 .container {
-  --song-item-btn-size: 48px;
+  --song-item-btn-size: 36px;
 
   display: flex;
   align-items: center;
-  margin-left: var(--space-xs);
-  margin-bottom: var(--space-xs);
+  margin-left: var(--space-s);
+  margin-bottom: var(--space-s);
   background-color: hsl(var(--hue-blue), 40%, 6%);
-  border-left: var(--space-xs) solid var(--song-item-btn-bg-color);
-  height: 52px;
+  border-left: 3px solid var(--song-item-btn-bg-color);
+  height: 44px;
 
   &.withArtist {
-    height: 64px;
+    height: 54px;
   }
 
   &.upcoming {
@@ -44,9 +44,9 @@
 
 .duration {
   color: var(--color-gray-5);
-  font-size: 14px;
+  font-size: 12px;
   text-align: right;
-  width: 40px;
+  width: 34px;
 }
 
 .primary {
@@ -55,31 +55,31 @@
   align-content: center;
   overflow: hidden;
   white-space: nowrap;
-  margin-left: 14px;
+  margin-left: var(--space-m);
   cursor: pointer;
 }
 
 .title {
   overflow: hidden;
   color: var(--color-gray-9);
-  font-size: 18px;
+  font-size: 15px;
   line-height: normal;
   text-overflow: ellipsis;
 }
 
 .artist {
   color: var(--color-gray-7);
-  font-size: 16px;
+  font-size: 13px;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-  margin-top: var(--space-xs);
+  margin-top: 2px;
 }
 
 /* genre is the first tag; stored lowercased, so capitalize for display */
 .tags {
   color: var(--color-gray-5);
-  font-size: 13px;
+  font-size: 11px;
   text-transform: capitalize;
 }
 

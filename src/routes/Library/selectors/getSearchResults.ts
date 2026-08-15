@@ -85,6 +85,18 @@ const getSongsByView = createSelector(
     }),
 )
 
+// options offered per facet: values present among songs matching every *other* active
+// filter, so choosing one facet narrows the rest (the selected value always survives)
+export const getFacetValues = createSelector(
+  [getSongsByKeyword, getSongs, getFilterTags, getFilterStarred, getStarredSongs],
+  (songIds, songs, filterTags, filterStarred, starredSongs) =>
+    filterTags.map((_, i) => [...new Set(songIds
+      .filter(songId => (!filterStarred || starredSongs.includes(songId))
+        && filterTags.every((tag, j) => j === i || !tag || songs.entities[songId].tags[j] === tag))
+      .map(songId => songs.entities[songId].tags[i])
+      .filter(Boolean))].sort()),
+)
+
 const getSearchResults = createSelector(
   [getArtistsByView, getSongsByView],
   (artistsResult, songsResult) => ({

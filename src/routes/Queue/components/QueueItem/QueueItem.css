@@ -1,10 +1,11 @@
 .container {
-  --image-width: 104px;
-  --queue-item-btn-size: 48px;
+  --image-width: 84px;
+  /* touch target; QueueItem's btnWidth must stay this + the 8px button margin */
+  --queue-item-btn-size: 44px;
 
   position: relative;
-  /* 104px */
-  height: 6.5rem;
+  /* 84px */
+  height: 5.25rem;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -29,12 +30,13 @@
   display: flex;
   justify-content: center;
   width: var(--image-width);
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1;
   overflow: hidden;
 
   img {
     width: 100%;
     height: 100%;
+    object-fit: cover; /* center-crops images stored before the square switch */
   }
 }
 
@@ -131,8 +133,8 @@
 
 .btnAdd svg,
 .btnPlayNext svg {
-  width: 60px !important;
-  height: 60px !important;
+  width: 50px !important;
+  height: 50px !important;
 }
 
 /* Currently playing  */

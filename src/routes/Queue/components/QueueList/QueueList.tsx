@@ -6,6 +6,7 @@ import QueueListAnimator from '../QueueListAnimator/QueueListAnimator'
 import { formatSeconds } from 'lib/dateTime'
 import { moveItem, removeUpcomingItems } from '../../modules/queue'
 import getPlayerHistory from '../../selectors/getPlayerHistory'
+import getQueueSections from '../../selectors/getQueueSections'
 import getRoundRobinQueue from '../../selectors/getRoundRobinQueue'
 import getWaits from '../../selectors/getWaits'
 
@@ -15,11 +16,13 @@ const QueueList = () => {
 
   const playerHistory = useAppSelector(getPlayerHistory)
   const queue = useAppSelector(getRoundRobinQueue)
+  const sections = useAppSelector(getQueueSections)
   const songs = useAppSelector(state => state.songs)
   const starredSongs = useAppSelector(state => ensureState(state.userStars).starredSongs)
   const starCounts = useAppSelector(state => state.starCounts)
   const user = useAppSelector(state => state.user)
   const waits = useAppSelector(getWaits)
+  const queueTab = useAppSelector(state => state.ui.queueTab)
 
   // actions
   const dispatch = useAppDispatch()
@@ -42,8 +45,14 @@ const QueueList = () => {
     dispatch(removeUpcomingItems(userId))
   }
 
-  // build children array
-  const items = queue.result.map((qId) => {
+  // "queue"/"me" are upcoming only; "history" is what's been sung, newest first
+  const result = queueTab === 'history'
+    ? [...sections.played].reverse()
+    : queueTab === 'me'
+      ? sections.upcoming.filter(qId => queue.entities[qId].userId === user.userId)
+      : sections.upcoming
+
+  const items = result.map((qId) => {
     const item = queue.entities[qId]
     const duration = songs.entities[item.songId].duration
     const isCurrent = (qId === queueId) && !isAtQueueEnd

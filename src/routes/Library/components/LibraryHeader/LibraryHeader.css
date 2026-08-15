@@ -1,9 +1,14 @@
+/* every control in here is a touch target; keep them at least this tall */
 .container {
+  --control-height: 44px;
+
   display: flex;
   flex-direction: column;
-  padding: var(--space-xs);
+  padding: var(--space-xs) var(--space-s) var(--space-s);
 
   button {
+    min-width: var(--control-height);
+    min-height: var(--control-height);
     cursor: pointer;
     color: var(--btn-bg-color);
   }
@@ -15,8 +20,11 @@
 }
 
 .searchInput {
+  flex: 1;
+  min-width: 0;
   align-self: stretch;
-  padding: var(--space-xs) var(--space-s) var(--space-xs) var(--space-xs) !important;
+  min-height: var(--control-height);
+  padding: 2px var(--space-s) 2px var(--space-xs) !important;
   font-size: var(--font-size-m) !important;
   color: var(--text-color) !important;
   background-color: transparent !important;
@@ -28,35 +36,29 @@
 }
 
 .btnMagnifier svg {
-  height: 2.5rem;
+  height: 1.75rem;
 }
 
 .btnClear {
-  height: 2.75rem;
+  height: 2rem;
 
   svg {
-    height: 3rem;
-  }
-}
-
-.btnStar {
-  margin-right: var(--space-s);
-
-  svg {
-    height: 3rem;
+    height: 2rem;
   }
 }
 
 .searchRow {
   display: flex;
   align-items: center;
+  gap: var(--space-s);
 }
 
-/* three facets won't fit beside the search box on a phone, so give them a row */
+/* facets + starred toggle share one row */
 .facetRow {
   display: flex;
-  gap: var(--space-xs);
-  margin-top: var(--space-xs);
+  align-items: center;
+  gap: var(--space-s);
+  margin-top: var(--space-m);
 }
 
 /* tags are stored lowercased; capitalize for display only */
@@ -65,18 +67,97 @@
   text-transform: capitalize;
 }
 
+/* filter pills; same light blue as the active tab below them.
+   one quarter of the row each, unset ones read "<emoji> All" */
 .facetSelect {
-  flex: 1;
-  min-width: 0; /* let them shrink evenly rather than overflow */
-  padding: var(--space-xs) !important;
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  text-overflow: ellipsis;
+  min-height: var(--control-height);
+  padding: 2px var(--space-m) 2px var(--space-s) !important;
   font-size: var(--font-size-s) !important;
-  color: var(--btn-bg-color) !important;
+  font-weight: var(--font-weight-bold);
+  color: #000 !important;
   cursor: pointer;
-  background-color: transparent !important;
+  background-color: var(--btn-active-bg-color) !important;
+  background-size: 1rem !important;
+  background-position: right 0 center !important;
   border: none !important;
+  border-radius: var(--border-radius) !important;
   box-shadow: none !important;
 }
 
-.facetSelect.activeSelect {
-  color: var(--btn-active-bg-color) !important;
+/* no values for this facet under the current filters: stays in place, greyed */
+.facetSelect:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* icon-sized; the selects share whatever space is left */
+.btnReset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  background: none;
+  border: none;
+  opacity: .35;
+
+  svg {
+    height: 1.5rem;
+  }
+}
+
+.container button.resetActive {
+  color: hsl(0, 75%, 60%);
+  opacity: 1;
+}
+
+.btnStar {
+  margin-left: auto;
+  padding: 1px var(--space-s);
+  font-size: 1.125rem;
+  line-height: 1.2;
+  background: none;
+  border: none;
+}
+
+.btnStar:not(.starActive) span {
+  filter: grayscale(1);
+  opacity: .55;
+}
+
+/* tabs */
+.tabRow {
+  display: flex;
+  gap: var(--space-s);
+  margin-top: var(--space-m);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  flex: 1;
+  padding: 6px 0;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-6) !important;
+  background-color: hsl(var(--hue-blue), 30%, 12%);
+  border: none;
+  border-radius: var(--border-radius);
+}
+
+.tabActive {
+  color: #000 !important;
+  background-color: var(--btn-active-bg-color);
+}
+
+.tabCount {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  opacity: .8;
 }

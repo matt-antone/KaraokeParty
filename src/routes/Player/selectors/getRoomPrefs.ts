@@ -5,7 +5,7 @@ import type { IRoomPrefs } from 'shared/types'
 const DEFAULT_ROOM_PREFS: IRoomPrefs = {
   qr: {
     isEnabled: false,
-    opacity: 0.625,
+    opacity: 1,
     password: '',
     size: 0.5,
   },

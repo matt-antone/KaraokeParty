@@ -106,7 +106,7 @@ const SongItem = ({
         </div>
       </ToggleAnimation>
 
-      <Buttons btnWidth={56} isExpanded={isExpanded}>
+      <Buttons btnWidth={44} isExpanded={isExpanded}>
         <ButtonStar
           className={styles.btn}
           onClick={handleStarClick}

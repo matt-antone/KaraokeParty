@@ -3,7 +3,6 @@ import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { fetchRooms } from 'store/modules/rooms'
 import { createAccount, login } from 'store/modules/user'
-import Logo from 'components/Logo/Logo'
 import SelectRoom from './SelectRoom/SelectRoom'
 import InputRadio from 'components/InputRadio/InputRadio'
 import Create from './Create/Create'
@@ -127,8 +126,6 @@ const SignedOutView = () => {
 
   return (
     <div className={styles.container} style={{ maxWidth: Math.max(340, ui.contentWidth * 0.66) }}>
-      <Logo className={styles.logo} />
-
       {showRoomSection && (
         <>
           <h1>Join room...</h1>
