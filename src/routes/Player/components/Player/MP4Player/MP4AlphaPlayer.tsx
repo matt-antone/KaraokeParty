@@ -87,6 +87,12 @@ class MP4AlphaPlayer extends React.Component<MP4AlphaPlayerProps> {
     this.stopChroma()
 
     this.chroma.unload()
+
+    // gl-chromakey polls checkReady() with setTimeout until the media is ready,
+    // and unload() neither cancels it nor clears the flag it bails out on, so a
+    // pending tick would rebuild shaders against the GL objects just deleted
+    ;(this.chroma as unknown as { _initialized: boolean })._initialized = false
+
     this.video.removeAttribute('src')
     this.video.load() // reset to ensure playback stops
   }
