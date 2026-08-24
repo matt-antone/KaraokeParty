@@ -36,7 +36,7 @@ class Queue {
   /**
    * Get queued items for a given room
    */
-  static get (roomId: number): { result: number[], entities: Record<number, QueueItem> } {
+  static get (roomId: number): { result: number[], entities: Record<number, QueueItem>, pausedUserIds: number[] } {
     const result: number[] = []
     const entities: Record<number, any> = {}
     const map = new Map()
@@ -106,7 +106,35 @@ class Queue {
       curQueueId = nextQueueId
     }
 
-    return { result, entities }
+    return { result, entities, pausedUserIds: this.getPausedUserIds(roomId) }
+  }
+
+  /**
+   * Get userIds whose songs are paused (sitting out) in a given room
+   */
+  static getPausedUserIds (roomId: number): number[] {
+    const query = sql`
+      SELECT userId
+      FROM queuePauses
+      WHERE roomId = ${roomId}
+    `
+    return db.all<{ userId: number }>(String(query), query.parameters).map(row => row.userId)
+  }
+
+  /**
+   * Pause (remove from rotation) or resume a user's songs in a room
+   */
+  static setPaused ({ isPaused, roomId, userId }: { isPaused: boolean, roomId: number, userId: number }): void {
+    const query = isPaused
+      ? sql`
+        INSERT OR IGNORE INTO queuePauses (roomId, userId)
+        VALUES (${roomId}, ${userId})
+      `
+      : sql`
+        DELETE FROM queuePauses
+        WHERE roomId = ${roomId} AND userId = ${userId}
+      `
+    db.run(String(query), query.parameters)
   }
 
   /**

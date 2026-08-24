@@ -6,6 +6,7 @@ import { useAppDispatch } from 'store/hooks'
 import Button from 'components/Button/Button'
 import ButtonStar from 'components/ButtonStar/ButtonStar'
 import Buttons from 'components/Buttons/Buttons'
+import Icon from 'components/Icon/Icon'
 import UserImage from 'components/UserImage/UserImage'
 import { requestPlayNext, requestReplay } from 'store/modules/status'
 import { showSongInfo } from 'store/modules/songInfo'
@@ -24,6 +25,7 @@ interface QueueItemProps {
   isInfoable: boolean
   isMovable: boolean
   isOwner: boolean
+  isPaused: boolean
   isPlayed: boolean
   isPlaying: boolean
   isRemovable: boolean
@@ -53,6 +55,7 @@ const QueueItem = ({
   isInfoable,
   isMovable,
   isOwner,
+  isPaused,
   isPlayed,
   isPlaying,
   isRemovable,
@@ -136,18 +139,18 @@ const QueueItem = ({
       style={{ '--progress': (isCurrent && pctPlayed < 2 ? 2 : pctPlayed) + '%' } as React.CSSProperties}
     >
       <div className={styles.content}>
-        <div className={clsx(styles.imageContainer, isPlayed && styles.greyed)}>
+        <div className={clsx(styles.imageContainer, (isPlayed || isPaused) && styles.greyed)}>
           <UserImage userId={userId} dateUpdated={userDateUpdated} />
           <div className={styles.waitContainer}>
             {isUpcoming && (
               <div className={clsx(styles.wait, isOwner && styles.isOwner)}>
-                {wait}
+                {isPaused ? <Icon icon='PAUSE' size={16} /> : wait}
               </div>
             )}
           </div>
         </div>
 
-        <div className={clsx(styles.primary, isPlayed && styles.greyed)} translate='no'>
+        <div className={clsx(styles.primary, (isPlayed || isPaused) && styles.greyed)} translate='no'>
           <div className={styles.innerPrimary}>
             <div className={styles.title}>{title}</div>
             <div className={styles.artist}>{artist}</div>

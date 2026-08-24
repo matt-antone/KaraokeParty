@@ -2,22 +2,24 @@ import React from 'react'
 import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { setQueueTab, QueueTab } from 'store/modules/ui'
+import { ensureState } from 'redux-optimistic-ui'
+import Button from 'components/Button/Button'
+import { setPaused } from '../../modules/queue'
+import getMyUpcoming from '../../selectors/getMyUpcoming'
 import getQueueSections from '../../selectors/getQueueSections'
-import getRoundRobinQueue from '../../selectors/getRoundRobinQueue'
 import styles from './QueueHeader.css'
 
 const QueueHeader = () => {
   const dispatch = useAppDispatch()
   const tab = useAppSelector(state => state.ui.queueTab)
   const userId = useAppSelector(state => state.user.userId)
-  const queue = useAppSelector(getRoundRobinQueue)
   const { played, upcoming } = useAppSelector(getQueueSections)
-
-  const mineCount = upcoming.filter(qId => queue.entities[qId].userId === userId).length
+  const mine = useAppSelector(getMyUpcoming)
+  const isPaused = useAppSelector(state => ensureState(state.queue).pausedUserIds.includes(userId))
 
   const tabs: Array<{ id: QueueTab, label: string, count: number }> = [
     { id: 'queue', label: 'Queue', count: upcoming.length },
-    { id: 'me', label: 'Me', count: mineCount },
+    { id: 'me', label: 'Me', count: mine.length },
     { id: 'history', label: 'History', count: played.length },
   ]
 
@@ -38,6 +40,15 @@ const QueueHeader = () => {
           </button>
         ))}
       </div>
+      {(isPaused || mine.length > 0) && (
+        <Button
+          className={clsx(styles.pauseBtn, isPaused && styles.pauseBtnActive)}
+          icon={isPaused ? 'PLAY' : 'PAUSE'}
+          onClick={() => dispatch(setPaused({ isPaused: !isPaused }))}
+        >
+          {isPaused ? 'Resume my songs' : 'Pause my songs'}
+        </Button>
+      )}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import QueueItem from '../QueueItem/QueueItem'
 import QueueListAnimator from '../QueueListAnimator/QueueListAnimator'
 import { formatSeconds } from 'lib/dateTime'
 import { moveItem, removeUpcomingItems } from '../../modules/queue'
+import getMyUpcoming from '../../selectors/getMyUpcoming'
 import getPlayerHistory from '../../selectors/getPlayerHistory'
 import getQueueSections from '../../selectors/getQueueSections'
 import getRoundRobinQueue from '../../selectors/getRoundRobinQueue'
@@ -17,6 +18,8 @@ const QueueList = () => {
   const playerHistory = useAppSelector(getPlayerHistory)
   const queue = useAppSelector(getRoundRobinQueue)
   const sections = useAppSelector(getQueueSections)
+  const myUpcoming = useAppSelector(getMyUpcoming)
+  const pausedUserIds = useAppSelector(state => ensureState(state.queue).pausedUserIds)
   const songs = useAppSelector(state => state.songs)
   const starredSongs = useAppSelector(state => ensureState(state.userStars).starredSongs)
   const starCounts = useAppSelector(state => state.starCounts)
@@ -49,7 +52,7 @@ const QueueList = () => {
   const result = queueTab === 'history'
     ? [...sections.played].reverse()
     : queueTab === 'me'
-      ? sections.upcoming.filter(qId => queue.entities[qId].userId === user.userId)
+      ? myUpcoming
       : sections.upcoming
 
   const items = result.map((qId) => {
@@ -58,6 +61,7 @@ const QueueList = () => {
     const isCurrent = (qId === queueId) && !isAtQueueEnd
     const isUpcoming = qId !== queueId && !playerHistory.includes(qId)
     const isOwner = item.userId === user.userId
+    const isPaused = isUpcoming && pausedUserIds.includes(item.userId)
 
     return (
       <QueueItem
@@ -68,8 +72,9 @@ const QueueList = () => {
         key={qId}
         isErrored={isCurrent && isErrored}
         isInfoable={user.isAdmin}
-        isMovable={isUpcoming && (isOwner || user.isAdmin)}
+        isMovable={isUpcoming && !isPaused && (isOwner || user.isAdmin)}
         isOwner={isOwner}
+        isPaused={isPaused}
         isPlayed={!isUpcoming && !isCurrent}
         isPlaying={isCurrent && isPlaying}
         isRemovable={isUpcoming && (isOwner || user.isAdmin)}
@@ -80,7 +85,7 @@ const QueueList = () => {
         pctPlayed={isCurrent ? position / duration * 100 : 0}
         starCount={starCounts.songs[item.songId] || 0}
         title={songs.entities[item.songId].title}
-        wait={formatSeconds(waits[qId], true)} // fuzzy
+        wait={isPaused ? '' : formatSeconds(waits[qId], true)} // fuzzy
         // actions
         onMoveClick={handleMoveClick}
         onRemoveUpcoming={handleRemoveUpcoming}
