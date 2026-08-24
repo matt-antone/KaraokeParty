@@ -40,11 +40,14 @@
 
 /* pause/resume: takes the singer out of (and back into) the rotation */
 .pauseBtn {
+  display: inline-flex;
+  align-items: center;
   margin-top: var(--space-s);
   align-self: flex-start;
   gap: var(--space-xs);
-  padding: 6px var(--space-s);
-  font-size: var(--font-size-s);
+  min-height: 44px; /* touch target, same as the tabs */
+  padding: 6px var(--space-m);
+  font-size: var(--font-size-m);
   color: var(--color-gray-7);
   background-color: hsl(var(--hue-blue), 30%, 12%);
   border-radius: var(--border-radius);
