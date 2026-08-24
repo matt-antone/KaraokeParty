@@ -4,6 +4,7 @@ import storage from 'redux-persist/lib/storage'
 import socket from 'lib/socket'
 import AppRouter from 'lib/AppRouter'
 import { RootState } from 'store/store'
+import { SongHistoryItem } from 'shared/types'
 import HttpApi from 'lib/HttpApi'
 import Persistor from 'store/Persistor'
 import { fetchPrefs } from './prefs'
@@ -166,6 +167,7 @@ interface UserState {
   isGuest: boolean
   dateCreated: number
   dateUpdated: number
+  history: SongHistoryItem[]
 }
 
 const initialState: UserState = {
@@ -177,6 +179,7 @@ const initialState: UserState = {
   isGuest: false,
   dateCreated: 0,
   dateUpdated: 0,
+  history: [],
 }
 
 const userReducer = createReducer(initialState, (builder) => {

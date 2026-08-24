@@ -1,0 +1,51 @@
+.empty {
+  color: var(--color-gray-6);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* ponytail: plain list; virtualize like the library if histories get huge */
+  max-height: 40vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding: var(--space-xs) 0;
+}
+
+.item + .item {
+  border-top: 1px solid hsl(var(--hue-blue), 20%, 16%);
+}
+
+.primary {
+  flex: 1;
+  overflow: hidden;
+}
+
+.title {
+  color: var(--color-gray-9);
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist {
+  color: var(--color-gray-7);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date {
+  color: var(--color-gray-5);
+  font-size: 12px;
+  white-space: nowrap;
+}

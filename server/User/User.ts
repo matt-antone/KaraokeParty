@@ -3,7 +3,7 @@ import sql from 'sqlate'
 import crypto from '../lib/crypto.js'
 import Queue from '../Queue/Queue.js'
 import { randomChars } from '../lib/util.js'
-import { User as UserType } from '../../shared/types.js'
+import { SongHistoryItem, User as UserType } from '../../shared/types.js'
 
 export type ServerUser = UserType & {
   role: string
@@ -181,6 +181,39 @@ class User {
   }
 
   /**
+   * Record that a user sang a song all the way through. Keyed on the queue item so
+   * the singer is whoever queued it, not whoever's signed in on the player.
+   */
+  static addPlay ({ queueId, roomId }: { queueId: number, roomId: number }): number {
+    const query = sql`
+      INSERT INTO songHistory (userId, artistNorm, titleNorm, dateSung)
+      SELECT queue.userId, artists.nameNorm, songs.titleNorm, ${Math.floor(Date.now() / 1000)}
+      FROM queue
+      INNER JOIN songs USING(songId)
+      INNER JOIN artists USING(artistId)
+      WHERE queue.queueId = ${queueId} AND queue.roomId = ${roomId}
+      ON CONFLICT (userId, artistNorm, titleNorm) DO UPDATE SET dateSung = excluded.dateSung
+    `
+    return db.run(String(query), query.parameters).changes
+  }
+
+  /**
+   * Get a user's sung songs, most recent first. Like stars, rows whose song isn't
+   * currently in the library just don't resolve.
+   */
+  static getHistory (userId: number): SongHistoryItem[] {
+    const query = sql`
+      SELECT songs.songId, songs.title, artists.name AS artist, songHistory.dateSung
+      FROM songHistory
+      INNER JOIN artists ON artists.nameNorm = songHistory.artistNorm
+      INNER JOIN songs ON songs.artistId = artists.artistId AND songs.titleNorm = songHistory.titleNorm
+      WHERE songHistory.userId = ${userId}
+      ORDER BY songHistory.dateSung DESC
+    `
+    return db.all<SongHistoryItem>(String(query), query.parameters)
+  }
+
+  /**
    * Remove a user
    */
   static remove (userId: number): void {
@@ -199,6 +232,13 @@ class User {
     for (const row of queueRows) {
       Queue.remove(row.queueId)
     }
+
+    // remove user's song history
+    const historyQuery = sql`
+      DELETE FROM songHistory
+      WHERE userId = ${userId}
+    `
+    db.run(String(historyQuery), historyQuery.parameters)
 
     // remove user's song stars
     const songStarsQuery = sql`
