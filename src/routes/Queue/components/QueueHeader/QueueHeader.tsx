@@ -40,7 +40,7 @@ const QueueHeader = () => {
           </button>
         ))}
       </div>
-      {(isPaused || mine.length > 0) && (
+      {tab === 'me' && (isPaused || mine.length > 0) && (
         <Button
           className={clsx(styles.pauseBtn, isPaused && styles.pauseBtnActive)}
           icon={isPaused ? 'PLAY' : 'PAUSE'}
