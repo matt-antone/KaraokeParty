@@ -56,9 +56,9 @@
   position: absolute;
   top: 2vh;
   right: 2vh;
-  max-width: 40vw;
+  max-width: 50vw;
   padding: var(--space-xs) var(--space-m);
-  font-size: 3.5vh;
+  font-size: 1rem;
   color: var(--color-gray-9);
   text-shadow: 1px 1px 5px #000;
   text-overflow: ellipsis;

@@ -246,12 +246,16 @@ class Library {
       starredArtists = rows.map(row => row.artistId)
     }
 
-    // get starred songs
+    // get starred songs. stars are keyed on the normalized artist/title, so ones
+    // whose song isn't currently in the library just don't resolve; they're still
+    // there if the song comes back under a different songId
     {
       const query = sql`
-        SELECT songId
+        SELECT songs.songId
         FROM songStars
-        WHERE userId = ${userId}
+        INNER JOIN artists ON artists.nameNorm = songStars.artistNorm
+        INNER JOIN songs ON songs.artistId = artists.artistId AND songs.titleNorm = songStars.titleNorm
+        WHERE songStars.userId = ${userId}
       `
       const rows = db.all<{ songId: number }>(String(query), query.parameters)
 
@@ -265,13 +269,12 @@ class Library {
   * Add a user's star to a song
   */
   static starSong (songId: number, userId: number): number {
-    const fields = new Map()
-    fields.set('songId', songId)
-    fields.set('userId', userId)
-
     const query = sql`
-      INSERT OR IGNORE INTO songStars ${sql.tuple(Array.from(fields.keys()).map(sql.column))}
-      VALUES ${sql.tuple(Array.from(fields.values()))}
+      INSERT OR IGNORE INTO songStars ("userId", "artistNorm", "titleNorm")
+      SELECT ${userId}, artists.nameNorm, songs.titleNorm
+      FROM songs
+      INNER JOIN artists USING(artistId)
+      WHERE songs.songId = ${songId}
     `
     const res = db.run(String(query), query.parameters)
 
@@ -289,7 +292,14 @@ class Library {
   static unstarSong (songId: number, userId: number): number {
     const query = sql`
       DELETE FROM songStars
-      WHERE userId = ${userId} AND songId = ${songId}
+      WHERE userId = ${userId} AND EXISTS (
+        SELECT 1
+        FROM songs
+        INNER JOIN artists USING(artistId)
+        WHERE songs.songId = ${songId}
+          AND artists.nameNorm = songStars.artistNorm
+          AND songs.titleNorm = songStars.titleNorm
+      )
     `
     const res = db.run(String(query), query.parameters)
 
@@ -330,9 +340,11 @@ class Library {
     // get song star counts
     {
       const query = sql`
-        SELECT songId, COUNT(userId) AS count
+        SELECT songs.songId, COUNT(songStars.userId) AS count
         FROM songStars
-        GROUP BY songId
+        INNER JOIN artists ON artists.nameNorm = songStars.artistNorm
+        INNER JOIN songs ON songs.artistId = artists.artistId AND songs.titleNorm = songStars.titleNorm
+        GROUP BY songs.songId
       `
       const rows = db.all<{ songId: number, count: number }>(String(query), query.parameters)
 

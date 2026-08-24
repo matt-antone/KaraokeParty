@@ -1,63 +1,77 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import fs from 'fs'
-import os from 'os'
-import path from 'path'
-import { open, close } from '../lib/Database.js'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import Database, { db, open, close } from '../lib/Database.js'
 import Library from './Library.js'
 
-// covers the filename-taxonomy round trip: parser output -> songs.tags -> client payload
-describe('Library tags', () => {
-  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ke-test-')), 'test.sqlite3')
-  let db
+const USER_ID = 1
 
-  beforeAll(() => {
-    db = open({ file, ro: false })
-    db.run('INSERT INTO paths (pathId, path, priority) VALUES (1, \'/media\', 1)')
+const addSong = (title = 'Here Comes The Rain Again', titleNorm = 'here comes the rain again') => {
+  db.run('INSERT INTO songs (artistId, title, titleNorm) VALUES (1, ?, ?)', [title, titleNorm])
+  return db.get<{ songId: number }>('SELECT MAX(songId) AS songId FROM songs').songId
+}
+
+describe('song stars survive songId churn', () => {
+  beforeEach(() => {
+    if (Database.db) close()
+    open({ file: ':memory:', ro: false })
+
+    db.run(`INSERT INTO users (userId, username, password, name, roleId)
+      VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`,
+    [USER_ID, 'dot', 'x', 'Dot Matrix'])
+    db.run('INSERT INTO artists (artistId, name, nameNorm) VALUES (1, ?, ?)', ['Eurythmics', 'eurythmics'])
+
+    Library.starCountsCache = { version: null }
   })
 
-  afterAll(() => {
-    close()
-    fs.rmSync(path.dirname(file), { recursive: true, force: true })
+  afterEach(close)
+
+  it('resolves a star to the song it was set on', () => {
+    const songId = addSong()
+    Library.starSong(songId, USER_ID)
+
+    expect(Library.getUserStars(USER_ID).starredSongs).toEqual([songId])
+    expect(Library.getStarCounts().songs).toEqual({ [songId]: 1 })
   })
 
-  const parsed = (tags?: string[]) => ({
-    artist: 'Cher',
-    artistNorm: 'Cher',
-    title: 'Believe',
-    titleNorm: 'Believe',
-    tags,
+  it('follows the song when a rescan re-mints its songId', () => {
+    const songId = addSong()
+    Library.starSong(songId, USER_ID)
+
+    // what a rename + rescan does: the old row loses its media and is cleaned up,
+    // the same artist/title comes back under a new songId
+    db.run('DELETE FROM songs WHERE songId = ?', [songId])
+    const newSongId = addSong()
+    expect(newSongId).not.toBe(songId)
+
+    Library.starCountsCache = { version: null }
+    expect(Library.getUserStars(USER_ID).starredSongs).toEqual([newSongId])
+    expect(Library.getStarCounts().songs).toEqual({ [newSongId]: 1 })
   })
 
-  const tagsOf = (songId: number) =>
-    db.get('SELECT tags FROM songs WHERE songId = ?', [songId]).tags
+  it('keeps the star while the song is missing entirely', () => {
+    const songId = addSong()
+    Library.starSong(songId, USER_ID)
 
-  it('stores tags on a new song', () => {
-    const { songId } = Library.matchSong(parsed(['pop', '90s']))
+    db.run('DELETE FROM songs WHERE songId = ?', [songId])
+    expect(Library.getUserStars(USER_ID).starredSongs).toEqual([])
 
-    expect(tagsOf(songId)).toBe('["pop","90s"]')
+    expect(addSong()).toBeGreaterThan(songId)
+    expect(Library.getUserStars(USER_ID).starredSongs).toHaveLength(1)
   })
 
-  it('updates tags when a matched song is rescanned after a rename', () => {
-    const { songId } = Library.matchSong(parsed(['rock', '80s']))
+  it('unstars by songId', () => {
+    const songId = addSong()
+    Library.starSong(songId, USER_ID)
 
-    expect(tagsOf(songId)).toBe('["rock","80s"]')
+    expect(Library.unstarSong(songId, USER_ID)).toBe(1)
+    expect(Library.getUserStars(USER_ID).starredSongs).toEqual([])
   })
 
-  it('defaults to an empty array when the filename has no taxonomy', () => {
-    const { songId } = Library.matchSong(parsed())
+  it('doesn\'t unstar a different song by the same artist', () => {
+    const rain = addSong()
+    const sweet = addSong('Sweet Dreams', 'sweet dreams')
+    Library.starSong(rain, USER_ID)
 
-    expect(tagsOf(songId)).toBe('[]')
-  })
-
-  it('sends tags to clients as a parsed array', () => {
-    const { songId } = Library.matchSong(parsed(['jazz']))
-
-    db.run(
-      'INSERT INTO media (songId, pathId, relPath, duration) VALUES (?, 1, \'cher.mp4\', 180)',
-      [songId],
-    )
-    Library.cache.version = null
-
-    expect(Library.get().songs.entities[songId].tags).toEqual(['jazz'])
+    expect(Library.unstarSong(sweet, USER_ID)).toBe(0)
+    expect(Library.getUserStars(USER_ID).starredSongs).toEqual([rain])
   })
 })

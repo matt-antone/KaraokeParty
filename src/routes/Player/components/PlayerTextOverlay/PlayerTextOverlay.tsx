@@ -120,7 +120,7 @@ const PlayerTextOverlay = ({
   } else {
     Component = (
       <>
-        <UpNow queueItem={queueItem} />
+        <UpNow key={queueItem.queueId} queueItem={queueItem} />
         {isSongEnding && nextQueueItem && (
           <div className={styles.upNext} translate='no'>
             {`Up Next: ${nextQueueItem.userDisplayName}`}
