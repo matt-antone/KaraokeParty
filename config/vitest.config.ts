@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, configDefaults } from 'vitest/config'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -13,6 +13,9 @@ export default defineConfig({
     ),
   },
   test: {
+    // build/ holds compiled copies of the server tests; running them twice just
+    // reports the setup file's logger init against the wrong module instance
+    exclude: [...configDefaults.exclude, 'build/**'],
     setupFiles: [path.resolve(__dirname, '../server/lib/test-setup.ts')],
   },
 })

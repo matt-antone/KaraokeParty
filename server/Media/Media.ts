@@ -126,13 +126,9 @@ class Media {
     `)
     log.info(`cleanup: ${res.changes} songs with no associated media`)
 
-    // remove stars for nonexistent songs
-    res = db.run(`
-      DELETE FROM songStars WHERE songId IN (
-        SELECT songStars.songId FROM songStars LEFT JOIN songs USING(songId) WHERE songs.songId IS NULL
-      )
-    `)
-    log.info(`cleanup: ${res.changes} stars for nonexistent songs`)
+    // stars are keyed on the normalized artist/title (not songId), so they're
+    // deliberately left alone here: a song that's renamed, rescanned or briefly
+    // offline gets its stars back when it reappears
 
     // remove queue items for nonexistent songs
     const rows = db.all<{ queueId: number }>(`
