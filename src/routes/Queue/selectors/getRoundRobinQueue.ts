@@ -8,10 +8,11 @@ const getResult = (state: RootState) => ensureState(state.queue).result
 const getEntities = (state: RootState) => ensureState(state.queue).entities
 const getQueueId = (state: RootState) => state.status.queueId
 const getNextUserId = (state: RootState) => state.status.nextUserId
+const getPausedUserIds = (state: RootState) => ensureState(state.queue).pausedUserIds
 
 const getRoundRobinQueue = createSelector(
-  [getResult, getEntities, getPlayerHistory, getQueueId, getNextUserId],
-  (result, entities, history, curId, nextUserId) => {
+  [getResult, getEntities, getPlayerHistory, getQueueId, getNextUserId, getPausedUserIds],
+  (result, entities, history, curId, nextUserId, pausedUserIds) => {
     // in case history references non-existent items or queue is still loading
     history = history.filter(queueId => result.includes(queueId))
 
@@ -21,7 +22,7 @@ const getRoundRobinQueue = createSelector(
     }
 
     // "lock in" next user's item (don't re-order it)
-    if (nextUserId !== null) {
+    if (nextUserId !== null && !pausedUserIds.includes(nextUserId)) {
       for (const queueId of result) {
         if (!history.includes(queueId) && entities[queueId].isOptimistic !== true && entities[queueId].userId === nextUserId) {
           history.push(queueId)
@@ -37,6 +38,7 @@ const getRoundRobinQueue = createSelector(
     result.forEach((queueId) => {
       if (history.includes(queueId) // only concerned with upcoming songs
         || entities[queueId].isOptimistic === true // ignore optimistic items
+        || pausedUserIds.includes(entities[queueId].userId) // singer is sitting out
       ) return
 
       const userId = entities[queueId].userId

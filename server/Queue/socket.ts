@@ -1,6 +1,6 @@
 import Queue from './Queue.js'
 import Rooms from '../Rooms/Rooms.js'
-import { QUEUE_ADD, QUEUE_MOVE, QUEUE_REMOVE, QUEUE_PUSH } from '../../shared/actionTypes.js'
+import { QUEUE_ADD, QUEUE_MOVE, QUEUE_PAUSE, QUEUE_REMOVE, QUEUE_PUSH } from '../../shared/actionTypes.js'
 
 // ------------------------------------
 // Action Handlers
@@ -60,6 +60,31 @@ const ACTION_HANDLERS = {
 
     // success
     acknowledge({ type: QUEUE_MOVE + '_SUCCESS' })
+
+    // tell room
+    sock.server.to(Rooms.prefix(sock.user.roomId)).emit('action', {
+      type: QUEUE_PUSH,
+      payload: Queue.get(sock.user.roomId),
+    })
+  },
+  [QUEUE_PAUSE]: (sock, { payload }, acknowledge) => {
+    const { isPaused, userId = sock.user.userId } = payload
+
+    if (userId !== sock.user.userId && !sock.user.isAdmin) {
+      return acknowledge({
+        type: QUEUE_PAUSE + '_ERROR',
+        error: 'Cannot pause another user\'s songs',
+      })
+    }
+
+    Queue.setPaused({
+      isPaused: !!isPaused,
+      roomId: sock.user.roomId,
+      userId,
+    })
+
+    // success
+    acknowledge({ type: QUEUE_PAUSE + '_SUCCESS' })
 
     // tell room
     sock.server.to(Rooms.prefix(sock.user.roomId)).emit('action', {

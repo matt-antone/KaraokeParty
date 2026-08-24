@@ -4,6 +4,7 @@ import getUpcoming from '../selectors/getUpcoming'
 import {
   QUEUE_ADD,
   QUEUE_MOVE,
+  QUEUE_PAUSE,
   QUEUE_PUSH,
   QUEUE_REMOVE,
   LOGOUT,
@@ -16,6 +17,7 @@ import type { QueueItem, OptimisticQueueItem } from 'shared/types'
 const logout = createAction(LOGOUT)
 export const moveItem = createAction<{ queueId: number, prevQueueId: number }>(QUEUE_MOVE)
 export const removeItem = createAction<{ queueId: number | number[] }>(QUEUE_REMOVE)
+export const setPaused = createAction<{ isPaused: boolean, userId?: number }>(QUEUE_PAUSE)
 export const queuePush = createAction<QueueState>(QUEUE_PUSH)
 
 export const queueSong = createAction(QUEUE_ADD, (songId: number) => ({
@@ -35,12 +37,14 @@ interface QueueState {
   isLoading: boolean
   result: number[] // queueIds
   entities: Record<number, QueueItem | OptimisticQueueItem>
+  pausedUserIds: number[] // users sitting out; their upcoming songs leave the rotation
 }
 
 const initialState: QueueState = {
   isLoading: true,
   result: [],
   entities: {},
+  pausedUserIds: [],
 }
 
 const queueReducer = createReducer(initialState, (builder) => {
@@ -61,10 +65,12 @@ const queueReducer = createReducer(initialState, (builder) => {
       isLoading: false,
       result: payload.result,
       entities: payload.entities,
+      pausedUserIds: payload.pausedUserIds,
     }))
     .addCase(logout, (state) => {
       state.result = []
       state.entities = {}
+      state.pausedUserIds = []
     })
 })
 

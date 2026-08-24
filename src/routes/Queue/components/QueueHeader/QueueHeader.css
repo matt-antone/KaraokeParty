@@ -37,3 +37,20 @@
   font-weight: var(--font-weight-normal);
   opacity: .8;
 }
+
+/* pause/resume: takes the singer out of (and back into) the rotation */
+.pauseBtn {
+  margin-top: var(--space-s);
+  align-self: flex-start;
+  gap: var(--space-xs);
+  padding: 6px var(--space-s);
+  font-size: var(--font-size-s);
+  color: var(--color-gray-7);
+  background-color: hsl(var(--hue-blue), 30%, 12%);
+  border-radius: var(--border-radius);
+}
+
+.pauseBtnActive {
+  color: #000;
+  background-color: var(--btn-active-bg-color);
+}

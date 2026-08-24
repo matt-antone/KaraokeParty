@@ -8,12 +8,13 @@ const ENTITIES = {
   4: { queueId: 4, songId: 13, userId: 1, prevQueueId: 3 },
 }
 
-const state = ({ history, queueId, isAtQueueEnd = false }: {
+const state = ({ history, queueId, isAtQueueEnd = false, pausedUserIds = [] }: {
   history: number[]
   queueId: number
   isAtQueueEnd?: boolean
+  pausedUserIds?: number[]
 }) => ({
-  queue: { isLoading: false, result: [1, 2, 3, 4], entities: ENTITIES },
+  queue: { isLoading: false, result: [1, 2, 3, 4], entities: ENTITIES, pausedUserIds },
   status: {
     historyJSON: JSON.stringify(history),
     queueId,
