@@ -35,6 +35,13 @@ export interface OptimisticQueueItem {
   songId: number
 }
 
+export interface SongHistoryItem {
+  songId: number
+  artist: string
+  title: string
+  dateSung: number
+}
+
 export interface IRoomPrefs {
   qr: {
     isEnabled: boolean

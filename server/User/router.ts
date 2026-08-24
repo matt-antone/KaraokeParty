@@ -124,7 +124,10 @@ router.get('/user', (ctx) => {
     ctx.throw(404)
   }
 
-  ctx.body = createUserCtx(user, ctx.user.roomId)
+  ctx.body = {
+    ...createUserCtx(user, ctx.user.roomId),
+    history: User.getHistory(ctx.user.userId),
+  }
 })
 
 // list all users (admin only)

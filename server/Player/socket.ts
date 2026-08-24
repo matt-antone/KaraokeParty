@@ -1,4 +1,5 @@
 import Rooms from '../Rooms/Rooms.js'
+import User from '../User/User.js'
 
 import {
   PLAYER_CMD_NEXT,
@@ -17,6 +18,7 @@ import {
   PLAYER_EMIT_LEAVE,
   PLAYER_STATUS,
   PLAYER_LEAVE,
+  SONG_PLAYED,
 } from '../../shared/actionTypes.js'
 
 // ------------------------------------
@@ -71,6 +73,10 @@ const ACTION_HANDLERS = {
       type: PLAYER_STATUS,
       payload,
     })
+  },
+  // the media reached its end on its own (skips don't count)
+  [SONG_PLAYED]: (sock, { payload }) => {
+    User.addPlay({ queueId: payload.queueId, roomId: sock.user.roomId })
   },
   [PLAYER_EMIT_LEAVE]: (sock) => {
     sock._lastPlayerStatus = null

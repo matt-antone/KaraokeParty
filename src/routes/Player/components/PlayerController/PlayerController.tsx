@@ -7,6 +7,7 @@ import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
 import { playerLeave, playerError, playerLoad, playerPlay, playerStatus, type PlayerState } from '../../modules/player'
 import getRoomPrefs from '../../selectors/getRoomPrefs'
 import getSkipEndsAt, { INTERMISSION_MS } from './getSkipEndsAt'
+import { SONG_PLAYED } from 'shared/actionTypes'
 import type { QueueItem } from 'shared/types'
 
 interface PlayerControllerProps {
@@ -134,6 +135,9 @@ const PlayerController = (props: PlayerControllerProps) => {
   const handleMediaEnd = useCallback(() => {
     clearIntermission()
 
+    // only songs that reached their end count toward the singer's history
+    dispatch({ type: SONG_PLAYED, payload: { queueId: player.queueId } })
+
     // nothing to wait for at the end of the queue
     if (!nextQueueItem) {
       handleLoadNext()
@@ -147,7 +151,7 @@ const PlayerController = (props: PlayerControllerProps) => {
     })
 
     intermissionTimer.current = setTimeout(() => loadNextRef.current(), INTERMISSION_MS)
-  }, [clearIntermission, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
+  }, [clearIntermission, dispatch, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
 
   // "lock in" the next user that isn't the currently up user, if possible
   useEffect(() => {

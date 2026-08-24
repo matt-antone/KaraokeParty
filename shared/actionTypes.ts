@@ -76,6 +76,9 @@ export const STAR_SONG = 'server/STAR_SONG'
 export const UNSTAR_SONG = 'server/UNSTAR_SONG'
 export const STARS_PUSH = 'user/STARS_PUSH'
 
+// Song history
+export const SONG_PLAYED = 'server/SONG_PLAYED'
+
 // Preferences
 export const PREFS_RECEIVE = 'prefs/RECEIVE'
 export const PREFS_REQUEST = 'prefs/REQUEST'
