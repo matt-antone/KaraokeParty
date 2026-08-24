@@ -192,3 +192,11 @@
     background-position: var(--queue-item-tile-size) 0;
   }
 }
+.dragHandle {
+  display: flex;
+  align-items: center;
+  cursor: grab;
+  color: var(--color-gray-5);
+  margin-right: var(--space-xs);
+  touch-action: none;
+}

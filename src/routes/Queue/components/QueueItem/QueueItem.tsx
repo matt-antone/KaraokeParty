@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import clsx from 'clsx'
+import type { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd'
 import { useSwipeable } from 'react-swipeable'
 import { useLongPress } from 'use-long-press'
 import { useAppDispatch } from 'store/hooks'
@@ -19,6 +20,7 @@ const LONG_PRESS_THRESHOLD_MS = 700
 
 interface QueueItemProps {
   artist: string
+  dragHandleProps?: DraggableProvidedDragHandleProps | null
   errorMessage: string
   isCurrent: boolean
   isErrored: boolean
@@ -49,6 +51,7 @@ interface QueueItemProps {
 
 const QueueItem = ({
   artist,
+  dragHandleProps,
   errorMessage,
   isCurrent,
   isErrored,
@@ -139,6 +142,11 @@ const QueueItem = ({
       style={{ '--progress': (isCurrent && pctPlayed < 2 ? 2 : pctPlayed) + '%' } as React.CSSProperties}
     >
       <div className={styles.content}>
+        {dragHandleProps && (
+          <div className={styles.dragHandle} {...dragHandleProps}>
+            <Icon icon='DRAG_INDICATOR' size={24} />
+          </div>
+        )}
         <div className={clsx(styles.imageContainer, (isPlayed || isPaused) && styles.greyed)}>
           <UserImage userId={userId} dateUpdated={userDateUpdated} />
           <div className={styles.waitContainer}>

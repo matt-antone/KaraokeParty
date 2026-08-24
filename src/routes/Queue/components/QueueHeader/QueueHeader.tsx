@@ -44,6 +44,7 @@ const QueueHeader = () => {
         <Button
           className={clsx(styles.pauseBtn, isPaused && styles.pauseBtnActive)}
           icon={isPaused ? 'PLAY' : 'PAUSE'}
+          size={22}
           onClick={() => dispatch(setPaused({ isPaused: !isPaused }))}
         >
           {isPaused ? 'Resume my songs' : 'Pause my songs'}
