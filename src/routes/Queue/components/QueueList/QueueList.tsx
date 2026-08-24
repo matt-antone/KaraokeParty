@@ -1,4 +1,5 @@
 import React from 'react'
+import { DragDropContext, Draggable, Droppable, DropResult, DraggableProvidedDragHandleProps } from '@hello-pangea/dnd'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { ensureState } from 'redux-optimistic-ui'
 import QueueItem from '../QueueItem/QueueItem'
@@ -55,7 +56,21 @@ const QueueList = () => {
       ? myUpcoming
       : sections.upcoming
 
-  const items = result.map((qId) => {
+  // reorder my own upcoming songs; the item lands after the one now above it
+  const handleDragEnd = ({ source, destination }: DropResult) => {
+    if (!destination || destination.index === source.index) return
+
+    const qId = result[source.index]
+    const rest = result.filter(id => id !== qId)
+
+    if (destination.index === 0) {
+      handleMoveClick(qId) // same as "move to top"
+    } else {
+      dispatch(moveItem({ queueId: qId, prevQueueId: rest[destination.index - 1] }))
+    }
+  }
+
+  const renderItem = (qId: number, dragHandleProps?: DraggableProvidedDragHandleProps | null) => {
     const item = queue.entities[qId]
     const duration = songs.entities[item.songId].duration
     const isCurrent = (qId === queueId) && !isAtQueueEnd
@@ -67,6 +82,7 @@ const QueueList = () => {
       <QueueItem
         {...item}
         artist={artists.entities[songs.entities[item.songId].artistId].name}
+        dragHandleProps={dragHandleProps}
         errorMessage={isCurrent && errorMessage ? errorMessage : ''}
         isCurrent={isCurrent}
         key={qId}
@@ -91,9 +107,32 @@ const QueueList = () => {
         onRemoveUpcoming={handleRemoveUpcoming}
       />
     )
-  })
+  }
 
-  return <QueueListAnimator queueItems={items} />
+  if (queueTab === 'me' && result.length > 1) {
+    return (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId='myQueue'>
+          {provided => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              {result.map((qId, i) => (
+                <Draggable draggableId={String(qId)} index={i} key={qId}>
+                  {dragProvided => (
+                    <div ref={dragProvided.innerRef} {...dragProvided.draggableProps}>
+                      {renderItem(qId, dragProvided.dragHandleProps)}
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    )
+  }
+
+  return <QueueListAnimator queueItems={result.map(qId => renderItem(qId))} />
 }
 
 export default QueueList
