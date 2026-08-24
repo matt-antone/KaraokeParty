@@ -17,6 +17,25 @@
   background-color: #000;
 }
 
+.nextSong {
+  text-align: center;
+  max-width: 80vw;
+  margin-bottom: var(--space-m);
+  color: var(--color-gray-8);
+  text-shadow: 1px 1px 5px #000;
+}
+
+.nextSongTitle {
+  font-size: 5vh;
+  line-height: 1.2;
+}
+
+.nextSongArtist {
+  font-size: 3.5vh;
+  line-height: 1.2;
+  color: var(--color-gray-6);
+}
+
 .nextUserImage {
   height: 25vh;
   margin-bottom: var(--space-m);
@@ -27,28 +46,25 @@
   color: var(--color-gray-5);
 }
 
-/* centered in the lower third of the intermission screen */
+/* one line under the countdown */
 .comingUp {
-  position: absolute;
-  top: 72%;
-  left: 0;
-  right: 0;
+  max-width: 90vw;
+  margin-top: var(--space-m);
+  font-size: 4vh;
+  line-height: 1.2;
   text-align: center;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
   color: var(--color-gray-8);
   text-shadow: 1px 1px 5px #000;
 }
 
 .comingUpHeading {
-  font-size: 3vh;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-gray-6);
-  margin-bottom: var(--space-xs);
-}
-
-.comingUpSinger {
-  font-size: 4vh;
-  line-height: 1.2;
+  margin-right: var(--space-xs);
 }
 
 /* teased in the last seconds of a song; kept out of the video's lower two-thirds */

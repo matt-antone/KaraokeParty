@@ -37,6 +37,8 @@ const render = (props = {}) => renderToStaticMarkup(
       isQueueEmpty={false}
       isErrored={false}
       intermissionEndsAt={Date.now() + 10000}
+      nextSongTitle='Spaceballs the Song'
+      nextSongArtist='Winnebago'
       width={1280}
       height={720}
       {...props}
@@ -53,6 +55,12 @@ describe('PlayerTextOverlay intermission', () => {
     const text = render().replace(/<[^>]+>/g, '') // ColorCycle wraps every character in a span
     expect(text).toContain('DOT MATRIX')
     expect(text).not.toContain('UP NEXT')
+  })
+
+  it('names the next song and artist above the singer', () => {
+    const text = render().replace(/<[^>]+>/g, '')
+    expect(text.indexOf('Spaceballs the Song')).toBeLessThan(text.indexOf('DOT MATRIX'))
+    expect(text).toContain('Winnebago')
   })
 
   it('lists the two singers after the next one under "Coming Up"', () => {

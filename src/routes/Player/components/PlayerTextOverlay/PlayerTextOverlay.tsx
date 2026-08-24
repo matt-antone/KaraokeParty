@@ -13,6 +13,8 @@ interface PlayerTextOverlayProps {
   queueItem?: QueueItem
   nextQueueItem?: QueueItem
   comingUpQueueItems?: QueueItem[]
+  nextSongTitle?: string
+  nextSongArtist?: string
   isSongEnding?: boolean
   isAtQueueEnd: boolean
   isQueueEmpty: boolean
@@ -23,9 +25,11 @@ interface PlayerTextOverlayProps {
 }
 
 // mounted when the intermission starts, so `now` is seeded correctly (keyed on endsAt by the parent)
-const Intermission = ({ endsAt, nextQueueItem, comingUpQueueItems = [] }: {
+const Intermission = ({ endsAt, nextQueueItem, nextSongTitle, nextSongArtist, comingUpQueueItems = [] }: {
   endsAt: number
   nextQueueItem?: QueueItem
+  nextSongTitle?: string
+  nextSongArtist?: string
   comingUpQueueItems?: QueueItem[]
 }) => {
   const [offset] = useState(() => Math.random() * -300)
@@ -40,6 +44,12 @@ const Intermission = ({ endsAt, nextQueueItem, comingUpQueueItems = [] }: {
 
   return (
     <>
+      {nextSongTitle && (
+        <div className={styles.nextSong} translate='no'>
+          <div className={styles.nextSongTitle}>{nextSongTitle}</div>
+          {nextSongArtist && <div className={styles.nextSongArtist}>{nextSongArtist}</div>}
+        </div>
+      )}
       {nextQueueItem && (
         <UserImage
           userId={nextQueueItem.userId}
@@ -55,10 +65,8 @@ const Intermission = ({ endsAt, nextQueueItem, comingUpQueueItems = [] }: {
       <ColorCycle text={`${secondsLeft}`} offset={offset} className={styles.backdrop} />
       {comingUpQueueItems.length > 0 && (
         <div className={styles.comingUp} translate='no'>
-          <div className={styles.comingUpHeading}>Coming Up</div>
-          {comingUpQueueItems.map(item => (
-            <div key={item.queueId} className={styles.comingUpSinger}>{item.userDisplayName}</div>
-          ))}
+          <span className={styles.comingUpHeading}>Coming Up</span>
+          {comingUpQueueItems.map(item => item.userDisplayName).join(', ')}
         </div>
       )}
     </>
@@ -72,6 +80,8 @@ const PlayerTextOverlay = ({
   intermissionEndsAt,
   nextQueueItem,
   comingUpQueueItems,
+  nextSongTitle,
+  nextSongArtist,
   isSongEnding,
   queueItem,
   width,
@@ -114,6 +124,8 @@ const PlayerTextOverlay = ({
         key={intermissionEndsAt}
         endsAt={intermissionEndsAt}
         nextQueueItem={nextQueueItem}
+        nextSongTitle={nextSongTitle}
+        nextSongArtist={nextSongArtist}
         comingUpQueueItems={comingUpQueueItems}
       />
     )
