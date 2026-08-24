@@ -13,3 +13,8 @@ node_modules/
 *.tsbuildinfo
 .hugo_build.lock
 .vscode
+
+# OMC operational state (session logs, job runs, memory). Specs are kept.
+.omc/
+!.omc/specs/
+!.omc/specs/**

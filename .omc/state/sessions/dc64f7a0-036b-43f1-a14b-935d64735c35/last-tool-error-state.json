@@ -1,7 +1,0 @@
-{
-  "tool_name": "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index",
-  "tool_input_preview": "{\"url\":\"https://cdn.mediavalet.com/aunsw/musictribe/Q9b0A6kIyE-N5oha4kFQjw/sUP8z3nDR0CcQdL55CoC2w/Original/tc-helicon_voicelive_3_quick_guide_english.pdf\",\"source\":\"voicelive3-quickguide\"}",
-  "error": "Failed to fetch https://cdn.mediavalet.com/aunsw/musictribe/Q9b0A6kIyE-N5oha4kFQjw/sUP8z3nDR0CcQdL55CoC2w/Original/tc-helicon_voicelive_3_quick_guide_english.pdf: HTTP 500",
-  "timestamp": "2026-08-12T07:46:25.598Z",
-  "retry_count": 1
-}
