@@ -117,6 +117,7 @@ export interface PlayerState {
   _isPlayingNext: boolean
   _isReplayingQueueId: number | null
   _lastReplayTime: number
+  _lastSkipTime: number
 }
 
 const initialState: PlayerState = {
@@ -143,12 +144,14 @@ const initialState: PlayerState = {
   _isPlayingNext: false,
   _isReplayingQueueId: null,
   _lastReplayTime: 0,
+  _lastSkipTime: 0,
 }
 
 const playerReducer = createReducer(initialState, (builder) => {
   builder
     .addCase(playerCmdNext, (state) => {
       state._isPlayingNext = true
+      state._lastSkipTime = Date.now()
     })
     .addCase(playerCmdOptions, (state, { payload }) => ({
       ...state,

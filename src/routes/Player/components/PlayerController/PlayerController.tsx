@@ -6,15 +6,13 @@ import PlayerQR from '../PlayerQR/PlayerQR'
 import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
 import { playerLeave, playerError, playerLoad, playerPlay, playerStatus, type PlayerState } from '../../modules/player'
 import getRoomPrefs from '../../selectors/getRoomPrefs'
+import getSkipEndsAt, { INTERMISSION_MS } from './getSkipEndsAt'
 import type { QueueItem } from 'shared/types'
 
 interface PlayerControllerProps {
   width: number
   height: number
 }
-
-// ponytail: fixed pause between songs; make it a room pref if hosts want to tune it
-const INTERMISSION_MS = 30000
 
 // how long before a song ends to tease the next singer
 const UP_NEXT_SECS = 15
@@ -30,6 +28,8 @@ const PlayerController = (props: PlayerControllerProps) => {
   const nextQueueItem = queue.entities[queue.result[nextIdx]]
   // the two singers after the next one, shown during the intermission
   const comingUpQueueItems = queue.result.slice(nextIdx + 1, nextIdx + 3).map(id => queue.entities[id])
+  const nextSong = useAppSelector(state => nextQueueItem ? state.songs.entities[nextQueueItem.songId] : undefined)
+  const nextArtist = useAppSelector(state => nextSong ? state.artists.entities[nextSong.artistId] : undefined)
 
   const dispatch = useAppDispatch()
   // set only when a song ends on its own; stays until the next one does. It's stamped with what
@@ -44,6 +44,9 @@ const PlayerController = (props: PlayerControllerProps) => {
   const isIntermission = !!intermission
     && intermission.queueId === player.queueId
     && intermission.replayTime === player._lastReplayTime
+
+  const skipEndsAt = getSkipEndsAt(player, !!nextQueueItem, isIntermission)
+  const intermissionEndsAt = skipEndsAt ?? (isIntermission ? intermission.endsAt : null)
 
   const clearIntermission = useCallback(() => {
     if (intermissionTimer.current) clearTimeout(intermissionTimer.current)
@@ -176,12 +179,24 @@ const PlayerController = (props: PlayerControllerProps) => {
     dispatch(playerLeave())
   }, [dispatch])
 
-  // playing for first time or playing next?
+  // playing for first time?
   useEffect(() => {
-    if ((player.isPlaying && player.queueId === -1) || player._isPlayingNext) {
+    if (player.isPlaying && player.queueId === -1) {
       handleLoadNext()
     }
-  }, [handleLoadNext, player.isPlaying, player.queueId, player._isPlayingNext])
+  }, [handleLoadNext, player.isPlaying, player.queueId])
+
+  useEffect(() => {
+    if (!player._isPlayingNext) return
+
+    if (!skipEndsAt) {
+      handleLoadNext()
+      return
+    }
+
+    const timerID = setTimeout(() => loadNextRef.current(), Math.max(0, skipEndsAt - Date.now()))
+    return () => clearTimeout(timerID)
+  }, [handleLoadNext, player._isPlayingNext, skipEndsAt])
 
   // replaying?
   useEffect(() => {
@@ -210,7 +225,7 @@ const PlayerController = (props: PlayerControllerProps) => {
         cdgAlpha={player.cdgAlpha}
         cdgSize={player.cdgSize}
         isPlaying={player.isPlaying}
-        isVisible={!!queueItem && !player.isErrored && !player.isAtQueueEnd}
+        isVisible={!!queueItem && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt}
         isReplayGainEnabled={prefs.isReplayGainEnabled}
         isVideoKeyingEnabled={!!queueItem?.isVideoKeyingEnabled}
         isWebGLSupported={player.isWebGLSupported}
@@ -235,10 +250,12 @@ const PlayerController = (props: PlayerControllerProps) => {
         queueItem={queueItem as QueueItem}
         nextQueueItem={nextQueueItem as QueueItem}
         comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+        nextSongTitle={nextSong?.title}
+        nextSongArtist={nextArtist?.name}
         isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
         isAtQueueEnd={player.isAtQueueEnd}
         isQueueEmpty={!queue.result.length}
-        intermissionEndsAt={isIntermission ? intermission.endsAt : null}
+        intermissionEndsAt={intermissionEndsAt}
         isErrored={player.isErrored}
         width={props.width}
         height={props.height}
