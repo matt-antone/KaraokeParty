@@ -5,6 +5,7 @@ docs/resources/
 node_modules/
 
 .DS_Store
+.fallow/
 *.log
 *.sqlite3
 *.sqlite3-shm
