@@ -27,12 +27,12 @@ const Logo = (props: LogoProps) => {
   }, [])
 
   return (
-    <div className={clsx(styles.container, props.className)} role='img' aria-label='Karaoke Eternal'>
+    <div className={clsx(styles.container, props.className)} role='img' aria-label='KaraokeParty'>
       <span className={styles.title} aria-hidden='true'>
         Karaoke
-        <span className={clsx(styles.eternal, { [styles.eternalVisible]: isFontLoaded })}>
-          Eterna
-          <span className={styles.lastChar}>l</span>
+        <span className={clsx(styles.subtitle, { [styles.subtitleVisible]: isFontLoaded })}>
+          Part
+          <span className={styles.lastChar}>y</span>
         </span>
       </span>
     </div>

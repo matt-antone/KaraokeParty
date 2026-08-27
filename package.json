@@ -1,5 +1,5 @@
 {
-  "name": "karaoke-eternal",
+  "name": "karaokeparty",
   "version": "0.0.0-dev.0",
   "description": "Open karaoke party system",
   "keywords": [
@@ -13,7 +13,7 @@
     "mp4",
     "webgl"
   ],
-  "homepage": "https://www.karaoke-eternal.com",
+  "homepage": "https://github.com/matt-antone/KaraokeParty",
   "type": "module",
   "main": "./build/server/main.js",
   "engines": {
@@ -23,6 +23,7 @@
   "scripts": {
     "docs:serve": "hugo serve --source docs -b http://localhost:1313 --bind 0.0.0.0",
     "dev": "NODE_ENV=development tsx watch server/main.ts -p 3000",
+    "dev:test": "KES_PATH_DATA=\"$PWD/.test-data\" npm run dev",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "test": "vitest run --config config/vitest.config.ts",
@@ -31,6 +32,7 @@
     "build:client": "webpack --config config/webpack.config.js",
     "build:server": "rm -rf build/server ; tsc -p config/tsconfig.server.json --noEmitOnError false ; mkdir -p build/server/lib ; cp -R server/lib/schemas build/server/lib/",
     "serve": "node build/server/main.js",
+    "serve:test": "KES_PATH_DATA=\"$PWD/.test-data\" npm run serve",
     "server": "npm run serve"
   },
   "files": [
@@ -40,13 +42,13 @@
     "build/shared/**"
   ],
   "bin": {
-    "karaoke-eternal-server": "build/server/main.js"
+    "karaokeparty-server": "build/server/main.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bhj/KaraokeEternal.git"
+    "url": "git+https://github.com/matt-antone/KaraokeParty.git"
   },
-  "productName": "Karaoke Eternal Server",
+  "productName": "KaraokeParty Server",
   "author": "RadRoot LLC",
   "license": "ISC",
   "overrides": {

@@ -1,8 +1,8 @@
-# Karaoke Eternal
+# KaraokeParty
 
 Host awesome karaoke parties where everyone can easily find and queue songs from their phone's browser. The player is also fully browser-based with support for MP3+G, MP4 videos and WebGL visualizations. The server is self-hosted and runs on nearly everything.
 
-[![Karaoke Eternal](/docs/assets/images/README.jpg?raw=true)](/docs/assets/images/README.jpg?raw=true)
+[![KaraokeParty](/docs/assets/images/README.jpg?raw=true)](/docs/assets/images/README.jpg?raw=true)
 
 <p align="center">
   <i>App in mobile browser (top) controlling player in desktop browser (bottom)</i>
@@ -21,19 +21,23 @@ Host awesome karaoke parties where everyone can easily find and queue songs from
 - Fully self-hosted
 - No ads or telemetry
 
-Microphones are *not* required since the player itself only outputs music - this allows your audio setup to be as simple or complex as you like. See the [F.A.Q.](https://www.karaoke-eternal.com/faq/#recommended-audio-microphone-setup) for more information.
+Microphones are *not* required since the player itself only outputs music - this allows your audio setup to be as simple or complex as you like. See the [F.A.Q.](docs/content/faq/recommended-audio-microphone-setup.md) for more information.
 
 ## Getting Started
 
- Karaoke Eternal basically has 3 parts. See [Getting Started](https://www.karaoke-eternal.com/docs/getting-started/) to get up and running step-by-step, or jump to the documentation for each part below:
- 
-- **[Server:](https://www.karaoke-eternal.com/docs/karaoke-eternal-server/)** Runs on pretty much anything to serve the web app and your media files, including a Windows PC, Mac, or a dedicated server like a Raspberry Pi or Synology NAS.
-- **[App:](https://www.karaoke-eternal.com/docs/karaoke-eternal-app/)** Fast, modern mobile web app designed for "karaoke conditions".
-- **[Player:](https://www.karaoke-eternal.com/docs/karaoke-eternal-app/#player)** Just another part of the app, but meant to run fullscreen on the system handling audio/video for a [room](https://www.karaoke-eternal.com/docs/karaoke-eternal-app/#rooms-admin-only)
+KaraokeParty basically has 3 parts. See [Getting Started](docs/content/docs/getting-started/index.md) to get up and running step-by-step, or jump to the documentation for each part below:
+
+- **[Server:](docs/content/docs/karaokeparty-server/index.md)** Runs on pretty much anything to serve the web app and your media files, including a Windows PC, Mac, or a dedicated server like a Raspberry Pi or Synology NAS.
+- **[App:](docs/content/docs/karaokeparty-app/index.md)** Fast, modern mobile web app designed for "karaoke conditions".
+- **[Player:](docs/content/docs/karaokeparty-app/index.md#player)** Just another part of the app, but meant to run fullscreen on the system handling audio/video for a [room](docs/content/docs/karaokeparty-app/index.md#rooms-admin-only)
 
 ## Installation
 
-There are several [installation methods](https://www.karaoke-eternal.com/docs/karaoke-eternal-server/#installation) available for Karaoke Eternal Server.
+There are several [installation methods](docs/content/docs/karaokeparty-server/index.md#installation) available for KaraokeParty Server.
+
+## Credits
+
+KaraokeParty is a fork of [Karaoke Eternal](https://github.com/bhj/KaraokeEternal) by RadRoot LLC, used under the ISC license.
 
 ## Discord & Support
 

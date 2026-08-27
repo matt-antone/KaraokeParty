@@ -18,3 +18,6 @@ node_modules/
 .omc/
 !.omc/specs/
 !.omc/specs/**
+
+# local test database (never the party/production db)
+.test-data/

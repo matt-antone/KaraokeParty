@@ -20,6 +20,16 @@
       ],
       "port": 3737,
       "autoPort": true
+    },
+    {
+      "name": "dev-test",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "NODE_ENV=development KES_PATH_DATA=\"$PWD/.test-data\" npx tsx watch server/main.ts -p $PORT"
+      ],
+      "port": 3739,
+      "autoPort": true
     }
   ]
 }

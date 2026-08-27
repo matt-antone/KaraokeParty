@@ -25,6 +25,7 @@ const env = {
     ? !['0', 'false'].includes(process.env.KES_CONSOLE_COLORS?.toLowerCase())
     : undefined,
   KES_PATH_ASSETS: path.join(baseDir, 'assets'),
+  // data dir keeps the pre-rebrand name so existing installs keep their database
   KES_PATH_DATA: process.env.KES_PATH_DATA || getAppPath('Karaoke Eternal Server'),
   KES_PATH_WEBROOT: path.join(baseDir, 'build', 'client'),
   KES_PORT: parseInt(process.env.KES_PORT, 10) || 0,
@@ -87,7 +88,7 @@ const argv = yargs(hideBin(process.argv))
   })
   .option('v', {
     alias: 'version',
-    describe: 'Output the Karaoke Eternal Server version and exit',
+    describe: 'Output the KaraokeParty Server version and exit',
   })
   .usage('$0')
   .usage('  Logging options use the following numeric levels:')
