@@ -1,6 +1,6 @@
 ---
-title: Karaoke Eternal (the app)
-description: Documentation for Karaoke Eternal (the app)
+title: KaraokeParty (the app)
+description: Documentation for KaraokeParty (the app)
 resources:
 - src: 'app-library.png'
   params:
@@ -19,7 +19,7 @@ resources:
     galleryOrder: 5
 ---
 
-Karaoke Eternal is a modern mobile browser app that lets everyone join without having to install anything on their phones. It's built for touch, but a mouse is supported in desktop browsers (click and drag to emulate swipe gestures).
+KaraokeParty is a modern mobile browser app that lets everyone join without having to install anything on their phones. It's built for touch, but a mouse is supported in desktop browsers (click and drag to emulate swipe gestures).
 
 - [Library](#library)
 - [Queue](#queue)
@@ -63,7 +63,7 @@ The queue view shows your room's previous, current and upcoming songs.
   {{% img "app-queue.png" "Queue view" /%}}
 </div>
 
-Karaoke Eternal automatically manages the queue using a round-robin method for fairness, without penalizing those joining later in the party. For example, a latecomer will be able to sing right after the next-up singer regardless of how long the queue was when they joined.
+KaraokeParty automatically manages the queue using a round-robin method for fairness, without penalizing those joining later in the party. For example, a latecomer will be able to sing right after the next-up singer regardless of how long the queue was when they joined.
 
 Swiping left on a queued song reveals some of the following options:
 
@@ -145,7 +145,7 @@ The account view lets users manage their account, while admins will see addition
 
 The Rooms panel allows admins to create, edit or remove rooms.
 
-Karaoke Eternal uses "rooms" to organize sessions by time and space (spacetime?) Users choose an open room when signing in, and each room has its own queue. **Don't re-use rooms** - create a new room before each session so that you start with an empty queue, then set the room to `closed` when finished.
+KaraokeParty uses "rooms" to organize sessions by time and space (spacetime?) Users choose an open room when signing in, and each room has its own queue. **Don't re-use rooms** - create a new room before each session so that you start with an empty queue, then set the room to `closed` when finished.
 
 <div class="row">
   {{% img "app-account-room.png" "Room editor" /%}}
@@ -179,7 +179,7 @@ The Users panel allows admins to create, edit or remove users.
 The Preferences panel allows admins to set these global preferences:
 
 - **Media Folders**
-  - Add folders with [supported media files]({{< ref "docs/karaoke-eternal-server#media-files" >}}) to scan them into the library. You can re-arrange the folder order by dragging and dropping, and when songs have multiple versions the one in the folder highest in the list will be used.
+  - Add folders with [supported media files]({{< ref "docs/karaokeparty-server#media-files" >}}) to scan them into the library. You can re-arrange the folder order by dragging and dropping, and when songs have multiple versions the one in the folder highest in the list will be used.
 - **Player**
   - **ReplayGain (clip-safe)**: [ReplayGain](https://en.wikipedia.org/wiki/ReplayGain){{% icon-external %}} metadata tags allow the player to automatically minimize volume differences between songs, resulting in a better experience for all, and without affecting the dynamic range of each song (no compression). This option should generally only be enabled when you know all of your media is properly tagged. It normally reduces the player's overall volume significantly, so just turn your output up, and/or your mics down.
 

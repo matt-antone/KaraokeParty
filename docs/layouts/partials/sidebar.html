@@ -3,7 +3,7 @@
   <header>
     <div class="logo">
       <a href='/'>
-        Karaoke<span class="logo-eternal">Eterna<span class="logo-lastChar">l</span></span>
+        Karaoke<span class="logo-subtitle">Part<span class="logo-lastChar">y</span></span>
       </a>
       <div class="tagline">Open karaoke party system</div>
     </div>
@@ -44,24 +44,24 @@
         <ul>
           <li class="{{ if eq $lastSeg "getting-started" }} active{{ end }}"><a
               href="{{ .Site.BaseURL }}docs/getting-started/">Getting Started</a></li>
-          <li class="{{ if eq $lastSeg "karaoke-eternal-app" }} active{{ end }}"><a
-              href="{{ .Site.BaseURL }}docs/karaoke-eternal-app/">Karaoke Eternal <span>(the app)</span></a>
-            <ul id="karaoke-eternal-app-toc">
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-app/#library">Library</a></li>
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-app/#queue">Queue</a></li>
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-app/#account">Account</a>
+          <li class="{{ if eq $lastSeg "karaokeparty-app" }} active{{ end }}"><a
+              href="{{ .Site.BaseURL }}docs/karaokeparty-app/">KaraokeParty <span>(the app)</span></a>
+            <ul id="karaokeparty-app-toc">
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-app/#library">Library</a></li>
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-app/#queue">Queue</a></li>
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-app/#account">Account</a>
               </li>
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-app/#player">Player</a></li>
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-app/#player">Player</a></li>
             </ul>
           </li>
-          <li class="{{ if eq $lastSeg "karaoke-eternal-server" }} active{{ end }}"><a
-              href="{{ .Site.BaseURL }}docs/karaoke-eternal-server/">Karaoke Eternal Server</a>
-            <ul id="karaoke-eternal-server-toc">
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-server/#installation">Installation</a></li>
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-server/#media-files">Media Files</a></li>
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-server/#metadata-parser">Metadata Parser</a></li>
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-server/#cli--env">CLI &amp; ENV</a></li>
-              <li><a href="{{ .Site.BaseURL }}docs/karaoke-eternal-server/#file-locations">File Locations</a></li>
+          <li class="{{ if eq $lastSeg "karaokeparty-server" }} active{{ end }}"><a
+              href="{{ .Site.BaseURL }}docs/karaokeparty-server/">KaraokeParty Server</a>
+            <ul id="karaokeparty-server-toc">
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-server/#installation">Installation</a></li>
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-server/#media-files">Media Files</a></li>
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-server/#metadata-parser">Metadata Parser</a></li>
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-server/#cli--env">CLI &amp; ENV</a></li>
+              <li><a href="{{ .Site.BaseURL }}docs/karaokeparty-server/#file-locations">File Locations</a></li>
             </ul>
           </li>
         </ul>

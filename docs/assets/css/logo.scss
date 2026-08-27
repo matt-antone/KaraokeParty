@@ -28,11 +28,11 @@
     0 0 9em hsl(var(--hue-pink), 100%, 50%);
 }
 
-.logo-eternal {
+.logo-subtitle {
   font-size: 40%;
   text-transform: uppercase;
   display: block;
-  letter-spacing: .9em;
+  letter-spacing: 1.87em;
   border: .1em solid transparent;
   border-radius: .25em;
   padding: .25em;
@@ -43,7 +43,7 @@
     0 0 .5em hsl(var(--hue-blue), 100%, 50%);
 }
 
-.fonts-loaded .logo-eternal {
+.fonts-loaded .logo-subtitle {
   border-color: hsl(var(--hue-blue), 100%, 90%);
   box-shadow:
     0 0 .1em hsl(var(--hue-blue), 100%, 90%),

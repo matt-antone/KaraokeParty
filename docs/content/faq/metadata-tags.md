@@ -4,7 +4,7 @@ category: Troubleshooting
 weight: 6
 ---
 
-Yes, just place the following <a href='{{< ref "docs/karaoke-eternal-server/#configuring-the-metadata-parser" >}}'>_kes.v1.js</a> file in the applicable media folder:
+Yes, just place the following <a href='{{< ref "docs/karaokeparty-server/#configuring-the-metadata-parser" >}}'>_kes.v1.js</a> file in the applicable media folder:
 
 {{< highlight js >}}
 return ({ compose, getDefaultParser, defaultMiddleware }) => {

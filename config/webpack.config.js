@@ -47,10 +47,10 @@ let config = {
       __TEST__,
       __PROD__,
       __KE_VERSION__: JSON.stringify(process.env.npm_package_version),
-      __KE_URL_HOME__: JSON.stringify('https://www.karaoke-eternal.com'),
+      __KE_URL_HOME__: JSON.stringify('https://github.com/matt-antone/KaraokeParty'),
       __KE_URL_LICENSE__: JSON.stringify('/licenses.txt'),
-      __KE_URL_REPO__: JSON.stringify('https://www.karaoke-eternal.com/repo'),
-      __KE_URL_SPONSOR__: JSON.stringify('https://www.karaoke-eternal.com/sponsor'),
+      __KE_URL_REPO__: JSON.stringify('https://github.com/matt-antone/KaraokeParty'),
+      __KE_URL_SPONSOR__: JSON.stringify('https://github.com/bhj/KaraokeEternal'),
     })),
     new CaseSensitivePathsPlugin(),
     new MiniCssExtractPlugin({

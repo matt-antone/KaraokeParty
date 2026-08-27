@@ -9,6 +9,7 @@ class Logger {
     log.transports.console.level = 'debug'
     log.transports.file.level = false
     log.transports.file.fileName = logId + '.log'
+    // log dir keeps the pre-rebrand name; see KES_PATH_DATA in cli.ts
     log.transports.file.setAppName('Karaoke Eternal Server')
 
     for (const transport in cfg) {

@@ -11,7 +11,7 @@ const applyLicenseConfig = (config) => {
     outputFilename: 'licenses.txt',
     perChunkOutput: false,
     renderLicenses: (modules) => {
-      modules.unshift(karaokeEternal)
+      modules.unshift(karaokeParty)
       modules.push(materialDesignIcons)
 
       return modules.reduce((txt, m, i) => {
@@ -44,9 +44,9 @@ const applyLicenseConfig = (config) => {
   return config
 }
 
-const karaokeEternal = {
+const karaokeParty = {
   packageJson: {
-    name: 'Karaoke Eternal',
+    name: 'KaraokeParty',
   },
   licenseText: fs.readFileSync('./LICENSE', 'utf8'),
 }

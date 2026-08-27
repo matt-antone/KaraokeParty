@@ -1,6 +1,6 @@
 ---
 title: Overview
-seoTitle: Karaoke Eternal | Open karaoke party system
+seoTitle: KaraokeParty | Open karaoke party system
 description: Host awesome karaoke parties where everyone can easily find and queue songs from their phone's browser. The player is also fully browser-based with support for MP3+G, MP4 videos and WebGL visualizations. The server is self-hosted and runs on nearly everything.
 ---
 
@@ -29,19 +29,19 @@ Microphones are *not* required since the player itself only outputs music - this
 
 ## Getting Started
 
- Karaoke Eternal basically has 3 parts. See <a href='{{< ref "docs/getting-started" >}}'>Getting Started</a> to get up and running step-by-step, or jump to the documentation for each part below:
+ KaraokeParty basically has 3 parts. See <a href='{{< ref "docs/getting-started" >}}'>Getting Started</a> to get up and running step-by-step, or jump to the documentation for each part below:
 
-- **<a href='{{< ref "docs/karaoke-eternal-server" >}}'>Server:</a>** Runs on pretty much anything to serve the web app and your media files.
-- **<a href='{{< ref "docs/karaoke-eternal-app" >}}'>App:</a>** Fast, modern mobile web app designed for "karaoke conditions".
-- **<a href='{{< ref "docs/karaoke-eternal-app/#player" >}}'>Player:</a>** Just another part of the app, but meant to run fullscreen on the system handling audio/video for a <a href='{{< ref "docs/karaoke-eternal-app/#rooms-admin-only" >}}'>room</a>.
+- **<a href='{{< ref "docs/karaokeparty-server" >}}'>Server:</a>** Runs on pretty much anything to serve the web app and your media files.
+- **<a href='{{< ref "docs/karaokeparty-app" >}}'>App:</a>** Fast, modern mobile web app designed for "karaoke conditions".
+- **<a href='{{< ref "docs/karaokeparty-app/#player" >}}'>Player:</a>** Just another part of the app, but meant to run fullscreen on the system handling audio/video for a <a href='{{< ref "docs/karaokeparty-app/#rooms-admin-only" >}}'>room</a>.
 
 ## Installation
 
-There are several <a href='{{< ref "docs/karaoke-eternal-server#installation" >}}'>installation methods</a> available for Karaoke Eternal Server.
+There are several <a href='{{< ref "docs/karaokeparty-server#installation" >}}'>installation methods</a> available for KaraokeParty Server.
 
 ## Discord & Support
 
-Join the <a href="{{% baseurl %}}discord" rel="noopener">Karaoke Eternal Discord Server</a>{{% icon-external %}} for general support and development chat, or just to say hi!
+Join the <a href="{{% baseurl %}}discord" rel="noopener">KaraokeParty Discord Server</a>{{% icon-external %}} for general support and development chat, or just to say hi!
 
 ## Contributing & Development
 
