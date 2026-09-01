@@ -1,0 +1,108 @@
+// @vitest-environment happy-dom
+import React from 'react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { configureStore, type UnknownAction } from '@reduxjs/toolkit'
+import { Provider } from 'react-redux'
+import { MemoryRouter } from 'react-router'
+import { ensureState } from 'redux-optimistic-ui'
+import type { Socket } from 'socket.io-client'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+// reducers -> user -> AppRouter -> App -> store/store -> reducers is a cycle;
+// the app only survives because its entry enters at the store (see
+// QueueItem.store.test.tsx). Enter where the app does.
+import 'store/store'
+import rootReducer from 'store/reducers'
+import createSocketMiddleware from 'store/socketMiddleware'
+import { queuePush } from 'routes/Queue/modules/queue'
+import { ACCOUNT_RECEIVE, PLAYER_STATUS, QUEUE_PAUSE } from 'shared/actionTypes'
+import Header from './Header'
+
+/**
+ * The singer's pause lives in the header on every screen, and it is the one
+ * control that takes them out of the rotation. Rendered here against the app's
+ * real reducers so both halves are exercised: the request the button sends, and
+ * the pushed state the header reads back.
+ *
+ * Pausing is the server's decision to record — no reducer touches
+ * pausedUserIds except on a push — so the outbound half asserts the emit.
+ */
+
+// vitest globals are off, so RTL's own afterEach hook never registers
+afterEach(cleanup)
+
+const USER_ID = 3
+
+const queueState = (pausedUserIds: number[] = []) => queuePush({
+  isLoading: false,
+  result: [1],
+  entities: { 1: { queueId: 1, songId: 2, userId: USER_ID } },
+  pausedUserIds,
+} as unknown as Parameters<typeof queuePush>[0])
+
+const renderHeader = () => {
+  const emitted: UnknownAction[] = []
+  const socket = {
+    on: () => {},
+    emit: (event: string, action: UnknownAction) => emitted.push(action),
+  } as unknown as Socket
+
+  const store = configureStore({
+    reducer: rootReducer,
+    middleware: getDefaultMiddleware => getDefaultMiddleware()
+      .concat(createSocketMiddleware(socket, 'server/')),
+  })
+
+  // a signed-in singer with one song queued, and a player in the room —
+  // otherwise the header has no status to report and YourTurn never renders
+  store.dispatch({ type: ACCOUNT_RECEIVE, payload: { userId: USER_ID } })
+  store.dispatch({ type: PLAYER_STATUS, payload: {} })
+  store.dispatch(queueState())
+
+  render(
+    <Provider store={store}>
+      <MemoryRouter><Header /></MemoryRouter>
+    </Provider>,
+  )
+
+  return { store, emitted }
+}
+
+describe('YourTurn pause against the real store', () => {
+  it('asks the server to take the singer out of the rotation', () => {
+    const { store, emitted } = renderHeader()
+
+    fireEvent.click(screen.getByText('Pause my songs'))
+
+    expect(emitted).toEqual([expect.objectContaining({ type: QUEUE_PAUSE, payload: { isPaused: true } })])
+    // sitting out is recorded on the server; nothing local has moved yet
+    expect(ensureState(store.getState().queue).pausedUserIds).toEqual([])
+    expect(screen.getByText('Pause my songs')).toBeTruthy()
+  })
+
+  it('reads paused from the pushed state, and asks to come back from there', () => {
+    const { store, emitted } = renderHeader()
+
+    act(() => {
+      store.dispatch(queueState([USER_ID]))
+    })
+
+    expect(ensureState(store.getState().queue).pausedUserIds).toEqual([USER_ID])
+    expect(screen.getByText('Paused')).toBeTruthy()
+    expect(screen.getByText('you are out of the rotation')).toBeTruthy()
+
+    // the toggle now reads the other way, which is the state having reached it
+    fireEvent.click(screen.getByText('Resume my songs'))
+    expect(emitted).toEqual([expect.objectContaining({ type: QUEUE_PAUSE, payload: { isPaused: false } })])
+  })
+
+  it('leaves another singer\'s pause alone', () => {
+    const { store } = renderHeader()
+
+    act(() => {
+      store.dispatch(queueState([USER_ID + 1]))
+    })
+
+    expect(screen.getByText('Pause my songs')).toBeTruthy()
+    expect(screen.queryByText('Paused')).toBeNull()
+  })
+})

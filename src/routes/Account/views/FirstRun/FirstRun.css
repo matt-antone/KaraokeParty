@@ -4,17 +4,6 @@
   overflow: hidden;
 }
 
-.logo {
-  margin-bottom: var(--gap-5);
-  text-align: center;
-  font-size: 30px;
-
-  @media (min-width: 42em) {
-    margin: var(--gap-5) 0;
-    font-size: 36px;
-  }
-}
-
 /* a section heading printed on the panel — silkscreen, via the global class */
 .heading {
   margin: var(--gap-5) 0 var(--gap-2);

@@ -104,7 +104,11 @@ select {
   color: var(--ink);
   border: none;
   border-radius: var(--radius-key);
-  background-color: var(--ink-2);
+  /* a native field is a recessed well, like the inputs above. This was
+     --input-bg-color, which was LIGHT in the old brand; swapping the alias for
+     its nearest token gave a light slab on a graphite panel. */
+  background-color: var(--key-well);
+  box-shadow: var(--well);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' height='1rem' viewBox='0 0 24 24'><path fill='currentColor' d='M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 8px center;

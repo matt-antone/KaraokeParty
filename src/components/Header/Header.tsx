@@ -154,9 +154,13 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
           />
         )}
 
+      {/* only these two routes add a header of their own. Without the
+          catch-all, react-router logs "No routes matched" on every render
+          from /account, /settings and /. */}
       <Routes>
         <Route path='/library' element={<LibraryHeader />} />
         <Route path='/queue' element={<QueueHeader />} />
+        <Route path='*' element={null} />
       </Routes>
     </div>
   )
