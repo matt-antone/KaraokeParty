@@ -78,6 +78,8 @@ export const requestScanStop = createAsyncThunk(
 // ------------------------------------
 interface PrefsState {
   isFirstRun?: boolean
+  /** http://<LAN IPv4>:<port>/ — the address guests can actually reach. */
+  serverUrl?: string
   isScanning: boolean
   isReplayGainEnabled: boolean
   paths: {

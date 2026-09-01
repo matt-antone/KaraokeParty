@@ -21,6 +21,7 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
   const [show, setShow] = useState(true)
   const { isPlaying } = useAppSelector(state => state.player)
   const { roomId } = useAppSelector(state => state.user)
+  const serverUrl = useAppSelector(state => state.prefs.serverUrl)
 
   const scheduleNextToggle = useCallback(() => {
     if (maxTimerID.current) {
@@ -71,7 +72,11 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
     }
   }
 
-  const url = new URL(window.location.href)
+  // Build from the server's own LAN address, not this browser's. A host who
+  // opened the player at localhost would otherwise encode localhost, and every
+  // phone that scanned the code would be pointed at itself. Falls back to our
+  // own location when the server reports no external IPv4.
+  const url = new URL(serverUrl ?? window.location.href)
   url.pathname = url.pathname.replace(/\/player$/, '')
   url.searchParams.append('roomId', String(roomId))
 
