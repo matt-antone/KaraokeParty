@@ -1,5 +1,6 @@
 import { Action, Middleware, UnknownAction } from '@reduxjs/toolkit'
 import { BEGIN, COMMIT, REVERT } from 'redux-optimistic-ui'
+import { SOCKET_AUTH_ERROR } from 'shared/actionTypes'
 import { Socket } from 'socket.io-client'
 import { OptimisticAction } from './store'
 
@@ -35,9 +36,17 @@ export default function createSocketMiddleware (socket: Socket, prefix: string):
         }
 
         if (isOptimistic) {
+          // An auth failure is a rejection even though it carries no `error`:
+          // the server refused the action outright, so anything applied
+          // optimistically has to come back off. user and userStars happen to
+          // mask this by resetting to initialState, but queue does not — a
+          // refused QUEUE_ADD would stay applied and leak a transaction that
+          // can never resolve.
+          const isRejected = !!cbAction.error || cbAction.type === SOCKET_AUTH_ERROR
+
           cbAction.meta = {
             ...('meta' in cbAction && typeof cbAction.meta === 'object' ? cbAction.meta : {}),
-            optimistic: cbAction.error ? { type: REVERT, id: txId } : { type: COMMIT, id: txId },
+            optimistic: isRejected ? { type: REVERT, id: txId } : { type: COMMIT, id: txId },
           }
         }
 

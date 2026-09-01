@@ -10,7 +10,8 @@ import 'store/store'
 import rootReducer from 'store/reducers'
 import createSocketMiddleware from 'store/socketMiddleware'
 import { toggleSongStarred } from 'store/modules/userStars'
-import { STAR_SONG, _ERROR, _SUCCESS } from 'shared/actionTypes'
+import { SOCKET_AUTH_ERROR, STAR_SONG, _ERROR, _SUCCESS } from 'shared/actionTypes'
+import { queueSong } from 'routes/Queue/modules/queue'
 
 /**
  * QueueItem.store.test.tsx proves the BEGIN half of the optimistic cycle: a star
@@ -52,6 +53,9 @@ const makeStore = () => {
 const ACK_OK = { type: STAR_SONG + _SUCCESS }
 const ACK_ERR = { type: STAR_SONG + _ERROR, error: `Error in ${STAR_SONG}: no such song` }
 
+const queueIn = (store: { getState: () => { queue: unknown } }) =>
+  ensureState(store.getState().queue as never).result as number[]
+
 const starsIn = (store: ReturnType<typeof makeStore>['store']) =>
   ensureState(store.getState().userStars).starredSongs
 
@@ -77,6 +81,25 @@ describe('the optimistic cycle, once the server answers', () => {
 
     expect(starsIn(store)).toEqual([])
     expect(store.getState().userStars.history).toEqual([])
+  })
+
+  it('rolls back when the server refuses on auth, which carries no error field', async () => {
+    const { store, acks } = makeStore()
+
+    // Uses the QUEUE slice deliberately, not stars. userStars has an
+    // addCase(SOCKET_AUTH_ERROR) that resets it to initialState, which masks
+    // this bug entirely — a star test passes whether or not the rollback
+    // happens. queue has no such case, so it shows the real behaviour.
+    store.dispatch(queueSong(SONG_ID))
+    expect(queueIn(store)).toHaveLength(1)
+
+    // server/socket.ts acks an unauthenticated action with a bare
+    // { type: SOCKET_AUTH_ERROR } — no `error` property. Treating that as a
+    // COMMIT would apply an action the server explicitly refused, and leave a
+    // transaction that can never resolve.
+    acks[0]({ type: SOCKET_AUTH_ERROR })
+
+    expect(queueIn(store)).toHaveLength(0)
   })
 
   it('reverts the star the server actually rejected, not whichever was last', async () => {
