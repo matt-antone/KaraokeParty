@@ -11,11 +11,18 @@ const PlayerView = React.lazy(() => import('routes/Player/views/PlayerView'))
 
 const AppRoutes = () => (
   <Routes>
-    <Route path='/account' element={<AccountView />} />
+    <Route
+      path='/account'
+      element={(
+        <RequireAuth path='/account' redirectTo='/'>
+          <AccountView />
+        </RequireAuth>
+      )}
+    />
     <Route
       path='/settings'
       element={(
-        <RequireAuth path='/settings' redirectTo='/account'>
+        <RequireAuth path='/settings' redirectTo='/'>
           <SettingsView />
         </RequireAuth>
       )}
@@ -23,7 +30,7 @@ const AppRoutes = () => (
     <Route
       path='/library'
       element={(
-        <RequireAuth path='/library' redirectTo='/account'>
+        <RequireAuth path='/library' redirectTo='/'>
           <LibraryView />
         </RequireAuth>
       )}
@@ -31,7 +38,7 @@ const AppRoutes = () => (
     <Route
       path='/queue'
       element={(
-        <RequireAuth path='/queue' redirectTo='/account'>
+        <RequireAuth path='/queue' redirectTo='/'>
           <QueueView />
         </RequireAuth>
       )}
@@ -39,23 +46,15 @@ const AppRoutes = () => (
     <Route
       path='/player'
       element={(
-        <RequireAuth path='/player' redirectTo='/account'>
+        <RequireAuth path='/player' redirectTo='/'>
           <PlayerView />
         </RequireAuth>
       )}
     />
-    <Route
-      path='/'
-      element={(
-        <Navigate
-          to={{
-            pathname: '/library',
-            search: window.location.search, // pass through search params (e.g. roomId)
-          }}
-          replace
-        />
-      )}
-    />
+    {/* The only way in. Signing out, an expired session and a deep link to a
+        guarded route all land here, so there is exactly one place that asks
+        for credentials. Once signed in it hands off to the app. */}
+    <Route path='/' element={<AccountView isSignInRoute />} />
   </Routes>
 )
 
