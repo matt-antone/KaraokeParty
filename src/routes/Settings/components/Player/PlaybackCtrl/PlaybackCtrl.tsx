@@ -1,30 +1,25 @@
 import React, { useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
-import { useLocation } from 'react-router'
 import clsx from 'clsx'
-import screenfull from 'screenfull'
 import { requestOptions, requestPause, requestPlay, requestPlayNext, requestVolume } from 'store/modules/status'
 import Button from 'components/Button/Button'
-import VolumeSlider from './VolumeSlider/VolumeSlider'
-import NoPlayer from './NoPlayer/NoPlayer'
-import DisplayCtrl from './DisplayCtrl/DisplayCtrl'
+import Knob from 'components/Knob/Knob'
+import VuMeter from 'components/VuMeter/VuMeter'
+import DisplayCtrl from '../DisplayCtrl/DisplayCtrl'
 import styles from './PlaybackCtrl.css'
 import { PlaybackOptions } from 'shared/types'
 
-const handleFullscreen = () => {
-  if (screenfull.isEnabled) {
-    const el = document.getElementById('player-fs-container')
-    screenfull.request(el)
-  }
-}
-
+/**
+ * The room transport. Its only home is the Player panel on the Settings screen:
+ * player controls are admin-only and a singer does not pause the room, not even
+ * during their own song. Order never changes — play/pause, skip, volume,
+ * display. Play/pause is the single amber key; skip is graphite with an amber
+ * glyph, because skipping someone's song deserves one more moment of thought
+ * than pausing. The knob is the input and the meter beside it is the readout;
+ * there is no volume number.
+ */
 const PlaybackCtrl = () => {
   const [isDisplayCtrlVisible, setDisplayCtrlVisible] = useState(false)
-  const location = useLocation()
-  const isPlayer = location.pathname.replace(/\/$/, '').endsWith('/player')
-
-  const isAdmin = useAppSelector(state => state.user.isAdmin)
-  const isInRoom = useAppSelector(state => state.user.roomId !== null)
   const status = useAppSelector(state => state.status)
 
   const dispatch = useAppDispatch()
@@ -34,53 +29,42 @@ const PlaybackCtrl = () => {
   const handlePlayNext = () => dispatch(requestPlayNext())
   const handleVolume = (val: number) => dispatch(requestVolume(val))
 
-  const toggleDisplayCtrl = () => {
-    setDisplayCtrlVisible(!isDisplayCtrlVisible)
-  }
-
-  if (!status.isPlayerPresent) {
-    return (isAdmin && isInRoom && screenfull.isEnabled) ? <NoPlayer /> : null
-  }
+  const toggleDisplayCtrl = () => setDisplayCtrlVisible(!isDisplayCtrlVisible)
 
   return (
     <div className={styles.container}>
       <Button
-        animateClassName={styles.btnAnimate}
-        className={clsx(styles.btn, status.isPlaying ? styles.pause : styles.play)}
+        className={clsx(styles.key, styles.transport)}
+        variant='primary'
         icon={status.isPlaying ? 'PAUSE' : 'PLAY'}
         onClick={status.isPlaying ? handlePause : handlePlay}
         aria-label={status.isPlaying ? 'Pause' : 'Play'}
       />
 
       <Button
-        animateClassName={styles.btnAnimate}
-        className={clsx(styles.btn, styles.next)}
+        className={clsx(styles.key, styles.transport, styles.next)}
+        variant='default'
         icon='PLAY_NEXT'
         onClick={handlePlayNext}
         aria-label='Play Next'
       />
 
-      <VolumeSlider
-        volume={status.volume}
-        onVolumeChange={handleVolume}
-      />
+      <div className={styles.volume}>
+        <Knob value={status.volume} onChange={handleVolume} label='vol' />
+        <VuMeter
+          value={status.isPlaying ? status.volume * 0.85 : 0}
+          segments={14}
+          label='Room level'
+        />
+      </div>
 
       <Button
-        className={clsx(styles.btn, styles.displayCtrl)}
+        className={styles.key}
+        variant='default'
         icon='TUNE'
         onClick={toggleDisplayCtrl}
-        size={48}
         aria-label='Display Options'
       />
-
-      {isPlayer && screenfull.isEnabled && (
-        <Button
-          className={clsx(styles.btn, styles.fullscreen)}
-          icon='FULLSCREEN'
-          onClick={handleFullscreen}
-          aria-label='Enter Fullscreen'
-        />
-      )}
 
       {isDisplayCtrlVisible && (
         <DisplayCtrl

@@ -1,22 +1,20 @@
+/* the gutter comes from AccountView's column */
 .container {
   margin: 0 auto;
   overflow: hidden;
-  padding: var(--container-padding);
+}
 
-  h1 {
-    margin: var(--space-l) 0 var(--space-m) 0;
-    font-family: var(--font-family-custom);
-    font-size: var(--font-size-l);
-    color: var(--ink-3);
-  }
+/* a section heading printed on the panel — silkscreen, via the global class */
+.heading {
+  margin: var(--gap-5) 0 var(--gap-2);
 }
 
 .radioContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-s);
+  gap: var(--gap-2);
   white-space: nowrap;
-  margin-bottom: var(--space-m);
+  margin-bottom: var(--gap-3);
 }
 
 .hidden {

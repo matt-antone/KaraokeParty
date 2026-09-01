@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import clsx from 'clsx'
 import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { requestLogout, updateAccount } from 'store/modules/user'
@@ -57,10 +58,11 @@ const Account = () => {
   }
 
   return (
-    <Panel title='My Account' contentClassName={styles.content}>
+    <Panel title='My Account'>
       <>
-        <p>
-          Signed in as&nbsp;
+        <p className={clsx('silkscreen', styles.signedInAs)}>
+          signed in as
+          {' '}
           <strong>{user.isGuest ? 'guest' : user.username}</strong>
         </p>
 

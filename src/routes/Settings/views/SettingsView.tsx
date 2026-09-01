@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { fetchPrefs } from 'store/modules/prefs'
 import usersReducer, { sliceInjectNoOp } from '../modules/users'
 import Prefs from '../components/Prefs/Prefs'
+import Player from '../components/Player/Player'
 import Rooms from '../components/Rooms/Rooms'
 import Users from '../components/Users/Users'
 import styles from './SettingsView.css'
@@ -35,6 +36,7 @@ const SettingsView = () => {
     >
       <Rooms />
       <Users />
+      <Player />
       <Prefs />
     </div>
   )

@@ -15,6 +15,8 @@ import styles from './PlayerTextOverlay.css'
 const UP_NOW_MS = 5000
 /** Queue depth that fills the bottom meter. Beyond it the room just reads "long". */
 const QUEUE_DEPTH_FULL = 20
+/** How long the fullscreen key stays up after the host last moved the mouse. */
+const POINTER_IDLE_MS = 3000
 
 /** Six mutually exclusive states — never two at once. */
 type OverlayState = 'upNow' | 'upNextTease' | 'intermission' | 'idle' | 'empty' | 'errored'
@@ -129,6 +131,23 @@ const PlayerTextOverlay = ({
 }: PlayerTextOverlayProps) => {
   const dispatch = useAppDispatch()
   const handlePlay = () => dispatch(requestPlay())
+  const [lastPointerMove, setLastPointerMove] = useState(0)
+
+  // The transport moved to Settings and took its fullscreen key with it, so this
+  // is now the only way into fullscreen once a song starts. A room TV is driven
+  // with a mouse, not touched, so the key behaves like any video player's chrome:
+  // it appears on pointer activity and clears itself again, which keeps it off
+  // the video the rest of the night.
+  useEffect(() => {
+    if (!lastPointerMove) return
+
+    const timeoutID = setTimeout(() => setLastPointerMove(0), POINTER_IDLE_MS)
+    return () => clearTimeout(timeoutID)
+  }, [lastPointerMove])
+
+  // a mouse fires dozens of moves a second; returning the previous value unchanged
+  // lets React bail out of the re-render, so only one move per second costs anything
+  const handlePointerMove = () => setLastPointerMove(prev => Date.now() - prev > 1000 ? Date.now() : prev)
 
   let state: OverlayState
 
@@ -139,10 +158,21 @@ const PlayerTextOverlay = ({
   else if (isSongEnding && nextQueueItem) state = 'upNextTease'
   else state = 'upNow'
 
+  // always up on the paused stage, as the handoff specifies; elsewhere only while
+  // the host is at the machine. The corner panel shares this corner, so the
+  // container drops the panel clear of the key for as long as the key is up.
+  const isFullscreenKeyShown = screenfull.isEnabled && !screenfull.isFullscreen
+    && (state === 'idle' || lastPointerMove !== 0)
+
   return (
     <div
       style={{ width, height }}
-      className={clsx(styles.container, state === 'intermission' && styles.intermission)}
+      onPointerMove={handlePointerMove}
+      className={clsx(
+        styles.container,
+        state === 'intermission' && styles.intermission,
+        isFullscreenKeyShown && styles.fullscreenKeyShown,
+      )}
     >
       {state === 'empty' && (
         <>
@@ -159,18 +189,17 @@ const PlayerTextOverlay = ({
         </>
       )}
 
+      {/* browsers won't autoplay without a tap */}
       {state === 'idle' && (
-        <>
-          {/* browsers won't autoplay without a tap */}
-          <button className={styles.playKey} onClick={handlePlay} aria-label='Play'>
-            <Icon icon='PLAY' />
-          </button>
-          {screenfull.isEnabled && (
-            <button className={styles.fullscreenKey} onClick={handleFullscreen} aria-label='Fullscreen'>
-              <Icon icon='FULLSCREEN' />
-            </button>
-          )}
-        </>
+        <button className={styles.playKey} onClick={handlePlay} aria-label='Play'>
+          <Icon icon='PLAY' />
+        </button>
+      )}
+
+      {isFullscreenKeyShown && (
+        <button className={styles.fullscreenKey} onClick={handleFullscreen} aria-label='Fullscreen'>
+          <Icon icon='FULLSCREEN' />
+        </button>
       )}
 
       {state === 'intermission' && (

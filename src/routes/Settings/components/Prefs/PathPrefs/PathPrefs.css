@@ -2,27 +2,27 @@
   button {
     display: flex;
     align-items: center;
-    gap: var(--space-s);
-    padding: var(--space-s);
-    font-size: var(--font-size-m);
+    gap: var(--gap-2);
+    padding: var(--gap-2);
+    font-size: var(--text-l);
   }
 
   svg {
-    height: var(--icon-size-l);
+    height: var(--icon-l);
   }
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-s);
-  padding: var(--container-padding);
+  gap: var(--gap-2);
+  padding: var(--gap-4);
 }
 
 .btnContainer {
   display: flex;
   align-items: flex-end;
-  gap: var(--space-m);
+  gap: var(--gap-3);
 
   button {
     flex: 1;

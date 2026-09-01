@@ -1,14 +1,25 @@
+/* A folder in the library, in priority order. The row holds the path and its
+   keys, so it is a well; the keys inside it carry the bevel. */
+
 .pathItem {
   display: flex;
   align-items: center;
-  background-color: var(--panel-bg-color);
-  padding: var(--space-xs);
-  margin-bottom: var(--space-s);
-  border-radius: var(--border-radius);
+  gap: var(--gap-2);
+  min-height: var(--target);
+  padding: 0 var(--gap-2);
+  margin-bottom: var(--gap-2);
+  background: var(--key-well);
+  box-shadow: var(--well);
+  border-radius: var(--radius-key);
 }
 
+/* the path is data printed on the panel, so it is mono */
 .pathName {
   flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  color: var(--ink-2);
   user-select: text;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -19,16 +30,16 @@
 
 .btnDrag {
   cursor: grab;
-  color: var(--btn-bg-color);
-  height: var(--icon-size-l);
+  color: var(--ink-3);
+  height: var(--icon-l);
 }
 
 .btnRefresh,
 .btnInfo {
-  color: var(--btn-active-bg-color);
-  padding: var(--space-xs);
+  flex-shrink: 0;
+  color: var(--vu);
 
   svg {
-    height: var(--icon-size-l);
+    height: var(--icon-m);
   }
 }

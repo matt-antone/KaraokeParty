@@ -5,10 +5,10 @@
 
    Source of truth: design_handoff_karaokeparty_deck/tokens/*.css
    The DECK block below is lifted verbatim from those files. The LEGACY block
-   at the bottom re-points the old Karaoke Eternal variable names onto DECK
-   values so the ~500 existing var() references repaint without touching each
-   component. Components adopt the DECK names directly as they are rebuilt;
-   the legacy aliases die with the last consumer. */
+   at the bottom re-pointed the old Karaoke Eternal variable names onto DECK
+   values so existing var() references repainted without touching each
+   component. Components adopt the DECK names directly as they are rebuilt and
+   an alias dies with its last consumer — three are left. */
 
 :root {
   /* ---- colour ------------------------------------------------------ */
@@ -169,134 +169,19 @@
   /* ================================================================== */
   /* LEGACY ALIASES — old Karaoke Eternal names, re-pointed onto DECK.   */
   /* Do not add to this block. Delete entries as components adopt the    */
-  /* DECK tokens above.                                                  */
+  /* DECK tokens above. Three left.                                     */
   /* ================================================================== */
 
-  /* The two brand hues are gone. These remain only so that any hsl() call
-     site still holding a raw hue resolves to neutral graphite instead of
-     blue or pink. Every known call site was migrated; this is the backstop. */
-  --hue-blue: 210;
-  --hue-pink: 210;
+  /* Michroma. Still overriding TextOverlay's silkscreen on the library's
+     empty-state h1 (routes/Library/views/LibraryView.css). Deleting that
+     rule retires this alias. */
 
-  --color-gray-1: var(--chassis);
-  --color-gray-2: var(--key-hi);
-  --color-gray-3: var(--hairline);
-  --color-gray-4: var(--ink-4);
-  --color-gray-5: var(--ink-3);
-  --color-gray-6: var(--ink-3);
-  --color-gray-7: var(--ink-2);
-  --color-gray-8: var(--ink-2);
-  --color-gray-9: var(--ink);
-
-  --font-family: var(--font-body);
-  --font-family-custom: var(--font-display);
-  --font-weight-light: var(--weight-regular);
-  --font-weight-normal: var(--weight-regular);
-  --font-weight-bold: var(--weight-bold);
-
-  --font-size-xs: var(--text-s);
-  --font-size-s: var(--text-m);
-  --font-size-m: var(--text-l);
-  --font-size-l: var(--text-2xl);
-  --font-size-xl: var(--text-3xl);
-
-  --icon-size-s: var(--icon-s);
-  --icon-size-m: var(--icon-m);
-  --icon-size-l: var(--icon-l);
-  --icon-size-xl: var(--icon-xl);
-
-  --space-xs: var(--gap-1);
-  --space-s: var(--gap-2);
-  --space-m: var(--gap-3);
-  --space-l: var(--gap-4);
-  --space-xl: var(--gap-5);
-  --container-padding: var(--gutter);
-
-  --bg-color: var(--chassis);
-  --text-color: var(--ink);
-  --link-color: var(--vu);
-  --mark-bg-color: var(--vu-well);
-
-  --text-shadow: none;
-  --box-shadow: var(--bevel);
-  --drop-shadow-filter: none;
+  /* the two <video>/<canvas> surfaces in routes/Player */
   --border-radius: var(--radius-key);
-  /* a hard amber ring, never blurred. 9 components route focus through this. */
+
+  /* a hard amber ring, never blurred. Not legacy — this is the shared focus
+     ring, routed through one name by global.css and 6 components. */
   --focus-outline: 2px solid var(--vu);
-
-  --input-color: var(--ink);
-  --input-placeholder-color: var(--ink-3);
-  --input-bg-color: var(--key-well);
-  --input-outline-color: var(--vu);
-  --input-margin: var(--gap-2);
-
-  --btn-bg-color: var(--key);
-  --btn-active-bg-color: var(--vu);
-  --btn-active-filter: none;
-  --btn-activate-filter: none;
-
-  --btn-danger-bg-color: var(--alert);
-  --btn-danger-filter: none;
-  --btn-danger-activate-filter: none;
-
-  /* UI chrome (header/footer) — a deck's faceplate is opaque. No blur. */
-  --chrome-bg-color: var(--faceplate);
-  --chrome-border-color: var(--seam);
-  --header-notice-color: var(--ink);
-  --header-notice-bg-color: var(--vu-well);
-
-  /* Library */
-  --artist-folder-color: var(--ink);
-  --artist-folder-bg-color: var(--key);
-  --artist-folder-starred-color: var(--on-vu);
-  --artist-folder-starred-bg-color: var(--vu);
-  --artist-folder-starred-filter: none;
-  --artist-name-color: var(--ink-2);
-
-  --song-item-btn-bg-color: var(--key);
-  --song-item-btn-active-color: var(--on-vu);
-  --song-item-btn-active-bg-color: var(--vu);
-  --song-item-btn-active-filter: none;
-
-  --alpha-picker-color: var(--ink-3);
-  --queued-item-color: var(--standby);
-  --queued-item-text-shadow: none;
-
-  /* Account panels */
-  --panel-bg-color: var(--faceplate);
-
-  /* PlaybackCtrl */
-  --transport-btn-bg-color: var(--key);
-  --transport-btn-filter: none;
-  --transport-volume-track-color: var(--key-well);
-  --transport-volume-track-active-color: var(--vu);
-  --transport-volume-track-active-filter: none;
-
-  /* Up Next header/banner */
-  --up-next-bg-color-from: var(--faceplate-hi);
-  --up-next-bg-color-to: var(--faceplate-lo);
-  --up-next-filter: none;
-
-  --up-now-bg-color-from: var(--vu-well);
-  --up-now-bg-color-to: var(--vu-dim);
-  --up-now-filter: none;
-
-  /* <button> colors */
-  --btn-primary-color: var(--on-vu);
-  --btn-primary-bg-color: var(--vu);
-
-  /* Animation — mechanical. Nothing overshoots, springs, or pulses. */
-  --spring-duration: var(--dur-ui);
-  --spring-function: var(--ease-key);
-  --animation-text-shadow-glow: none;
-  --animation-btn-danger-activate: none;
-  --text-shadow-glow: none;
-
-  --animation-btn-star: none;
-  --bounce-1: var(--ease-key);
-
-  --animation-btn-activate: none;
-  --activate-1: var(--ease-key);
 }
 
 @media (prefers-reduced-motion: reduce) {

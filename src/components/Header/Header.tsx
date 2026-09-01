@@ -16,7 +16,6 @@ import getWaits from 'routes/Queue/selectors/getWaits'
 import LibraryHeader from 'routes/Library/components/LibraryHeader/LibraryHeader'
 import QueueHeader from 'routes/Queue/components/QueueHeader/QueueHeader'
 import Logo from 'components/Logo/Logo'
-import PlaybackCtrl from './PlaybackCtrl/PlaybackCtrl'
 import ProgressBar from './ProgressBar/ProgressBar'
 import YourTurn from './YourTurn/YourTurn'
 import styles from './Header.css'
@@ -95,9 +94,6 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
             onTogglePaused={() => dispatch(setPaused({ isPaused: !isPaused }))}
           />
         )}
-
-      {(isUpNow || isAdmin)
-        && <PlaybackCtrl />}
 
       {isAdmin && !isPlayer
         && (

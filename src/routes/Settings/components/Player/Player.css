@@ -1,0 +1,64 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-3);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+}
+
+/* a recessed lamp, not a circle: knobs and radios are the only circles here */
+.lamp {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-key);
+  background: var(--ink-5);
+  box-shadow: var(--well);
+}
+
+.lit {
+  background: var(--vu);
+}
+
+/* read as a sentence, so Figtree */
+.blurb {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-m);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* the key that opens the player: navigation, so it stays a link, but it is
+   pressed like every other key — 1px of travel and no hover state */
+.openKey {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-2);
+  min-height: var(--target);
+  padding: var(--gap-3);
+  font-family: var(--font-body);
+  font-size: var(--text-m);
+  font-weight: var(--weight-bold);
+  color: var(--on-vu);
+  background-color: var(--vu);
+  background-image: var(--key-face-vu);
+  box-shadow: var(--bevel);
+  border-radius: var(--radius-key);
+  text-decoration: none;
+  transition: transform var(--dur-key) var(--ease-key);
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  svg {
+    display: block;
+    height: var(--icon-m);
+  }
+}

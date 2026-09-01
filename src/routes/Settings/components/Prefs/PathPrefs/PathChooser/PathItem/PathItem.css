@@ -1,14 +1,15 @@
 .container {
   display: flex;
-  height: 40px;
+  min-height: var(--target);
+  gap: var(--gap-2);
+  padding: 0 var(--gap-2);
   cursor: pointer;
   align-items: center;
 }
 
 .path {
   flex: 1;
-  font-size: 16px;
-  margin-left: 5px;
+  font-size: var(--text-l);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

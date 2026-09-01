@@ -2,38 +2,32 @@ import React from 'react'
 import { ensureState } from 'redux-optimistic-ui'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { toggleSongStarred } from 'store/modules/userStars'
-import ButtonStar from 'components/ButtonStar/ButtonStar'
 import Panel from 'components/Panel/Panel'
-import { formatDate } from 'lib/dateTime'
+import SongHistoryList, { type SongHistoryDisplayItem } from 'components/SongHistoryList/SongHistoryList'
+import { formatShortDate } from 'lib/dateTime'
 import styles from './SongHistory.css'
 
 const SongHistory = () => {
   const dispatch = useAppDispatch()
   const history = useAppSelector(state => state.user.history)
   const starredSongs = useAppSelector(state => ensureState(state.userStars).starredSongs)
+  const starCounts = useAppSelector(state => state.starCounts)
+
+  const items: SongHistoryDisplayItem[] = history.map(({ songId, artist, title, dateSung }) => ({
+    songId,
+    artist,
+    title,
+    date: formatShortDate(new Date(dateSung * 1000)),
+    isStarred: starredSongs.includes(songId),
+    starCount: starCounts.songs[songId] || 0,
+  }))
 
   return (
-    <Panel title='Song History'>
-      {history.length === 0
-        ? <p className={styles.empty}>Songs you sing all the way through will show up here.</p>
-        : (
-            <ul className={styles.list}>
-              {history.map(({ songId, artist, title, dateSung }) => (
-                <li key={songId} className={styles.item}>
-                  <div className={styles.primary}>
-                    <div className={styles.title}>{title}</div>
-                    <div className={styles.artist}>{artist}</div>
-                  </div>
-                  <div className={styles.date}>{formatDate(new Date(dateSung * 1000))}</div>
-                  <ButtonStar
-                    onClick={() => dispatch(toggleSongStarred(songId))}
-                    isStarred={starredSongs.includes(songId)}
-                    count={0}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+    <Panel title='Song History' contentClassName={styles.content}>
+      <SongHistoryList
+        items={items}
+        onStar={item => dispatch(toggleSongStarred(item.songId))}
+      />
     </Panel>
   )
 }

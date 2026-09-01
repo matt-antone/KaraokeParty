@@ -128,7 +128,7 @@ const SignedOutView = () => {
     <div className={styles.container} style={{ maxWidth: Math.max(340, ui.contentWidth * 0.66) }}>
       {showRoomSection && (
         <>
-          <h1>Join room...</h1>
+          <h2 className={clsx('silkscreen', styles.heading)}>join room</h2>
           <SelectRoom
             rooms={rooms}
             roomId={roomId}
@@ -144,7 +144,7 @@ const SignedOutView = () => {
         {allowNew
           ? (
               <>
-                <h1>Join as...</h1>
+                <h2 className={clsx('silkscreen', styles.heading)}>join as</h2>
                 <div className={styles.radioContainer}>
                   <InputRadio name='type' value='returning' checked={mode === 'returning'} onChange={setMode} label='Returning user' />
                   {allowNewStandard && <InputRadio name='type' value='standard' checked={mode === 'standard'} onChange={setMode} label='New user' />}
@@ -152,7 +152,7 @@ const SignedOutView = () => {
                 </div>
               </>
             )
-          : <h1>Sign in</h1>}
+          : <h2 className={clsx('silkscreen', styles.heading)}>sign in</h2>}
 
         {(mode === 'returning' || !allowNew) && (
           <SignIn

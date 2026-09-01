@@ -10,20 +10,25 @@
 }
 
 .folderCurrent {
-  padding: 10px;
-  border: 1px solid var(--text-color);
-  border-radius: var(--border-radius);
-  background: var(--panel-bg-color);
+  padding: var(--gap-3);
+  border-radius: var(--radius-key);
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  color: var(--ink-2);
+
+  /* it holds the path you are standing in, so it is a well */
+  background: var(--key-well);
+  box-shadow: var(--well);
   overflow-wrap: anywhere;
 }
 
 .folderList {
   flex: 1;
-  margin: var(--space-s) 0;
+  margin: var(--gap-2) 0;
   overflow: auto;
 }
 
 .btnContainer {
   display: flex;
-  gap: var(--space-m);
+  gap: var(--gap-3);
 }

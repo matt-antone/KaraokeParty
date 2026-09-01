@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { ensureState } from 'redux-optimistic-ui'
 import { RootState } from 'store/store'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
@@ -9,8 +9,10 @@ import PaddedList from 'components/PaddedList/PaddedList'
 import ArtistItem from '../ArtistItem/ArtistItem'
 import type { ListImperativeAPI, RowComponentProps } from 'react-window'
 
-const ROW_HEIGHT_ARTIST = 44 // 40px + 4px margin
-const ROW_HEIGHT_SONG = 52 // 44px + 8px margin
+// estimates only: rows are measured once rendered (see PaddedList), because a
+// song title always shows in full and a wrapped title makes the row taller
+const ROW_HEIGHT_ARTIST = 47 // --row-artist + seam rule
+const ROW_HEIGHT_SONG = 62 // --row-song + --gap-2 margin
 
 interface SearchResultsProps {
   ui: RootState['ui']
@@ -68,7 +70,8 @@ const SearchResults = ({ ui }: SearchResultsProps) => {
   const listRef = useRef<ListImperativeAPI | null>(null)
   const filterKeywords = filterStr.trim() ? filterStr.trim().toLowerCase().split(' ') : []
 
-  const rowHeight = (index: number) => {
+  // stable identity: PaddedList keys its measurement cache off this function
+  const rowHeight = useCallback((index: number) => {
     const artistId = artistsResult[index]
     let height = ROW_HEIGHT_ARTIST
 
@@ -77,7 +80,7 @@ const SearchResults = ({ ui }: SearchResultsProps) => {
     }
 
     return height
-  }
+  }, [artists, artistsResult, expandedArtistResults])
 
   const handleRef = (ref: ListImperativeAPI) => {
     if (ref) listRef.current = ref
@@ -94,6 +97,7 @@ const SearchResults = ({ ui }: SearchResultsProps) => {
         expandedArtistResults,
       }}
       rowHeight={rowHeight}
+      cacheKey={filterStr}
       numRows={artistsResult.length}
       paddingTop={ui.headerHeight}
       paddingRight={4}

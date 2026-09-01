@@ -15,8 +15,12 @@
 }
 
 .table th {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
   color: var(--ink-3);
-  font-weight: normal;
   text-align: left;
 }
 
@@ -29,12 +33,24 @@
 }
 
 .table td {
-  height: 25px;
+  height: 32px;
   overflow: hidden;
   white-space: nowrap;
+}
+
+/* meta columns are data printed on the panel, so they are mono */
+.table td:nth-child(2),
+.table td:nth-child(3) {
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  color: var(--ink-3);
 }
 
 .table td:first-child  {
   text-overflow: ellipsis;
   max-width: 0;
+}
+
+.createBtn {
+  margin-top: var(--gap-3);
 }

@@ -76,7 +76,7 @@ const Create = ({
       </div>
 
       <Button type='submit' variant='primary'>
-        Join
+        {guest ? 'Join as Guest' : 'Create Account'}
       </Button>
     </form>
   )

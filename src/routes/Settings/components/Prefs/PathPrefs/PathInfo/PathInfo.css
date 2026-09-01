@@ -4,12 +4,12 @@
 
 .label {
   font-weight: bold;
-  color: #777;
+  color: var(--ink-3);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-m);
-  margin-bottom: var(--space-m);
+  gap: var(--gap-3);
+  margin-bottom: var(--gap-3);
 }

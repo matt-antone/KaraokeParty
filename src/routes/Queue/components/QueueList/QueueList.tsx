@@ -90,10 +90,11 @@ const QueueList = () => {
         isPlaying={isCurrent && isPlaying}
         isRemovable={isUpcoming && (isOwner || user.isAdmin)}
         isReplayable={(!isUpcoming || isCurrent) && user.isAdmin}
-        isSkippable={isCurrent && (isOwner || user.isAdmin)}
+        isSkippable={isCurrent && user.isAdmin}
         isStarred={starredSongs.includes(item.songId)}
         isUpcoming={isUpcoming}
         pctPlayed={isCurrent ? position / duration * 100 : 0}
+        showStar={queueTab !== 'me'}
         starCount={starCounts.songs[item.songId] || 0}
         title={songs.entities[item.songId].title}
         wait={isPaused ? '' : formatSeconds(waits[qId], true)} // fuzzy

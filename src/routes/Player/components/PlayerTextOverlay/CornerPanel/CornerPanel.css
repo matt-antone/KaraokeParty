@@ -2,8 +2,10 @@
    it would eat the type otherwise. Top-right, so lyrics keep the lower two-thirds. */
 .panel {
   position: absolute;
-  top: 2vh;
+  /* set by PlayerTextOverlay: steps down while the fullscreen key is up */
+  top: var(--corner-panel-top, 2vh);
   right: 2vh;
+  transition: top var(--dur-ui) var(--ease-key);
   max-width: 46vw;
   padding: 1.4vh 2vh;
   background: var(--brush);

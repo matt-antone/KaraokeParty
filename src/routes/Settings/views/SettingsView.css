@@ -1,10 +1,10 @@
 .container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-4);
   margin: 0 auto;
+  padding: var(--gap-4) var(--gutter) var(--gap-5);
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-
-  & > div {
-    margin: var(--space-m) auto;
-  }
 }

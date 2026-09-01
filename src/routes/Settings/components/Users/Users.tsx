@@ -96,8 +96,7 @@ const Users = () => {
           </tbody>
         </table>
 
-        <br />
-        <Button onClick={handleOpen} variant='primary'>
+        <Button className={styles.createBtn} onClick={handleOpen} variant='primary'>
           Create User
         </Button>
 

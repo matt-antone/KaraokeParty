@@ -1,18 +1,25 @@
 import React, { useEffect, useRef } from 'react'
-import { useAppSelector } from 'store/hooks'
+import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { ensureState } from 'redux-optimistic-ui'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { toggleSongStarred } from 'store/modules/userStars'
 import getMyUpcoming from '../selectors/getMyUpcoming'
 import getQueueSections from '../selectors/getQueueSections'
 import getRoundRobinQueue from '../selectors/getRoundRobinQueue'
 import QueueList from '../components/QueueList/QueueList'
+import Button from 'components/Button/Button'
+import Panel from 'components/Panel/Panel'
+import SongHistoryList, { type SongHistoryDisplayItem } from 'components/SongHistoryList/SongHistoryList'
 import Spinner from 'components/Spinner/Spinner'
 import TextOverlay from 'components/TextOverlay/TextOverlay'
+import { formatShortDate } from 'lib/dateTime'
 import styles from './QueueView.css'
 
 const QUEUE_ITEM_HEIGHT = 92
 
 const QueueView = () => {
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { innerWidth, innerHeight, headerHeight, footerHeight } = useAppSelector(state => state.ui)
   const isInRoom = useAppSelector(state => !!state.user.roomId)
   const isLoading = useAppSelector(state => ensureState(state.queue).isLoading)
@@ -21,7 +28,19 @@ const QueueView = () => {
   const queueTab = useAppSelector(state => state.ui.queueTab)
   const { played, upcoming } = useAppSelector(getQueueSections)
   const mine = useAppSelector(getMyUpcoming)
+  const history = useAppSelector(state => state.user.history)
+  const starredSongs = useAppSelector(state => ensureState(state.userStars).starredSongs)
+  const starCounts = useAppSelector(state => state.starCounts)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const historyItems: SongHistoryDisplayItem[] = history.map(({ songId, artist, title, dateSung }) => ({
+    songId,
+    artist,
+    title,
+    date: formatShortDate(new Date(dateSung * 1000)),
+    isStarred: starredSongs.includes(songId),
+    starCount: starCounts.songs[songId] || 0,
+  }))
 
   // ensure current song is in view on first mount only
   useEffect(() => {
@@ -89,6 +108,21 @@ const QueueView = () => {
       )}
 
       <QueueList />
+
+      {!isLoading && queueTab === 'me' && (
+        <div className={styles.meFooter}>
+          <Button icon='PLUS' size={20} onClick={() => navigate('/library')}>
+            Queue another song
+          </Button>
+
+          <Panel title='Sung Tonight' contentClassName={styles.historyContent}>
+            <SongHistoryList
+              items={historyItems}
+              onStar={item => dispatch(toggleSongStarred(item.songId))}
+            />
+          </Panel>
+        </div>
+      )}
     </div>
   )
 }

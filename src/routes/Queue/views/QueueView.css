@@ -4,6 +4,15 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.container h1 {
-  font-family: var(--font-family-custom);
+/* the Me tab's own footer: "queue another song", then the locked record of
+   what's already been sung. The queue rows above run flush; this doesn't. */
+.meFooter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-4);
+  padding: var(--gap-4) var(--gutter);
+}
+
+.historyContent {
+  padding: 0;
 }

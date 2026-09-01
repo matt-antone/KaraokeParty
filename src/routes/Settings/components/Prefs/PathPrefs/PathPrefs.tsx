@@ -55,7 +55,7 @@ const PathPrefs = () => {
   }
 
   const handleRemove = (pathId: number) => {
-    if (!confirm(`Remove folder from library?\n\n${paths.entities[pathId].path}`)) {
+    if (!confirm(`Remove this folder from the library?\n\n${paths.entities[pathId].path}\n\nEvery song in it disappears from the library and from anyone's queue. The files on disk are not touched.`)) {
       return
     }
 

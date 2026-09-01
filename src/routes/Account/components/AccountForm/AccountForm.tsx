@@ -135,7 +135,7 @@ const AccountForm = ({
         <input
           type='password'
           autoComplete='new-password'
-          placeholder={user && user.userId !== null ? 'new password confirm' : 'confirm password'}
+          placeholder={user && user.userId !== null ? 'confirm new password' : 'confirm password'}
           ref={newPasswordConfirm}
         />
       )}

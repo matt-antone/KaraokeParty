@@ -43,7 +43,7 @@ const EditRoom = ({ onClose, room }: EditRoomProps) => {
   }
 
   const handleRemoveClick = () => {
-    if (room && confirm(`Remove room "${room.name}" and its queue?`)) {
+    if (room && confirm(`Remove the room "${room.name}"?\n\nIts queue is deleted and everyone in it is signed out. This cannot be undone.`)) {
       dispatch(removeRoom(room.roomId))
     }
   }

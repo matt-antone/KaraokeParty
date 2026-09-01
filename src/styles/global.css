@@ -13,9 +13,9 @@ html {
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
+  background-color: var(--chassis);
+  color: var(--ink);
+  font-family: var(--font-body);
   height: 100%;
   margin: 0;
   padding: 0;
@@ -28,7 +28,7 @@ body.scroll-lock {
 }
 
 a {
-  color: var(--link-color);
+  color: var(--vu);
   font-weight: bold;
   cursor: pointer;
 }
@@ -65,15 +65,15 @@ input[type="search"] {
   font-size: 16px; /* don't go below 16px: iOS zooms the viewport on focus */
   box-shadow: var(--well);
   border: none;
-  border-radius: var(--border-radius);
-  color: var(--input-color);
-  background-color: var(--input-bg-color);
+  border-radius: var(--radius-key);
+  color: var(--ink);
+  background-color: var(--key-well);
 }
 
 input[type="text"]::placeholder,
 input[type="email"]::placeholder,
 input[type="password"]::placeholder {
-  color: var(--input-placeholder-color);
+  color: var(--ink-3);
 }
 
 input[type="text"]:focus,
@@ -96,14 +96,14 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 select {
-  font-size: var(--font-size-s);
+  font-size: var(--text-m);
   width: auto;
-  padding: var(--space-s);
-  padding-right: var(--space-xl);
+  padding: var(--gap-2);
+  padding-right: var(--gap-5);
   appearance: none;
-  color: var(--input-color);
+  color: var(--ink);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-key);
   background-color: var(--ink-2);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' height='1rem' viewBox='0 0 24 24'><path fill='currentColor' d='M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z'/></svg>");
   background-repeat: no-repeat;
@@ -119,7 +119,7 @@ select {
 
 mark {
   color: inherit;
-  background-color: var(--mark-bg-color);
+  background-color: var(--vu-well);
 }
 
 /* override modern-normalize's bad defaults */

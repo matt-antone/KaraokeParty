@@ -9,6 +9,14 @@
   justify-content: center;
   flex-direction: column;
   color: var(--ink);
+
+  /* the corner panel and the fullscreen key share the top-right corner; the key
+     is transient, so the panel steps down out of its way while it is up */
+  --corner-panel-top: 2vh;
+}
+
+.fullscreenKeyShown {
+  --corner-panel-top: 10vh;
 }
 
 /* the one takeover */
@@ -59,7 +67,8 @@
   }
 }
 
-/* floats on the paused stage only */
+/* upper-right, clear of the lyric band. Always up on the paused stage; over
+   playing video it is revealed by pointer activity and clears itself again. */
 .fullscreenKey {
   position: absolute;
   top: 2vh;

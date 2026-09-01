@@ -22,6 +22,11 @@ export function formatDate (dateObj: Date) {
   return dateObj.toISOString().substring(0, 10)
 }
 
+// short and pre-formatted for display, e.g. "Aug 29"
+export function formatShortDate (dateObj: Date) {
+  return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 export function formatDateTime (dateObj: Date) {
   return (formatDate(dateObj) + ' ' + formatTime(dateObj))
 }

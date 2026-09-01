@@ -121,7 +121,7 @@ const DisplayCtrl = ({
                 </div>
 
                 <div className={styles.field}>
-                  <label id='label-visualizer-sensitivity'>Sensitivity</label>
+                  <label id='label-visualizer-sensitivity' className={styles.groupLabel}>Sensitivity</label>
                   <Slider
                     min={0}
                     max={2}
@@ -146,12 +146,12 @@ const DisplayCtrl = ({
         <div className={clsx(styles.section, styles.lyrics)}>
           <fieldset>
             <legend>
-              <label>Lyrics</label>
+              <span className={styles.groupLabel}>Lyrics</span>
             </legend>
 
             {mediaType === 'cdg' && (
               <div className={styles.field}>
-                <label id='label-lyrics-size'>Size</label>
+                <label id='label-lyrics-size' className={styles.groupLabel}>Size</label>
                 <Slider
                   min={0.4}
                   max={0.9}
@@ -166,7 +166,7 @@ const DisplayCtrl = ({
 
             {(mediaType === 'cdg' || isVideoKeyingEnabled) && (
               <div className={styles.field}>
-                <label id='label-lyrics-background'>Background</label>
+                <label id='label-lyrics-background' className={styles.groupLabel}>Background</label>
                 <Slider
                   min={0}
                   max={1}

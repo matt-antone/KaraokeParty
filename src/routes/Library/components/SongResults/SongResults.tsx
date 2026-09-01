@@ -6,7 +6,12 @@ import PaddedList from 'components/PaddedList/PaddedList'
 import SongList from '../SongList/SongList'
 import type { RowComponentProps } from 'react-window'
 
-const ROW_HEIGHT_SONG_WITH_ARTIST = 62 // 54px + 8px margin
+// estimate only: rows are measured once rendered (see PaddedList), because a
+// song title always shows in full and a wrapped title makes the row taller
+const ROW_HEIGHT_SONG_WITH_ARTIST = 62 // --row-song + --gap-2 margin
+
+// stable identity: PaddedList keys its measurement cache off this function
+const rowHeight = () => ROW_HEIGHT_SONG_WITH_ARTIST
 
 interface SongResultsProps {
   ui: RootState['ui']
@@ -44,7 +49,8 @@ const SongResults = ({ ui }: SongResultsProps) => {
     <PaddedList
       rowComponent={RowComponent}
       rowProps={{ filterKeywords, songsResult }}
-      rowHeight={() => ROW_HEIGHT_SONG_WITH_ARTIST}
+      rowHeight={rowHeight}
+      cacheKey={filterStr}
       numRows={songsResult.length}
       paddingTop={ui.headerHeight}
       paddingRight={4}
