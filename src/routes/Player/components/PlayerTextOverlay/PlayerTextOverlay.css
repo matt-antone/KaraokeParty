@@ -19,10 +19,8 @@
   --corner-panel-top: 10vh;
 }
 
-/* the one takeover */
-.intermission {
-  background: var(--stage-wash);
-}
+/* the intermission gets no wash: the thread field behind it *is* the background,
+   and an opaque --stage-wash over it would hide the one state it exists for. */
 
 /* --- empty / errored ---------------------------------------------------- */
 

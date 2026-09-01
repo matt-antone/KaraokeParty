@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import Player from '../Player/Player'
+import PlayerBackdrop from '../PlayerBackdrop/PlayerBackdrop'
 import PlayerTextOverlay from '../PlayerTextOverlay/PlayerTextOverlay'
 import PlayerQR from '../PlayerQR/PlayerQR'
 import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
@@ -226,13 +227,18 @@ const PlayerController = (props: PlayerControllerProps) => {
     }
   }, [handleStatus, player.isErrored, player.isPlaying])
 
+  // the media layer covers the stage completely; the thread field behind it stops
+  // drawing whenever it does
+  const isMediaVisible = !!queueItem && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt
+
   return (
     <>
+      <PlayerBackdrop isCovered={isMediaVisible} />
       <Player
         cdgAlpha={player.cdgAlpha}
         cdgSize={player.cdgSize}
         isPlaying={player.isPlaying}
-        isVisible={!!queueItem && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt}
+        isVisible={isMediaVisible}
         isReplayGainEnabled={prefs.isReplayGainEnabled}
         isVideoKeyingEnabled={!!queueItem?.isVideoKeyingEnabled}
         isWebGLSupported={player.isWebGLSupported}

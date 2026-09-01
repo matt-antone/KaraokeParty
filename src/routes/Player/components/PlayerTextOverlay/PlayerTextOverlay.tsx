@@ -170,7 +170,6 @@ const PlayerTextOverlay = ({
       onPointerMove={handlePointerMove}
       className={clsx(
         styles.container,
-        state === 'intermission' && styles.intermission,
         isFullscreenKeyShown && styles.fullscreenKeyShown,
       )}
     >
