@@ -98,4 +98,37 @@ describe('PlayerTextOverlay queue depth', () => {
     expect(markup).toContain('role="meter"')
     expect(markup.replace(/<[^>]+>/g, '')).toContain('queue 08')
   })
+
+  it('reports a fault instead of joking about it', () => {
+    // "The player states what happened." Where the old brand said OOPS...,
+    // DECK reports: a silkscreen FAULT over what broke and where to look.
+    const html = render({ isErrored: true })
+
+    expect(html).toContain('fault')
+    expect(html).toContain('Media failed')
+    expect(html).toContain('see the queue for details')
+  })
+
+  it('shows the fault alone — the six states are mutually exclusive', () => {
+    // errored outranks intermission, upNextTease and upNow. Before the rebuild
+    // an if/else chain let upNow and upNextTease render together.
+    const html = render({
+      isErrored: true,
+      intermissionEndsAt: Date.now() + 10000,
+      isSongEnding: true,
+    })
+
+    expect(html).toContain('Media failed')
+    expect(html).not.toContain('coming up')
+    expect(html).not.toContain('up next')
+    expect(html).not.toContain('on stage')
+  })
+
+  it('yields to an empty queue, which is not a fault', () => {
+    // a queue that ran out is not broken media, and must not read as one
+    const html = render({ isErrored: true, isQueueEmpty: true })
+
+    expect(html).toContain('queue empty')
+    expect(html).not.toContain('Media failed')
+  })
 })
