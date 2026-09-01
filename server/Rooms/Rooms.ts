@@ -9,6 +9,20 @@ const PASSWORD_MIN_LENGTH = 5
 
 export const STATUSES = ['open', 'closed']
 
+/**
+ * Role prefs a room is created with: guests may join, standard accounts may
+ * not. Guests are the one-field path the product is built around; a standard
+ * account is a commitment the host should opt into.
+ */
+function guestDefaultRoles (): Record<number, { allowNew: boolean }> {
+  const query = sql`SELECT roleId FROM roles WHERE name = 'guest'`
+  const row = db.get<{ roleId: number }>(String(query), query.parameters)
+
+  // no guest role means a schema older than this default; a room with no role
+  // prefs is the previous behaviour, so fall back to it rather than throwing
+  return row ? { [row.roleId]: { allowNew: true } } : {}
+}
+
 // Remember which users have been seen in each room
 const roomUsers: Map<number, Set<number>> = new Map()
 
@@ -106,6 +120,13 @@ class Rooms {
         WHERE roomId = ${roomId}
       `
     } else {
+      // A brand-new room lets guests in. The product is "scan the QR, type a
+      // name, sing" — a room that denies self-registration until an admin
+      // finds Settings > Rooms > Edit makes that impossible on a fresh
+      // install, which is the first five minutes of every party. Only applied
+      // on INSERT, so an admin who later turns guests off stays turned off.
+      const newPrefs = prefs?.roles ? prefs : { ...prefs, roles: guestDefaultRoles() }
+
       query = sql`
         INSERT INTO rooms (name, password, status, dateCreated, data)
         VALUES (
@@ -113,7 +134,7 @@ class Rooms {
           ${typeof password === 'undefined' ? null : await crypto.hash(password)},
           ${status},
           ${Math.floor(Date.now() / 1000)},
-          json_set('{}', '$.prefs', json(${JSON.stringify(prefs)}))
+          json_set('{}', '$.prefs', json(${JSON.stringify(newPrefs)}))
         )
       `
     }
