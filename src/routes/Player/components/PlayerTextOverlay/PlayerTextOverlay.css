@@ -1,136 +1,168 @@
+/* Everything the player draws over (or instead of) the video. Overlays that sit
+   over playing video are solid corner panels, never washes over the whole frame. */
 .container {
-  font-family: var(--font-family-custom);
+  font-family: var(--font-body);
   position: absolute;
   top: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-
-  --color-pink: var(--alert);
-  --color-blue: var(--vu);
+  color: var(--ink);
 }
 
+/* the one takeover */
 .intermission {
-  background-color: #000;
+  background: var(--stage-wash);
 }
+
+/* --- empty / errored ---------------------------------------------------- */
+
+.stateLabel {
+  font-size: 1.6vh;
+  margin-bottom: 1.5vh;
+}
+
+.stateFooter {
+  font-size: 1.4vh;
+  margin-top: 1.5vh;
+}
+
+.fault {
+  color: var(--alert);
+}
+
+/* --- idle --------------------------------------------------------------- */
+
+/* a knob: the only circle in the system besides the real ones */
+.playKey {
+  display: grid;
+  place-items: center;
+  width: 26vh;
+  height: 26vh;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--key-face);
+  box-shadow: var(--bevel);
+  color: var(--vu);
+  cursor: pointer;
+
+  svg {
+    width: 11vh;
+    height: 11vh;
+  }
+
+  /* the key face travels 1px down: that travel is the feedback */
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+/* floats on the paused stage only */
+.fullscreenKey {
+  position: absolute;
+  top: 2vh;
+  right: 2vh;
+  display: grid;
+  place-items: center;
+  width: 6vh;
+  height: 6vh;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-key);
+  background: var(--key-face);
+  box-shadow: var(--bevel);
+  color: var(--ink-2);
+  cursor: pointer;
+
+  svg {
+    width: 2.8vh;
+    height: 2.8vh;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+/* --- intermission ------------------------------------------------------- */
 
 .nextSong {
   text-align: center;
   max-width: 80vw;
-  margin-bottom: var(--space-m);
-  color: var(--color-gray-8);
-  text-shadow: 1px 1px 5px #000;
+  margin-bottom: 2vh;
 }
 
 .nextSongTitle {
-  font-size: 5vh;
+  font-size: 3.4vh;
+  font-weight: var(--weight-semibold);
   line-height: 1.2;
+  text-wrap: pretty;
 }
 
 .nextSongArtist {
-  font-size: 3.5vh;
+  font-size: 2.4vh;
   line-height: 1.2;
-  color: var(--color-gray-6);
+  color: var(--ink-2);
 }
 
 .nextUserImage {
-  height: 25vh;
-  margin-bottom: var(--space-m);
+  width: 22vh;
+  height: 22vh;
+  margin-bottom: 2vh;
 }
 
-/* the fallback avatar icon's default color vanishes against the black intermission backdrop */
+/* the fallback avatar glyph reads as "off" against the stage wash */
 .container .nextUserImage svg {
-  color: var(--color-gray-5);
+  color: var(--ink-5);
+}
+
+/* the countdown's 200ms tick — one of the system's two ambient motions.
+   Declared here rather than reused from variables.css: css-loader scopes
+   animation names per module, so a global keyframe name would never resolve. */
+@keyframes tick {
+  from { opacity: 0.55; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.countdown {
+  margin-top: 1vh;
+  animation: tick 200ms var(--ease-key);
 }
 
 /* one line under the countdown */
 .comingUp {
   max-width: 90vw;
-  margin-top: var(--space-m);
-  font-size: 4vh;
+  margin-top: 2.5vh;
+  font-size: 2.2vh;
   line-height: 1.2;
   text-align: center;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-  color: var(--color-gray-8);
-  text-shadow: 1px 1px 5px #000;
+  color: var(--ink-2);
 }
 
 .comingUpHeading {
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-gray-6);
-  margin-right: var(--space-xs);
+  font-size: 1.4vh;
+  margin-bottom: 0.6vh;
 }
 
-/* teased in the last seconds of a song; kept out of the video's lower two-thirds */
-.upNext {
+/* --- queue depth -------------------------------------------------------- */
+
+/* along the bottom edge, clear of the lyric band */
+.queueDepth {
   position: absolute;
-  top: 2vh;
+  left: 2vh;
   right: 2vh;
-  max-width: 50vw;
-  padding: var(--space-xs) var(--space-m);
-  font-size: 1rem;
-  color: var(--color-gray-9);
-  text-shadow: 1px 1px 5px #000;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  background-color: var(--chrome-bg-color);
-  border: 1px solid var(--chrome-border-color);
-  border-radius: var(--border-radius);
+  bottom: 2vh;
+  display: flex;
+  align-items: center;
+  gap: 1.5vh;
 }
 
-.playButton {
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-
-  &:focus-visible {
-    outline: var(--focus-outline);
-  }
-
-  svg {
-    width: 33vh;
-    height: 33vh;
-    fill: url(#play-icon-gradient);
-    will-change: filter;
-
-    path {
-      fill: url(#play-icon-gradient);
-    }
-  }
+.queueDepthLabel {
+  font-size: 1.1vh;
+  flex-shrink: 0;
 }
-
-.gradientStop1 {
-  --color-start: var(--color-pink);
-  --color-end: var(--color-blue);
-  animation: gradient-pulse 4s infinite;
-}
-
-.gradientStop2 {
-  --color-start: var(--color-blue);
-  --color-end: var(--color-pink);
-  animation: gradient-pulse 7s infinite;
-}
-
-@keyframes gradient-pulse {
-
-  0%,
-  100% {
-    stop-color: var(--color-start);
-  }
-
-  50% {
-    stop-color: var(--color-end);
-  }
-}
-
-.backdrop {
-  background-color: var(--chrome-bg-color);
-  border-radius: var(--border-radius);
-  padding: var(--space-m) var(--space-xl);
-}
-

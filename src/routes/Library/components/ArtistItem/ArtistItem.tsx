@@ -3,7 +3,6 @@ import clsx from 'clsx'
 import Highlighter from 'react-highlight-words'
 import SongList from '../SongList/SongList'
 import Icon from 'components/Icon/Icon'
-import ToggleAnimation from 'components/ToggleAnimation/ToggleAnimation'
 import styles from './ArtistItem.css'
 
 interface ArtistItemProps {
@@ -33,22 +32,21 @@ const ArtistItem = ({
 
   return (
     <div style={style} translate='no'>
-      <div onClick={onArtistClick} className={clsx(styles.container, isChildStarred && styles.hasStarred)}>
-        <div className={styles.folderContainer}>
-          <Icon icon='FOLDER' />
-          {isExpanded && (
-            <div className={styles.iconChevronContainer}>
-              <Icon icon='CHEVRON_DOWN' />
-            </div>
-          )}
-          {!isExpanded && <div className={styles.count}>{artistSongIds.length}</div>}
+      <button
+        type='button'
+        onClick={onArtistClick}
+        aria-expanded={isExpanded}
+        className={styles.container}
+      >
+        <div className={clsx(styles.folder, isChildStarred && styles.folderStarred)}>
+          <Icon icon='FOLDER' size={28} />
+          <span className={styles.count}>{isExpanded ? '' : artistSongIds.length}</span>
+          {isExpanded && <Icon icon='CHEVRON_DOWN' size={18} className={styles.chevron} />}
         </div>
-        <ToggleAnimation toggle={isChildUpcoming} className={styles.animateGlow}>
-          <div className={clsx(styles.name, isChildUpcoming && styles.isChildUpcoming)}>
-            {filterKeywords?.length ? <Highlighter autoEscape textToHighlight={name} searchWords={filterKeywords} /> : name}
-          </div>
-        </ToggleAnimation>
-      </div>
+        <span className={clsx(styles.name, isChildUpcoming && styles.upcoming)}>
+          {filterKeywords?.length ? <Highlighter autoEscape textToHighlight={name} searchWords={filterKeywords} /> : name}
+        </span>
+      </button>
 
       {isExpanded && (
         <SongList

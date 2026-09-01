@@ -5,7 +5,7 @@ import { ensureState } from 'redux-optimistic-ui'
 import QueueItem from '../QueueItem/QueueItem'
 import QueueListAnimator from '../QueueListAnimator/QueueListAnimator'
 import { formatSeconds } from 'lib/dateTime'
-import { moveItem, removeUpcomingItems } from '../../modules/queue'
+import { moveItem } from '../../modules/queue'
 import getMyUpcoming from '../../selectors/getMyUpcoming'
 import getPlayerHistory from '../../selectors/getPlayerHistory'
 import getQueueSections from '../../selectors/getQueueSections'
@@ -43,10 +43,6 @@ const QueueList = () => {
     }
 
     dispatch(moveItem({ queueId: qId, prevQueueId: lastPlayed }))
-  }
-
-  const handleRemoveUpcoming = (userId: number) => {
-    dispatch(removeUpcomingItems(userId))
   }
 
   // "queue"/"me" are upcoming only; "history" is what's been sung, newest first
@@ -87,7 +83,6 @@ const QueueList = () => {
         isCurrent={isCurrent}
         key={qId}
         isErrored={isCurrent && isErrored}
-        isInfoable={user.isAdmin}
         isMovable={isUpcoming && !isPaused && (isOwner || user.isAdmin)}
         isOwner={isOwner}
         isPaused={isPaused}
@@ -104,7 +99,6 @@ const QueueList = () => {
         wait={isPaused ? '' : formatSeconds(waits[qId], true)} // fuzzy
         // actions
         onMoveClick={handleMoveClick}
-        onRemoveUpcoming={handleRemoveUpcoming}
       />
     )
   }

@@ -1,202 +1,187 @@
-.container {
-  --image-width: 84px;
-  /* touch target; QueueItem's btnWidth must stay this + the 8px button margin */
-  --queue-item-btn-size: 44px;
+/* A channel in the rotation. Taller than a library row because the singer's
+   photo is the primary identifier — people find their turn by looking for
+   their face, not by reading. */
 
+/* The swipe shell. Edge rules live here rather than on the sliding row, so
+   they stay visible while the row is aside. */
+.shell {
+  margin-bottom: 3px;
+  border-left: 2px solid transparent;
+  box-shadow: var(--bevel);
+}
+
+/* the viewer's own row: on a deck, the armed channel is marked at the edge */
+.isOwner {
+  border-left-color: var(--vu);
+}
+
+/* a singer sitting out is a dead channel */
+.ownerPaused {
+  border-left-color: var(--hairline);
+}
+
+/* The sliding row. Opaque, always — the keys are underneath it, and any
+   transparency here would let them ghost through. */
+.container {
   position: relative;
-  /* 84px */
-  height: 5.25rem;
   display: flex;
   align-items: center;
-  overflow: hidden;
-  background-color: var(--chassis);
-  margin: var(--space-s) 0;
+  gap: var(--gap-3);
+  /* a MINIMUM: a long title wraps and the row grows past it */
+  min-height: var(--row-queue);
+  padding: var(--gap-2) var(--gap-3);
+  background: var(--faceplate);
   line-height: normal;
 }
 
-.content {
-  display: flex;
-  flex: 1;
-  margin: 0.5rem 0 0.5rem var(--space-s);
-  overflow: hidden;
+/* The playing row IS the progress bar — an amber wash, never a separate
+   progress element. */
+.current {
+  background: var(--vu-well);
 }
 
-.greyed {
-  opacity: .5;
+.fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--progress, 0%);
+  background: var(--vu-dim);
+  opacity: .45;
+  pointer-events: none;
+}
+
+/* Declared locally, not pulled from variables.css: css-loader hashes
+   `animation: <name>` inside a CSS module even when the keyframe is only
+   declared globally, so a global @keyframes silently resolves to nothing.
+   The same trap applies to key-press, vu-settle and tick. */
+@keyframes vu-sweep {
+  0% { background-position: -40% 0; }
+  100% { background-position: 140% 0; }
+}
+
+/* a slow sweep across the fill. Paused, not hidden, when the audio pauses. */
+.sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--progress, 0%);
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 138, 30, .16) 50%, transparent 100%);
+  background-size: 55% 100%;
+  background-repeat: repeat-x;
+  animation: vu-sweep 6s linear infinite;
+}
+
+.paused .sweep {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep { animation: none; }
+}
+
+.dragHandle {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--ink-5);
+  touch-action: none;
 }
 
 .imageContainer {
   position: relative;
-  display: flex;
-  justify-content: center;
-  width: var(--image-width);
+  flex-shrink: 0;
+  width: var(--avatar-queue);
   aspect-ratio: 1;
   overflow: hidden;
+  border-radius: var(--radius-key);
+  box-shadow: var(--well);
 
   img {
+    display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* center-crops images stored before the square switch */
+    object-fit: cover;
   }
 }
 
-.waitContainer {
+/* the wait rides on the avatar, in mono, because it is data */
+.wait {
   position: absolute;
   bottom: 0;
   right: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  border-top-left-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  padding: 1px 3px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: .06em;
+  color: var(--ink-2);
+  background: var(--chassis-deep);
+  border-top-left-radius: var(--radius-key);
 }
 
-.wait {
-  color: var(--color-gray-7);
-  font-size: var(--font-size-s);
-  padding: var(--space-xs);
+.waitIsOwner {
+  color: var(--on-vu);
+  background: var(--vu);
 }
 
 .primary {
+  position: relative;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  margin-left: var(--container-padding);
-  overflow: hidden;
+  min-width: 0;
 }
 
-.innerPrimary {
-  flex: 1;
-}
-
+/* Song titles are never truncated, site-wide: they wrap and the row grows. */
 .title {
-  color: var(--color-gray-9);
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* artist and singer still ellipsise on one line — only titles wrap */
+.artist,
+.user {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .artist {
-  color: var(--color-gray-7);
-  font-size: 1.125rem;
+  font-size: var(--text-m);
+  color: var(--ink-2);
 }
 
 .user {
-  font-size: var(--font-size-s);
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  color: var(--color-gray-5);
-  margin-bottom: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
-.isOwner {
-  color: var(--queued-item-color);
-  text-shadow: var(--text-shadow-glow);
+.userIsOwner {
+  color: var(--vu);
 }
 
-.title,
-.artist,
-.user {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
+/* Spent — played, or the singer is sitting out. Dim by stepping down the ink
+   ramp and greyscaling the avatar, NEVER by opacity: this row is the only
+   opaque layer over its action keys. */
+.spent {
+  .title { color: var(--ink-4); }
+  .artist,
+  .user { color: var(--ink-5); }
+  .imageContainer { filter: grayscale(1); }
 }
 
-/* Buttons */
-.btnContainer {
-  button {
-    position: relative;
-    width: var(--queue-item-btn-size);
-    height: var(--queue-item-btn-size);
-  }
-
-  button:not(.btnStar) {
-    color: var(--song-item-btn-bg-color);
-
-    svg {
-      height: 100%;
-      width: auto;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-  }
-
-  button.active {
-    color: var(--song-item-btn-active-bg-color);
-    filter: var(--song-item-btn-active-filter);
-  }
-
-  button.danger {
-    color: var(--btn-danger-bg-color);
-    filter: var(--btn-danger-filter);
-  }
+.errored .title {
+  color: var(--alert);
 }
 
-.btnAdd svg,
-.btnPlayNext svg {
-  width: 50px !important;
-  height: 50px !important;
-}
-
-/* Currently playing  */
-.container.current {
-  /* Added 1% tail fade (99% -> 100%) */
-  background-image: linear-gradient(to right,
-      var(--vu-well) 99%,
-      transparent 100%);
-  background-repeat: no-repeat;
-  background-size: var(--progress, 0%) 100%;
-}
-
-.container.current::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: auto;
-  width: var(--progress, 0%);
-  --queue-item-crawl-span: 300%;
-  --queue-item-shine-width: 55vw;
-  /* Tile must exceed shine width; gap factor creates transparent buffer so repeat is seamless */
-  --queue-item-gap-factor: 1.5;
-  --queue-item-tile-size: calc(var(--queue-item-shine-width) * var(--queue-item-gap-factor));
-  /* Soften trailing edge of shine (fade last 1%) */
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 99%, rgba(0, 0, 0, 0) 100%);
-  mask-image: linear-gradient(to right, #000 0%, #000 99%, rgba(0, 0, 0, 0) 100%);
-  /* Slightly reduced alpha of shine for overall softness */
-  background: linear-gradient(90deg,
-      transparent 0%,
-      transparent calc(50% - (var(--queue-item-shine-width) / 2)),
-      rgba(255, 255, 255, 0.55) 50%,
-      transparent calc(50% + (var(--queue-item-shine-width) / 2)),
-      transparent 100%);
-  /* Use the computed tile size so the shine fully fits inside one repeat */
-  background-size: var(--queue-item-tile-size) 100%;
-  background-repeat: repeat-x;
-  animation: queueItemCrawl 3s linear infinite;
-  will-change: background-position;
-  mix-blend-mode: overlay;
-  opacity: 0.85;
-}
-
-.container.current.paused::after {
-  animation-play-state: paused;
-}
-
-@keyframes queueItemCrawl {
-  0% {
-    background-position: 0 0;
-  }
-
-  100% {
-    background-position: var(--queue-item-tile-size) 0;
-  }
-}
-.dragHandle {
-  display: flex;
-  align-items: center;
-  cursor: grab;
-  color: var(--color-gray-5);
-  margin-right: var(--space-xs);
-  touch-action: none;
+.star {
+  position: relative;
+  flex-shrink: 0;
+  align-self: center;
 }

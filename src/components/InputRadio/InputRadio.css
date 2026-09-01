@@ -1,32 +1,44 @@
 .container {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: var(--space-s);
+  gap: var(--gap-3);
+  min-height: var(--target);
   cursor: pointer;
 
-  &:has(:focus-visible) {
-    outline: var(--focus-outline);
+  &:has(input:disabled) {
+    cursor: default;
+    opacity: .45;
   }
 
   input[type="radio"] {
     -webkit-appearance: none;
     appearance: none;
-    min-width: 1.5em;
-    min-height: 1.5em;
-    border-radius: 50%;
-    border: 2px solid var(--btn-bg-color);
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    border-radius: var(--radius-round);
+    border: 2px solid var(--hairline);
+    background: var(--key-well);
+    box-shadow: var(--well);
     outline: none;
+    cursor: pointer;
 
-    &:checked,
-    &:focus:checked,
-    &:hover:checked {
-      background: radial-gradient(
-        circle,
-        var(--btn-active-bg-color) 0%,
-        var(--btn-active-bg-color) 60%,
-        #000 60%,
-        #000 100%
-      );
+    &:focus-visible {
+      outline: var(--focus-outline);
+    }
+
+    &:checked {
+      border-color: var(--vu);
+      background: radial-gradient(circle, var(--vu) 0%, var(--vu) 58%, transparent 58%);
+      box-shadow: none;
     }
   }
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

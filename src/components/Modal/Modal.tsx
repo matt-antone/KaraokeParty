@@ -50,7 +50,7 @@ const Modal = ({ buttons, className, children, visible = true, onClose, scrollab
       onCancel={handleCancel}
     >
       <div className={styles.titleContainer}>
-        <h1>{title}</h1>
+        <h1 className='silkscreen'>{title}</h1>
         <Button icon='CLEAR' className={styles.btnClose} onClick={onClose} aria-label='Close' />
       </div>
       <div className={clsx(styles.content, scrollable && styles.scrollable)}>{children}</div>

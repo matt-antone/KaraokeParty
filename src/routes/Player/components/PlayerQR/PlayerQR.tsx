@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import clsx from 'clsx'
 import { useAppSelector } from 'store/hooks'
 import { CSSTransition } from 'react-transition-group'
 import { QRCode } from 'react-qrcode-logo'
@@ -20,7 +19,6 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
   const maxTimerID = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastToggleTime = useRef<number>(0)
   const [show, setShow] = useState(true)
-  const [alternate, setAlternate] = useState(false)
   const { isPlaying } = useAppSelector(state => state.player)
   const { roomId } = useAppSelector(state => state.user)
 
@@ -66,7 +64,6 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
 
   const handleTransitionEnd = () => {
     if (!show) {
-      setAlternate(prev => !prev)
       setShow(true) // trigger enter transition
       lastToggleTime.current = Date.now()
 
@@ -108,7 +105,7 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
       }}
     >
       <div
-        className={clsx(styles.container, alternate && styles.alternate)}
+        className={styles.container}
         ref={ref}
       >
         <QRCode

@@ -1,38 +1,48 @@
 .container {
-  background: var(--faceplate);
-  border-radius: var(--border-radius);
-  
+  background: var(--key-well);
+  box-shadow: var(--well);
+  border-radius: var(--radius-key);
+
   &[data-expanded] {
-    .icon { 
+    .icon {
       transform: rotate(90deg);
     }
 
     .headingContainer {
-      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      border-radius: var(--radius-key) var(--radius-key) 0 0;
     }
   }
 }
 
 .icon {
   flex-shrink: 0;
+  color: var(--ink-3);
+  transition: transform var(--dur-ui) var(--ease-key);
 }
 
 .headingContainer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--key);
-  background-image: linear-gradient(135deg, var(--key) 0%, var(--faceplate) 100%);
-  border-radius: var(--border-radius);
+  min-height: var(--target);
+  padding: 0 var(--gap-3);
+  color: var(--ink);
+  background: var(--key-face);
+  box-shadow: var(--bevel);
+  border-radius: var(--radius-key);
   cursor: pointer;
 
   button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
     color: inherit;
     background: none;
     border: none;
     cursor: pointer;
     outline: none;
-    
+
     &:focus-visible {
       outline: var(--focus-outline);
     }
@@ -40,6 +50,6 @@
 
   svg {
     display: block;
-    height: var(--icon-size-l);
+    height: var(--icon-l);
   }
 }

@@ -31,6 +31,9 @@ const PlayerController = (props: PlayerControllerProps) => {
   const comingUpQueueItems = queue.result.slice(nextIdx + 1, nextIdx + 3).map(id => queue.entities[id])
   const nextSong = useAppSelector(state => nextQueueItem ? state.songs.entities[nextQueueItem.songId] : undefined)
   const nextArtist = useAppSelector(state => nextSong ? state.artists.entities[nextSong.artistId] : undefined)
+  // the corner panel names the singer *and* their song, so the player needs the current one too
+  const song = useAppSelector(state => queueItem ? state.songs.entities[queueItem.songId] : undefined)
+  const artist = useAppSelector(state => song ? state.artists.entities[song.artistId] : undefined)
 
   const dispatch = useAppDispatch()
   // set only when a song ends on its own; stays until the next one does. It's stamped with what
@@ -254,8 +257,11 @@ const PlayerController = (props: PlayerControllerProps) => {
         queueItem={queueItem as QueueItem}
         nextQueueItem={nextQueueItem as QueueItem}
         comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+        songTitle={song?.title}
+        songArtist={artist?.name}
         nextSongTitle={nextSong?.title}
         nextSongArtist={nextArtist?.name}
+        queueDepth={Math.max(0, queue.result.length - nextIdx)}
         isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
         isAtQueueEnd={player.isAtQueueEnd}
         isQueueEmpty={!queue.result.length}

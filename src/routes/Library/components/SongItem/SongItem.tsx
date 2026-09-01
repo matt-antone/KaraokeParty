@@ -1,16 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import clsx from 'clsx'
 import Highlighter from 'react-highlight-words'
-import { useSwipeable } from 'react-swipeable'
-import Button from 'components/Button/Button'
 import ButtonStar from 'components/ButtonStar/ButtonStar'
-import Buttons from 'components/Buttons/Buttons'
-import Icon from 'components/Icon/Icon'
-import ToggleAnimation from 'components/ToggleAnimation/ToggleAnimation'
 import { formatDuration } from 'lib/dateTime'
 import styles from './SongItem.css'
-
-let ignoreMouseup = false
 
 interface SongItemProps {
   songId: number
@@ -20,7 +13,6 @@ interface SongItemProps {
   duration: number
   onSongQueue(songId: number): void
   onSongStarClick(songId: number): void
-  onSongInfo(songId: number): void
   isPlayed: boolean
   isStarred: boolean
   isUpcoming: boolean
@@ -30,6 +22,12 @@ interface SongItemProps {
   filterKeywords: string[]
 }
 
+/**
+ * The library's unit of action: an un-queued song is a raised key, a queued
+ * song drops to a teal standby well and goes inert, a played song loses its
+ * key face entirely and dims down the ink ramp. One tap queues it — the star
+ * is the row's only other action.
+ */
 const SongItem = ({
   songId,
   artist,
@@ -38,7 +36,6 @@ const SongItem = ({
   duration,
   onSongQueue,
   onSongStarClick,
-  onSongInfo,
   isPlayed,
   isStarred,
   isUpcoming,
@@ -47,76 +44,49 @@ const SongItem = ({
   numMedia,
   filterKeywords,
 }: SongItemProps) => {
-  const [isExpanded, setExpanded] = useState(false)
-
-  const handleClick = () => {
-    if (ignoreMouseup) ignoreMouseup = false
-    else if (!isUpcoming) onSongQueue(songId)
-  }
-  const handleInfoClick = () => onSongInfo(songId)
+  const handleClick = () => onSongQueue(songId)
   const handleStarClick = () => onSongStarClick(songId)
-
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: ({ event }) => {
-      ignoreMouseup = event.type === 'mouseup'
-      setExpanded(isAdmin)
-    },
-    onSwipedRight: ({ event }) => {
-      ignoreMouseup = event.type === 'mouseup'
-      setExpanded(false)
-    },
-    preventScrollOnSwipe: true,
-    trackMouse: true,
-  })
 
   return (
     <div
-      {...swipeHandlers}
       className={clsx(
         styles.container,
         isPlayed && styles.played,
         isUpcoming && styles.upcoming,
-        isStarred && styles.starred,
-        isExpanded && styles.expanded,
-        artist && styles.withArtist,
       )}
     >
-      <ToggleAnimation toggle={isUpcoming} className={styles.animateGlow}>
-        <div className={styles.duration}>
-          {formatDuration(duration)}
-        </div>
-        <div onClick={handleClick} className={styles.primary}>
-          <div className={styles.title}>
-            {filterKeywords?.length ? <Highlighter autoEscape textToHighlight={title} searchWords={filterKeywords} /> : title}
-            {isAdmin && numMedia > 1 && (
-              <i>
-                {' '}
-                (
-                {numMedia}
-                )
-              </i>
-            )}
-            {(artist || tags.length > 0) && (
-              <div className={styles.artist}>
-                {artist && <span>{artist}</span>}
-                {tags.length > 0 && <span className={styles.tags}>{tags.join(' · ')}</span>}
-              </div>
-            )}
-          </div>
-        </div>
-      </ToggleAnimation>
+      <div className={styles.duration}>
+        {formatDuration(duration)}
+      </div>
 
-      <Buttons btnWidth={44} isExpanded={isExpanded}>
-        <ButtonStar
-          className={styles.btn}
-          onClick={handleStarClick}
-          isStarred={isStarred}
-          count={numStars}
-        />
-        <Button onClick={handleInfoClick} className={clsx(styles.btn, styles.info)} data-hide>
-          <Icon icon='INFO_OUTLINE' />
-        </Button>
-      </Buttons>
+      <button
+        type='button'
+        onClick={isUpcoming ? undefined : handleClick}
+        disabled={isUpcoming}
+        className={styles.primary}
+      >
+        {/* titles always show in full: they wrap, and the row grows to fit */}
+        <span className={styles.title}>
+          {filterKeywords?.length ? <Highlighter autoEscape textToHighlight={title} searchWords={filterKeywords} /> : title}
+          {isAdmin && numMedia > 1 && <span className={styles.numMedia}>{` (${numMedia})`}</span>}
+        </span>
+        {(artist || tags.length > 0) && (
+          <span className={styles.meta}>
+            {[artist, tags.join(' · ')].filter(Boolean).join(' · ')}
+          </span>
+        )}
+      </button>
+
+      {isUpcoming
+        ? <span className={styles.queued}>QUEUED</span>
+        : (
+            <ButtonStar
+              className={styles.btn}
+              onClick={handleStarClick}
+              isStarred={isStarred}
+              count={numStars}
+            />
+          )}
     </div>
   )
 }

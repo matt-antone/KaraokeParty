@@ -307,6 +307,13 @@
   }
 }
 
+/* These keyframes are GLOBAL and are NOT reachable by name from a CSS module.
+   css-loader hashes `animation: <name>` inside a module even when the keyframe
+   is only declared here, so the reference silently resolves to nothing — no
+   error, no animation. A component that wants one must declare its own copy
+   locally; QueueItem.css (vu-sweep) and PlayerTextOverlay.css (tick) both do.
+   They stay here as the canonical definitions for global.css and for copying. */
+
 /* key press: the face drops into its well */
 @keyframes key-press {
   from { transform: translateY(0); }

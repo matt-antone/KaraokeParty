@@ -52,20 +52,20 @@ describe('PlayerTextOverlay intermission', () => {
   })
 
   it('shows the next singer\'s name without an "up next" prefix', () => {
-    const text = render().replace(/<[^>]+>/g, '') // ColorCycle wraps every character in a span
-    expect(text).toContain('DOT MATRIX')
-    expect(text).not.toContain('UP NEXT')
+    const text = render().replace(/<[^>]+>/g, '')
+    expect(text).toContain('Dot Matrix')
+    expect(text).not.toContain('up next')
   })
 
   it('names the next song and artist above the singer', () => {
     const text = render().replace(/<[^>]+>/g, '')
-    expect(text.indexOf('Spaceballs the Song')).toBeLessThan(text.indexOf('DOT MATRIX'))
+    expect(text.indexOf('Spaceballs the Song')).toBeLessThan(text.indexOf('Dot Matrix'))
     expect(text).toContain('Winnebago')
   })
 
   it('lists the two singers after the next one under "Coming Up"', () => {
     const text = render().replace(/<[^>]+>/g, '')
-    expect(text).toContain('Coming Up')
+    expect(text).toContain('coming up')
     expect(text).toContain('Barf')
     expect(text).toContain('Lone Starr')
   })
@@ -75,12 +75,27 @@ describe('PlayerTextOverlay up next', () => {
   const playing = { intermissionEndsAt: null as number | null }
 
   it('teases the next singer only when the song is ending', () => {
-    expect(render({ ...playing, isSongEnding: false })).not.toContain('Up Next:')
-    expect(render({ ...playing, isSongEnding: true })).toContain('Up Next:')
+    expect(render({ ...playing, isSongEnding: false })).not.toContain('up next')
+    expect(render({ ...playing, isSongEnding: true })).toContain('up next')
   })
 
-  it('names the next singer', () => {
+  it('names the next singer and their song', () => {
     const text = render({ ...playing, isSongEnding: true }).replace(/<[^>]+>/g, '')
-    expect(text).toContain('Up Next: Dot Matrix')
+    expect(text).toContain('Dot Matrix')
+    expect(text).toContain('Spaceballs the Song')
+  })
+})
+
+describe('PlayerTextOverlay queue depth', () => {
+  const playing = { intermissionEndsAt: null as number | null }
+
+  it('hides the meter when nothing is queued', () => {
+    expect(render({ ...playing, queueDepth: 0 })).not.toContain('role="meter"')
+  })
+
+  it('shows the meter and the zero-padded count when songs are still to come', () => {
+    const markup = render({ ...playing, queueDepth: 8 })
+    expect(markup).toContain('role="meter"')
+    expect(markup.replace(/<[^>]+>/g, '')).toContain('queue 08')
   })
 })

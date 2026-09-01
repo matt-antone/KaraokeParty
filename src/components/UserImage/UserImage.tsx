@@ -23,7 +23,7 @@ const UserImageContent = ({ dateUpdated, userId }: { dateUpdated: number, userId
   return (
     <>
       {(isLoading || isErrored) && (
-        <Icon icon='ACCOUNT' />
+        <Icon icon='PERSON' />
       )}
 
       {!isErrored && (

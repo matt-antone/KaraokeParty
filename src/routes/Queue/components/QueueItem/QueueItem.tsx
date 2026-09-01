@@ -1,22 +1,20 @@
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import clsx from 'clsx'
 import type { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd'
-import { useSwipeable } from 'react-swipeable'
-import { useLongPress } from 'use-long-press'
 import { useAppDispatch } from 'store/hooks'
-import Button from 'components/Button/Button'
 import ButtonStar from 'components/ButtonStar/ButtonStar'
-import Buttons from 'components/Buttons/Buttons'
 import Icon from 'components/Icon/Icon'
+import SwipeRow from 'components/SwipeRow/SwipeRow'
+import type { SwipeAction } from 'components/SwipeRow/constants'
 import UserImage from 'components/UserImage/UserImage'
 import { requestPlayNext, requestReplay } from 'store/modules/status'
-import { showSongInfo } from 'store/modules/songInfo'
 import { toggleSongStarred } from 'store/modules/userStars'
 import { showErrorMessage } from 'store/modules/ui'
-import { queueSong, removeItem } from '../../modules/queue'
+import { removeItem } from '../../modules/queue'
 import styles from './QueueItem.css'
 
-const LONG_PRESS_THRESHOLD_MS = 700
+/** A just-started song still reads as started. */
+const MIN_PCT = 2
 
 interface QueueItemProps {
   artist: string
@@ -24,7 +22,6 @@ interface QueueItemProps {
   errorMessage: string
   isCurrent: boolean
   isErrored: boolean
-  isInfoable: boolean
   isMovable: boolean
   isOwner: boolean
   isPaused: boolean
@@ -44,18 +41,26 @@ interface QueueItemProps {
   userDisplayName: string
   userId: number
   wait?: string
-  // actions
+  /** Off on the Me tab, where the list is already your own songs. */
+  showStar?: boolean
   onMoveClick(queueId: number): void
-  onRemoveUpcoming: (userId: number) => void
 }
 
+/**
+ * Actions live *under* the row via SwipeRow, so the row's own content never
+ * changes width and a long title is never squeezed by actions appearing. The
+ * star stays on the row face: it is a state readout as much as an action.
+ *
+ * A played row gets no actions at all — a song sung tonight is locked for the
+ * rest of the party. There is no info action anywhere: the row already shows
+ * the title, artist and singer, which is everything anyone acts on.
+ */
 const QueueItem = ({
   artist,
   dragHandleProps,
   errorMessage,
   isCurrent,
   isErrored,
-  isInfoable,
   isMovable,
   isOwner,
   isPaused,
@@ -67,202 +72,94 @@ const QueueItem = ({
   isStarred,
   isUpcoming,
   onMoveClick,
-  onRemoveUpcoming,
   pctPlayed,
   queueId,
   songId,
   starCount,
+  showStar = true,
   title,
   userDateUpdated,
   userDisplayName,
   userId,
   wait,
 }: QueueItemProps) => {
-  const [isExpanded, setExpanded] = useState(false)
-  const longPressActiveRef = useRef(false)
+  const [isOpen, setOpen] = useState(false)
   const dispatch = useAppDispatch()
 
-  const handleErrorInfoClick = () => dispatch(showErrorMessage(errorMessage))
-  const handleInfoClick = () => dispatch(showSongInfo(songId))
-  const handleMoveClick = () => {
-    onMoveClick(queueId)
-    setExpanded(false)
-  }
-  const handleReplayClick = () => {
-    dispatch(requestReplay(queueId))
-    setExpanded(false)
-  }
-  const handleRequeueClick = () => {
-    dispatch(queueSong(songId))
-    setExpanded(false)
-  }
-  const handleSkipClick = () => {
-    dispatch(requestPlayNext())
-    setExpanded(false)
-  }
-  const handleRemoveClick = () => dispatch(removeItem({ queueId }))
-  const handleStarClick = () => dispatch(toggleSongStarred(songId))
+  // Which keys appear is permission-driven: amber for constructive, red for
+  // destructive. A played row is locked, so it gets none.
+  const actions: SwipeAction[] = isPlayed
+    ? []
+    : [
+        isMovable && { icon: 'MOVE_TOP', label: 'Top', tone: 'vu', onClick: () => onMoveClick(queueId) },
+        isReplayable && { icon: 'REPLAY', label: 'Replay', tone: 'vu', onClick: () => dispatch(requestReplay(queueId)) },
+        isSkippable && { icon: 'PLAY_NEXT', label: 'Skip', tone: 'alert', onClick: () => dispatch(requestPlayNext()) },
+        isRemovable && { icon: 'DELETE', label: 'Remove', tone: 'alert', onClick: () => dispatch(removeItem({ queueId })) },
+      ].filter(Boolean) as SwipeAction[]
 
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => {
-      setExpanded(isErrored || isInfoable || isRemovable || isSkippable)
-    },
-    onSwipedRight: () => setExpanded(false),
-    preventScrollOnSwipe: true,
-    trackMouse: true,
-  })
-
-  const bindRemovePressHandlers = useLongPress(() => {
-    const confirmText = isOwner ? 'Remove all your upcoming songs?' : `Remove all upcoming songs for "${userDisplayName}"?`
-    longPressActiveRef.current = true
-
-    if (confirm(confirmText)) {
-      onRemoveUpcoming(userId)
-    }
-  }, { threshold: LONG_PRESS_THRESHOLD_MS, cancelOnMovement: true })
-
-  const bindSkipPressHandlers = useLongPress(() => {
-    const confirmText = isOwner ? 'Skip and remove all your upcoming songs?' : `Skip and remove all upcoming songs for "${userDisplayName}"?`
-    longPressActiveRef.current = true
-
-    if (confirm(confirmText)) {
-      onRemoveUpcoming(userId)
-      handleSkipClick()
-    }
-  }, { threshold: LONG_PRESS_THRESHOLD_MS, cancelOnMovement: true })
+  const isSpent = isPlayed || isPaused
 
   return (
-    <div
-      {...swipeHandlers}
+    <SwipeRow
+      actions={actions}
+      isOpen={isOpen}
+      onOpenChange={setOpen}
       className={clsx(
-        styles.container,
-        isCurrent && styles.current,
-        isCurrent && !isPlaying && styles.paused,
+        styles.shell,
+        isOwner && styles.isOwner,
+        isOwner && isPaused && styles.ownerPaused,
       )}
-      style={{ '--progress': (isCurrent && pctPlayed < 2 ? 2 : pctPlayed) + '%' } as React.CSSProperties}
     >
-      <div className={styles.content}>
+      <div
+        className={clsx(
+          styles.container,
+          isCurrent && styles.current,
+          isCurrent && !isPlaying && styles.paused,
+          isSpent && styles.spent,
+          isErrored && styles.errored,
+        )}
+        style={{ '--progress': `${isCurrent && pctPlayed < MIN_PCT ? MIN_PCT : pctPlayed}%` } as React.CSSProperties}
+        // no info icon: an errored row surfaces its own message when tapped
+        onClick={isErrored ? () => dispatch(showErrorMessage(errorMessage)) : undefined}
+      >
+        {isCurrent && (
+          <>
+            <div className={styles.fill} />
+            <div className={styles.sweep} />
+          </>
+        )}
+
         {dragHandleProps && (
           <div className={styles.dragHandle} {...dragHandleProps}>
             <Icon icon='DRAG_INDICATOR' size={24} />
           </div>
         )}
-        <div className={clsx(styles.imageContainer, (isPlayed || isPaused) && styles.greyed)}>
+
+        <div className={styles.imageContainer}>
           <UserImage userId={userId} dateUpdated={userDateUpdated} />
-          <div className={styles.waitContainer}>
-            {isUpcoming && (
-              <div className={clsx(styles.wait, isOwner && styles.isOwner)}>
-                {isPaused ? <Icon icon='PAUSE' size={16} /> : wait}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={clsx(styles.primary, (isPlayed || isPaused) && styles.greyed)} translate='no'>
-          <div className={styles.innerPrimary}>
-            <div className={styles.title}>{title}</div>
-            <div className={styles.artist}>{artist}</div>
-          </div>
-          <div className={clsx(styles.user, isOwner && styles.isOwner)}>
-            {userDisplayName}
-          </div>
-        </div>
-
-        <Buttons btnWidth={52} isExpanded={isExpanded} className={styles.btnContainer}>
-          {isErrored && (
-            <Button
-              className={styles.danger}
-              icon='INFO_OUTLINE'
-              onClick={handleErrorInfoClick}
-            />
+          {isUpcoming && (wait || isPaused) && (
+            <div className={clsx(styles.wait, isOwner && styles.waitIsOwner)}>
+              {isPaused ? <Icon icon='PAUSE' size={12} /> : wait}
+            </div>
           )}
+        </div>
+
+        <div className={styles.primary} translate='no'>
+          <div className={styles.title}>{title}</div>
+          <div className={styles.artist}>{artist}</div>
+          <div className={clsx(styles.user, isOwner && styles.userIsOwner)}>{userDisplayName}</div>
+        </div>
+
+        {showStar && (
           <ButtonStar
-            className={styles.btnStar}
+            className={styles.star}
             isStarred={isStarred}
-            onClick={handleStarClick}
+            onClick={() => dispatch(toggleSongStarred(songId))}
             count={starCount}
           />
-          {isInfoable && (
-            <Button
-              className={styles.active}
-              data-hide
-              icon='INFO_OUTLINE'
-              onClick={handleInfoClick}
-            />
-          )}
-          {isMovable && (
-            <Button
-              className={clsx(styles.btnMove, styles.active)}
-              data-hide
-              icon='MOVE_TOP'
-              onClick={handleMoveClick}
-            />
-          )}
-          {isPlayed && (
-            <Button
-              className={clsx(styles.btnAdd, styles.active)}
-              data-hide
-              icon='PLUS'
-              onClick={handleRequeueClick}
-            />
-          )}
-          {isReplayable && (
-            <Button
-              className={clsx(styles.active, styles.danger)}
-              data-hide
-              icon='REPLAY'
-              onClick={handleReplayClick}
-            />
-          )}
-          {isRemovable && (
-            <Button
-              className={clsx(styles.btnRemove, styles.danger)}
-              data-hide
-              icon='DELETE'
-              onTouchEnd={(e: React.TouchEvent<HTMLButtonElement>) => {
-                if (longPressActiveRef.current) {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  longPressActiveRef.current = false
-                  return
-                }
-              }}
-              onClick={() => {
-                if (longPressActiveRef.current) {
-                  longPressActiveRef.current = false
-                  return
-                }
-                handleRemoveClick()
-              }}
-              {...bindRemovePressHandlers()}
-            />
-          )}
-          {isSkippable && (
-            <Button
-              className={clsx(styles.btnPlayNext, styles.danger)}
-              data-hide
-              icon='PLAY_NEXT'
-              onTouchEnd={(e: React.TouchEvent<HTMLButtonElement>) => {
-                if (longPressActiveRef.current) {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  longPressActiveRef.current = false
-                  return
-                }
-              }}
-              onClick={() => {
-                if (longPressActiveRef.current) {
-                  longPressActiveRef.current = false
-                  return
-                }
-                handleSkipClick()
-              }}
-              {...bindSkipPressHandlers()}
-            />
-          )}
-        </Buttons>
+        )}
       </div>
-    </div>
+    </SwipeRow>
   )
 }
 

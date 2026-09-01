@@ -1,17 +1,14 @@
+/* Parked in the lower-right, out of the lyric band and clear of the bottom
+   queue-depth meter. It fades out and back in rather than burning in. */
 .container {
   position: absolute;
-  bottom: 3vh;
-  left: 3vh;
+  bottom: 5vh;
+  right: 3vh;
   opacity: 1;
   transition: opacity 0.3s ease;
 
-  &.alternate {
-    left: unset;
-    right: 3vh;
-  }
-
   canvas {
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-key);
   }
 }
 

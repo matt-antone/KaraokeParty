@@ -1,63 +1,68 @@
+/* A library folder row: a label separated by a seam, not a key — only the
+   songs underneath are pressable in the key sense. */
 .container {
-  --artist-item-height: 40px;
-
   display: flex;
-  height: var(--artist-item-height);
   align-items: center;
-  margin-bottom: var(--space-xs);
-  overflow: hidden;
-}
-
-.name {
-  color: var(--artist-name-color);
-  flex: 1;
-  font-size: 17px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  padding-left: 3px;
+  gap: var(--gap-3);
+  width: 100%;
+  min-height: var(--row-artist);
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: var(--seam-rule);
   cursor: pointer;
 }
 
-.folderContainer {
+.folder {
   position: relative;
-  color: var(--artist-folder-bg-color);
-
-  svg {
-    height: var(--artist-item-height);
-  }
-
-  .iconChevronContainer svg {
-    height: 20px;
-  }
-
-  div {
-    position: absolute;
-    top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-color);
-    width: 100%;
-    height: 100%;
-  }
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--ink-5);
 }
 
-.hasStarred .folderContainer {
-  color: var(--artist-folder-starred-bg-color);
-  filter: var(--artist-folder-starred-filter);
+/* a starred child lights the folder amber */
+.folderStarred {
+  color: var(--vu);
 }
 
-.hasStarred .iconChevronContainer,
-.hasStarred .count {
-  color: #000;
+/* silkscreened inside the folder glyph; swaps for a chevron when open */
+.count {
+  position: absolute;
+  top: 54%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink);
+  pointer-events: none;
 }
 
-.animateGlow {
-  animation: var(--animation-text-shadow-glow);
+.chevron {
+  position: absolute;
+  color: var(--ink);
 }
 
-.isChildUpcoming {
-  color: var(--queued-item-color);
-  text-shadow: var(--queued-item-text-shadow);
+.folderStarred .count,
+.folderStarred .chevron {
+  color: var(--on-vu);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+/* a queued child lights the name amber */
+.upcoming {
+  color: var(--vu);
 }

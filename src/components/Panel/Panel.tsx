@@ -13,7 +13,7 @@ interface PanelProps {
 const Panel = ({ children, className, contentClassName, title, titleComponent }: PanelProps) => (
   <div className={clsx(styles.container, className)}>
     <div className={styles.titleContainer}>
-      <h1>{title}</h1>
+      <h1 className='silkscreen'>{title}</h1>
       {titleComponent}
     </div>
     <div className={clsx(styles.content, contentClassName)}>

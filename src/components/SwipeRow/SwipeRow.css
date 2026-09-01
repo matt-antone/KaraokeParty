@@ -1,0 +1,65 @@
+/* Swipe-to-reveal. The row slides aside in one piece and the action keys sit
+   underneath it, bolted to the chassis — you are moving the cartridge aside to
+   get at the panel behind it, not pulling a menu out of the row.
+
+   Nothing expands and nothing reflows, so the row's own content never changes
+   width and a long song title is never squeezed by actions appearing. */
+
+.container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* the keys, bolted to the chassis under the row */
+.actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: var(--swipe-action-width);
+  border: none;
+  border-left: 1px solid var(--chassis-deep);
+  cursor: pointer;
+
+  /* the label is what makes the payoff of the gesture obvious */
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.panel {
+  background-image: var(--key-face);
+  color: var(--ink);
+}
+
+.vu {
+  background-image: var(--key-face-vu);
+  color: var(--on-vu);
+}
+
+.alert {
+  background-image: var(--key-face-alert);
+  color: var(--ink);
+}
+
+/* The one opaque layer. It must stay at opacity 1 — anything transparent here
+   lets the keys ghost through, which is why spent rows dim by colour instead. */
+.slider {
+  position: relative;
+  transition: transform var(--dur-ui) var(--ease-key);
+  touch-action: pan-y;
+}
+
+.dragging {
+  transition: none;
+}

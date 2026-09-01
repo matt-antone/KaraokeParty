@@ -1,4 +1,5 @@
 import React from 'react'
+import clsx from 'clsx'
 import { lockScrolling } from 'store/modules/ui'
 import styles from './AlphaPicker.css'
 
@@ -39,6 +40,7 @@ class AlphaPicker extends React.Component<AlphaPickerProps> {
         {this.alphabet.map(char => (
           <div
             key={char}
+            className={clsx(char === this.state.char && styles.active)}
             style={{ flex: '1 1 auto', minHeight: 0 }}
           >
             {char}
