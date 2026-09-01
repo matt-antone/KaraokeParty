@@ -54,7 +54,7 @@ const ACK_OK = { type: STAR_SONG + _SUCCESS }
 const ACK_ERR = { type: STAR_SONG + _ERROR, error: `Error in ${STAR_SONG}: no such song` }
 
 const queueIn = (store: { getState: () => { queue: unknown } }) =>
-  ensureState(store.getState().queue as never).result as number[]
+  (ensureState(store.getState().queue as { result: number[] })).result
 
 const starsIn = (store: ReturnType<typeof makeStore>['store']) =>
   ensureState(store.getState().userStars).starredSongs
