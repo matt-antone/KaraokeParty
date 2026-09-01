@@ -18,7 +18,7 @@ const INDEX_ATTR = 'data-react-window-index'
  * `cacheKey` clears the cache: when it changes, index -> content has changed
  * (e.g. a new search) and every remembered height is meaningless.
  *
- * ⚠️ `estimate` must be referentially stable (see PaddedList's `rowHeight` prop).
+ * `estimate` must be referentially stable (see PaddedList's `rowHeight` prop).
  */
 const useMeasuredRowHeights = (
   estimate: (index: number) => number,
@@ -81,7 +81,7 @@ interface PaddedListProps {
   rowComponent: React.ComponentType<RowComponentProps>
   /**
    * Estimated height of a row, used until it has been measured.
-   * ⚠️ Must be referentially stable (module scope or useCallback), otherwise the
+   * Must be referentially stable (module scope or useCallback), otherwise the
    * measurement cache is rebuilt on every render.
    */
   rowHeight(index: number): number

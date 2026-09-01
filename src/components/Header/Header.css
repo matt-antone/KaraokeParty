@@ -2,12 +2,14 @@
    a deck's faceplate is opaque.
 
    The handoff has the wordmark row scrolling away above a sticky YourTurn.
-   That needs the page to own the scroll, and here the virtualized song list
-   owns it instead (PaddedList is a full-viewport react-window List with the
-   chrome overlaid on top), so nothing can sit above the chrome and scroll
-   under it. The wordmark row is therefore pinned with the rest of the header.
-   Cost is ~30px of fixed height on a 390px screen. Undoing this means moving
-   the lists to a window-scroller, which react-window v2 does not provide. */
+   The page does not own the scroll — every route is its own full-viewport
+   scroller under this fixed chrome — so `position: sticky` is not available.
+   Instead the whole faceplate is translated up by --chrome-shift, which
+   Header.tsx tracks 1:1 against the active scroller and caps so that whatever
+   sits below the wordmark stays pinned. Content is padded by the header, so its top
+   and faceplate bottom both sit at headerHeight - scrollTop and stay flush
+   until the cap; past it, content scrolls under the pinned remainder. Being a
+   transform, this never changes the measured header height. */
 
 .container {
   position: fixed;
@@ -18,6 +20,7 @@
   border-bottom: var(--seam-rule);
   box-shadow: var(--edge-top);
   z-index: 1;
+  transform: translateY(calc(var(--chrome-shift, 0px) * -1));
 
   &:empty {
     display: none;

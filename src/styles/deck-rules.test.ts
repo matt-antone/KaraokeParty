@@ -1,0 +1,164 @@
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+/**
+ * The DECK design system's load-bearing rules, asserted across the whole of
+ * src/ rather than screen by screen.
+ *
+ * These exist because every one of them was violated at some point during the
+ * rebrand in a way no type-check or unit test could see: a circular Slider
+ * handle in a system where only knobs and radios are circles, a live
+ * hsl(209 …) in Panel after the hue migration "finished", an opacity dim on a
+ * row that would let its swipe keys ghost through. The rules are cheap to
+ * check and expensive to rediscover.
+ *
+ * Scope note: this proves the SOURCE obeys the rules. It cannot prove the
+ * rendered result does — a container can still defeat a correct component,
+ * which is exactly what react-window did to non-truncating titles.
+ */
+
+const SRC = join(__dirname, '..')
+
+/** Files matching a glob, repo-relative. */
+function files (glob: string): string[] {
+  return execFileSync('grep', ['-rlE', '-e', '', SRC, '--include', glob], { encoding: 'utf8' })
+    .trim().split('\n').filter(Boolean)
+    .map(l => l.replace(SRC + '/', ''))
+}
+
+/** Ripgrep-style search returning matching "path:line:text" rows. */
+function search (pattern: string, glob: string): string[] {
+  try {
+    // -e is required: a pattern starting with "--" (e.g. --font-display) is
+    // otherwise parsed as a flag, grep errors, and the catch below turns that
+    // into a silent pass. This test suite exists to catch violations, so a
+    // check that cannot fail is worse than no check.
+    return execFileSync('grep', ['-rnE', '-e', pattern, SRC, '--include', glob],
+      { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 })
+      .trim().split('\n').filter(Boolean)
+      .map(l => l.replace(SRC + '/', ''))
+  } catch (err) {
+    // grep exits 1 for "no matches" and 2 for a bad pattern or bad usage.
+    // Collapsing both to [] makes a broken check look like a clean pass, which
+    // is how the --font-display and lookahead checks were silently passing.
+    const { status, stderr } = err as { status?: number, stderr?: Buffer }
+    if (status === 1) return []
+    throw new Error(`grep failed (${status}) for /${pattern}/: ${stderr?.toString().trim()}`)
+  }
+}
+
+describe('DECK rules', () => {
+  it('uses no emoji anywhere', () => {
+    // "No emoji. Anywhere." The favourite control is a text star and library
+    // facets are words on keys.
+    //
+    // Done in JS rather than grep: grep matches bytes in this locale, so a
+    // Unicode range flags fragments of unrelated multibyte characters — it
+    // reported every em dash in the codebase, and the legitimate ★.
+    // built rather than a literal: the /u flag on a regex literal needs an
+    // es6 target, and this file compiles under the project's lower one
+    const EMOJI = new RegExp('\\p{Extended_Pictographic}|\\uFE0F', 'u')
+    const hits: string[] = []
+
+    for (const file of files('*.tsx')) {
+      for (const [i, line] of readFileSync(join(SRC, file), 'utf8').split('\n').entries()) {
+        // ★ and ☆ are text stars, explicitly what the design system asks for
+        if (EMOJI.test(line.replace(/[★☆]/g, ''))) hits.push(`${file}:${i + 1}:${line.trim()}`)
+      }
+    }
+
+    expect([...new Set(hits)]).toEqual([])
+  })
+
+  it('has no glow: no drop-shadow filters, no text-shadow', () => {
+    // "There is no glow anywhere — an indicator is lit by being amber, not by
+    // bleeding light."
+    expect(search('filter:\\s*drop-shadow', '*.css')).toEqual([])
+    expect(search('text-shadow:', '*.css')
+      .filter(l => !/text-shadow:\s*none/.test(l))).toEqual([])
+  })
+
+  it('has no frosted glass', () => {
+    // "This brand has no frosted glass... a deck's faceplate is opaque."
+    expect(search('backdrop-filter', '*.css')).toEqual([])
+  })
+
+  it('has no hover states', () => {
+    // "No hover language — this is a touch product; states are press and
+    // selected only."
+    expect(search(':hover', '*.css')).toEqual([])
+  })
+
+  it('carries no old-brand hue, in any form', () => {
+    // The token pass missed a literal hsl(209 …) in Panel because it only
+    // matched the hsl(var(--hue-blue) …) form. Check both.
+    expect(search('--hue-(blue|pink)', '*.css')).toEqual([])
+    expect(search('hsla?\\(\\s*(209|270)\\b', '*.css')).toEqual([])
+  })
+
+  it('defines no colour outside the token file', () => {
+    // The palette is closed. A raw hex in a component is a fifth colour
+    // sneaking in without the "do you want a fifth indicator?" conversation.
+    const hex = search('#[0-9a-fA-F]{3,8}\\b', '*.css')
+      .filter(l => !l.startsWith('styles/variables.css'))
+      // data: URIs carry encoded SVG markup, not palette
+      .filter(l => !/url\("data:/.test(l))
+    expect(hex).toEqual([])
+  })
+
+  it('keeps Michroma off the app, reserved for the wordmark and player', () => {
+    // "Michroma — the wordmark and the player... never more than three words."
+    const uses = search('--font-display', '*.css')
+      // styles/ is where the token is defined and documented, not used
+      .filter(l => !l.startsWith('styles/'))
+      .filter(l => !/^(components\/Logo|routes\/Player)\//.test(l))
+      // YourTurn's wait is the one sanctioned exception: "the one number in
+      // the app set in Michroma", readable at arm's length in a dark room
+      .filter(l => !l.startsWith('components/Header/YourTurn/'))
+    expect(uses).toEqual([])
+  })
+
+  it('never dims with opacity outside the disabled state', () => {
+    // "Dim by colour, never by opacity: a list row is the only opaque layer
+    // over its swipe actions, so any transparency lets them ghost through."
+    // Disabled is the single sanctioned use (45%).
+    // A line-based grep cannot tell a disabled rule from a live one — the
+    // selector is on another line — so walk each file tracking its enclosing
+    // block. Keyframes are animation, not a dim of content.
+    const dims: string[] = []
+
+    for (const file of new Set(search('opacity:\\s*0?\\.[0-9]', '*.css').map(l => l.split(':')[0]))) {
+      const text = readFileSync(join(SRC, file), 'utf8')
+      let block = ''
+      let inKeyframes = false
+      let depth = 0
+
+      for (const [i, line] of text.split('\n').entries()) {
+        if (/@keyframes/.test(line)) inKeyframes = true
+        if (/\{/.test(line) && !/@keyframes/.test(line)) block = line
+        depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length
+        if (depth === 0) inKeyframes = false
+
+        const m = line.match(/opacity:\s*(0?\.[0-9]+)/)
+        if (!m || inKeyframes) continue
+        if (/disabled/.test(block)) continue // the one sanctioned dim, at 45%
+        // "numbers are quiet": silkscreen counts ride at 75%
+        if (m[1] === '.75' || m[1] === '0.75') continue
+        if (/^(components\/VuMeter|routes\/Queue\/components\/QueueItem)\//.test(file)) continue
+        dims.push(`${file}:${i + 1}:${line.trim()}`)
+      }
+    }
+
+    expect(dims).toEqual([])
+  })
+
+  it('gives song titles a minimum height, never a fixed one', () => {
+    // "--row-song, --row-queue and --row-artist are MINIMUMS, not fixed
+    // heights, and no row may be placed in a fixed-height container."
+    // anchored: min-height is the correct form and must not match
+    const fixed = search('^\\s*height:\\s*var\\(--row-(song|queue|artist)\\)', '*.css')
+    expect(fixed).toEqual([])
+  })
+})
