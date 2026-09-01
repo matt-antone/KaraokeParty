@@ -33,6 +33,19 @@ a {
   cursor: pointer;
 }
 
+/* The silkscreen label: every label printed on the panel — section headings,
+   panel titles, durations, tags, counts, waits, meter legends. A utility
+   because it is a package, not a size. The rule it enforces: if it is
+   language, it is Figtree; if it is data, it is mono. */
+.silkscreen {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
 /* Focus is a hard 2px amber ring with a chassis-coloured gap, never blurred.
    Set once here so every focusable thing gets the gap; the components that
    declare `outline: var(--focus-outline)` themselves just restate the ring. */

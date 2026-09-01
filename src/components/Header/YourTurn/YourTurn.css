@@ -1,0 +1,70 @@
+/* Your Turn — the singer's own channel strip, and the app's header.
+   Standalone it is a panel: brushed face, panel radius, raised. In the header
+   it loses its radius and gains the seam above and hairline below, because it
+   is machined into the chrome rather than sitting on it. */
+
+.container {
+  background: var(--brush);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--bevel);
+  overflow: hidden;
+}
+
+.inHeader {
+  border-radius: 0;
+  box-shadow: var(--edge-top);
+  border-top: var(--seam-rule);
+  border-bottom: var(--hair-rule);
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  padding: var(--gap-3) var(--gap-4) var(--gap-2);
+}
+
+.headline {
+  min-width: 0;
+}
+
+.legend {
+  margin-bottom: 3px;
+}
+
+/* the one number in the app set in Michroma: it has to be readable at arm's
+   length, in a dark room, by someone holding a drink */
+.wait {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--vu);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* paused is a visibly dead channel: the meter empties and the wait goes cold */
+.paused .wait {
+  color: var(--ink-3);
+}
+
+.songCount {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.meter {
+  padding: 0 var(--gap-4);
+}
+
+.label {
+  margin-top: 5px;
+}
+
+.action {
+  padding: var(--gap-2) var(--gap-4) var(--gap-3);
+}

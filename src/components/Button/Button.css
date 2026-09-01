@@ -20,6 +20,13 @@
 .default,
 .primary,
 .danger {
+  /* a labelled key sets its glyph and label on one line, centred together.
+     .container makes svg a block for bare icon keys, which would otherwise
+     push the label onto a second line. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-2);
   padding: var(--gap-3);
   width: 100%;
   font-size: var(--text-m);

@@ -5,14 +5,19 @@ import { RootState } from 'store/store'
 import { Routes, Route, useLocation } from 'react-router'
 import { createSelector } from '@reduxjs/toolkit'
 
+import { ensureState } from 'redux-optimistic-ui'
+import { formatSeconds } from 'lib/dateTime'
 import { requestScanStop } from 'store/modules/prefs'
+import { setPaused } from 'routes/Queue/modules/queue'
+import getMyRotation from 'routes/Queue/selectors/getMyRotation'
+import getMyUpcoming from 'routes/Queue/selectors/getMyUpcoming'
 import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
 import getWaits from 'routes/Queue/selectors/getWaits'
 import LibraryHeader from 'routes/Library/components/LibraryHeader/LibraryHeader'
 import QueueHeader from 'routes/Queue/components/QueueHeader/QueueHeader'
 import PlaybackCtrl from './PlaybackCtrl/PlaybackCtrl'
 import ProgressBar from './ProgressBar/ProgressBar'
-import UpNext from './UpNext/UpNext'
+import YourTurn from './YourTurn/YourTurn'
 import styles from './Header.css'
 
 // selectors
@@ -33,17 +38,11 @@ const getUserWait = createSelector(
   },
 )
 
-const getStatusProps = createSelector(
+const getIsUpNow = createSelector(
   [getRoundRobinQueue, getQueueId, getIsAtQueueEnd, getUserId],
   (queue, queueId, isAtQueueEnd, userId) => {
-    const { result, entities } = queue
-    const curIdx = result.indexOf(queueId)
-    const curItem = entities[queueId]
-
-    return {
-      isUpNext: result[curIdx + 1] ? entities[result[curIdx + 1]].userId === userId : false,
-      isUpNow: curItem ? !isAtQueueEnd && curItem.userId === userId : false,
-    }
+    const curItem = queue.entities[queueId]
+    return curItem ? !isAtQueueEnd && curItem.userId === userId : false
   },
 )
 
@@ -54,8 +53,12 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   const isScanning = useAppSelector(state => state.prefs.isScanning)
   const scannerText = useAppSelector(state => state.prefs.scannerText)
   const scannerPct = useAppSelector(state => state.prefs.scannerPct)
-  const { isUpNext, isUpNow } = useAppSelector(getStatusProps)
+  const userId = useAppSelector(getUserId)
+  const isUpNow = useAppSelector(getIsUpNow)
   const wait = useAppSelector(getUserWait)
+  const { position, rotationSize } = useAppSelector(getMyRotation)
+  const songCount = useAppSelector(getMyUpcoming).length
+  const isPaused = useAppSelector(state => ensureState(state.queue).pausedUserIds.includes(userId))
 
   const location = useLocation()
   const isPlayer = location.pathname.replace(/\/$/, '').endsWith('/player')
@@ -65,8 +68,20 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
 
   return (
     <div className={clsx(styles.container, 'bg-blur')} ref={ref}>
-      {!isPlayer && isPlayerPresent
-        && <UpNext isUpNext={isUpNext} isUpNow={isUpNow} wait={wait} />}
+      {/* nothing queued and not sitting out means no status to report */}
+      {!isPlayer && isPlayerPresent && (songCount > 0 || isPaused)
+        && (
+          <YourTurn
+            inHeader
+            isUpNow={isUpNow}
+            isPaused={isPaused}
+            wait={wait === undefined ? undefined : formatSeconds(wait, true)}
+            position={position}
+            rotationSize={rotationSize}
+            songCount={songCount}
+            onTogglePaused={() => dispatch(setPaused({ isPaused: !isPaused }))}
+          />
+        )}
 
       {(isUpNow || isAdmin)
         && <PlaybackCtrl />}
