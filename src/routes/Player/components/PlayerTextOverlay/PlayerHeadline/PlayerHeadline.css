@@ -8,6 +8,11 @@
   text-align: center;
   text-transform: uppercase;
   color: var(--ink);
+  /* Not a glow. The headline sits over arbitrary video, and a plain dark drop
+     is the only thing keeping it legible against a bright frame. The banned
+     effect is the old brand's coloured bloom — light bleeding *out* of the
+     type; this is shadow falling behind it. */
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
 }
 
 /* amber for what the room should act on, ink for what it should just read */

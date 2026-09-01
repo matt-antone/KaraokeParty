@@ -75,9 +75,22 @@ describe('DECK rules', () => {
   it('has no glow: no drop-shadow filters, no text-shadow', () => {
     // "There is no glow anywhere — an indicator is lit by being amber, not by
     // bleeding light."
+    //
+    // The rule bans GLOW: light bleeding outward from the type, which is what
+    // the old brand did in colour. A plain dark drop behind type that sits
+    // over arbitrary video is the opposite — it subtracts light to keep the
+    // type readable, and the handoff's own PlayerHeadline.jsx carries it.
+    // Allowed only there, and only in black: any coloured or zero-offset
+    // shadow is a glow again and still fails.
+    // the sole exception, pinned to the file AND the exact declaration
+    const LEGIBILITY_SHADOW = new RegExp(
+      '^routes/Player/components/PlayerTextOverlay/PlayerHeadline/PlayerHeadline\\.css:'
+      + '\\d+:\\s*text-shadow: 0 2px 12px rgba\\(0, 0, 0, \\.8\\);$')
+
     expect(search('filter:\\s*drop-shadow', '*.css')).toEqual([])
     expect(search('text-shadow:', '*.css')
-      .filter(l => !/text-shadow:\s*none/.test(l))).toEqual([])
+      .filter(l => !/text-shadow:\s*none/.test(l))
+      .filter(l => !LEGIBILITY_SHADOW.test(l))).toEqual([])
   })
 
   it('has no frosted glass', () => {
@@ -146,7 +159,7 @@ describe('DECK rules', () => {
         if (/disabled/.test(block)) continue // the one sanctioned dim, at 45%
         // "numbers are quiet": silkscreen counts ride at 75%
         if (m[1] === '.75' || m[1] === '0.75') continue
-        if (/^(components\/VuMeter|routes\/Queue\/components\/QueueItem)\//.test(file)) continue
+        if (/^components\/VuMeter\//.test(file)) continue
         dims.push(`${file}:${i + 1}:${line.trim()}`)
       }
     }

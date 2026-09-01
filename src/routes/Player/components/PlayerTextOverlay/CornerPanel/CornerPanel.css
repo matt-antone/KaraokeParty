@@ -14,9 +14,13 @@
   box-shadow: var(--bevel);
 }
 
-.label {
+/* one ink level up from the .silkscreen utility's --ink-3: this is read from
+   across the room, not from a phone in your hand. Nested so it outranks the
+   global utility without changing it. */
+.panel .label {
   font-size: 1.1vh;
   margin-bottom: 0.5vh;
+  color: var(--ink-2);
 }
 
 .singer {

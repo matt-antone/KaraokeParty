@@ -14,8 +14,13 @@
   padding: 0 var(--gap-4);
   border-bottom: var(--hair-rule);
 
+  /* A panel title steps up one ink level from the .silkscreen utility's
+     --ink-3. The utility is right for meta, counts and placeholders; a title
+     is a heading and has to hold at a glance. Scoped here (and so outranking
+     the global utility) rather than changing .silkscreen itself. */
   h1 {
     margin: 0;
+    color: var(--ink-2);
   }
 }
 

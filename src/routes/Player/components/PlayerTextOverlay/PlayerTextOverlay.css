@@ -13,6 +13,18 @@
   /* the corner panel and the fullscreen key share the top-right corner; the key
      is transient, so the panel steps down out of its way while it is up */
   --corner-panel-top: 2vh;
+
+  /* Every silkscreen label on the stage steps up one ink level from the
+     utility's --ink-3. On a phone --ink-3 is correct for meta; on a room TV
+     these are the words read from the back of the room, and the darker step
+     costs legibility. Nested so it outranks the global utility without
+     changing it — the utility is right everywhere else. */
+  .stateLabel,
+  .stateFooter,
+  .comingUpHeading,
+  .queueDepthLabel {
+    color: var(--ink-2);
+  }
 }
 
 .fullscreenKeyShown {
@@ -34,7 +46,9 @@
   margin-top: 1.5vh;
 }
 
-.fault {
+/* the one label that is not ink: a fault reads red. Matches the specificity of
+   the --ink-2 block above, and wins by coming after it. */
+.container .fault {
   color: var(--alert);
 }
 

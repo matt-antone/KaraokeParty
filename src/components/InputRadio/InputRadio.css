@@ -3,6 +3,7 @@
   align-items: center;
   gap: var(--gap-3);
   min-height: var(--target);
+  font-size: var(--text-l);
   cursor: pointer;
 
   &:has(input:disabled) {

@@ -20,7 +20,7 @@
     width: 100%;
     background-color: var(--key-well);
     box-shadow: var(--well);
-    border-radius: var(--radius-key);
+    border-radius: 4px;
     cursor: pointer;
   }
 
@@ -29,7 +29,7 @@
     height: var(--track-height);
     top: calc(50% - (var(--track-height) / 2));
     left: 0;
-    border-radius: var(--radius-key);
+    border-radius: 4px;
     background-color: var(--vu);
     cursor: pointer;
   }
@@ -44,7 +44,7 @@
   width: 14px;
   height: 28px;
   margin-top: -14px;
-  border-radius: var(--radius-key);
+  border-radius: 2px;
   background: var(--key-face);
   box-shadow: var(--bevel);
   cursor: pointer;

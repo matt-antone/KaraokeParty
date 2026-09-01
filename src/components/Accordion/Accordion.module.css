@@ -14,6 +14,12 @@
   }
 }
 
+/* The body's padding belongs to the accordion, not to whatever it wraps —
+   three call sites had drifted to three different values. */
+.content {
+  padding: var(--gap-3);
+}
+
 .icon {
   flex-shrink: 0;
   color: var(--ink-3);
@@ -48,8 +54,9 @@
     }
   }
 
+  /* 22px: --icon-l (26px) is reserved for transport and nav */
   svg {
     display: block;
-    height: var(--icon-l);
+    height: var(--icon-m);
   }
 }

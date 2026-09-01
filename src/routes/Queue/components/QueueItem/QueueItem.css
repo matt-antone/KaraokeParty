@@ -29,25 +29,22 @@
   gap: var(--gap-3);
   /* a MINIMUM: a long title wraps and the row grows past it */
   min-height: var(--row-queue);
-  padding: var(--gap-2) var(--gap-3);
-  background: var(--faceplate);
+  padding: var(--gap-2) var(--gap-2) var(--gap-2) var(--gap-3);
+  background: var(--brush);
   line-height: normal;
 }
 
-/* The playing row IS the progress bar — an amber wash, never a separate
-   progress element. */
-.current {
-  background: var(--vu-well);
-}
-
+/* The playing row IS the progress bar — an amber wash grown to the played
+   percentage, never a separate progress element and never a tint over the
+   whole row. The playhead is the fill's own right edge. */
 .fill {
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
   width: var(--progress, 0%);
-  background: var(--vu-dim);
-  opacity: .45;
+  background: linear-gradient(180deg, rgba(255, 138, 30, .26), rgba(255, 138, 30, .08));
+  border-right: 2px solid var(--vu);
   pointer-events: none;
 }
 
@@ -68,10 +65,10 @@
   left: 0;
   width: var(--progress, 0%);
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 138, 30, .16) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 35%, rgba(255, 196, 120, .16) 50%, transparent 65%);
   background-size: 55% 100%;
-  background-repeat: repeat-x;
-  animation: vu-sweep 6s linear infinite;
+  background-repeat: no-repeat;
+  animation: vu-sweep 4s linear infinite;
 }
 
 .paused .sweep {
@@ -83,7 +80,8 @@
 }
 
 .dragHandle {
-  display: flex;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
   color: var(--ink-5);
   touch-action: none;
@@ -93,17 +91,10 @@
   position: relative;
   flex-shrink: 0;
   width: var(--avatar-queue);
-  aspect-ratio: 1;
-  overflow: hidden;
-  border-radius: var(--radius-key);
-  box-shadow: var(--well);
+}
 
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+.avatar {
+  width: 100%;
 }
 
 /* the wait rides on the avatar, in mono, because it is data */
@@ -113,16 +104,16 @@
   right: 0;
   display: flex;
   align-items: center;
-  padding: 1px 3px;
+  padding: 2px 4px;
   font-family: var(--font-mono);
   font-size: 8.5px;
   letter-spacing: .06em;
   color: var(--ink-2);
   background: var(--chassis-deep);
-  border-top-left-radius: var(--radius-key);
+  border-radius: 2px 0 3px 0;
 }
 
-.waitIsOwner {
+.waitIsCurrent {
   color: var(--on-vu);
   background: var(--vu);
 }
@@ -136,6 +127,7 @@
 /* Song titles are never truncated, site-wide: they wrap and the row grows. */
 .title {
   font-size: var(--text-2xl);
+  line-height: 1.2;
   font-weight: var(--weight-semibold);
   color: var(--ink);
   overflow-wrap: anywhere;
@@ -173,7 +165,7 @@
   .title { color: var(--ink-4); }
   .artist,
   .user { color: var(--ink-5); }
-  .imageContainer { filter: grayscale(1); }
+  .imageContainer { filter: grayscale(1) brightness(.7); }
 }
 
 .errored .title {

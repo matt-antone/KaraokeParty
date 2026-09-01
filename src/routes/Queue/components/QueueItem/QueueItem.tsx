@@ -113,7 +113,6 @@ const QueueItem = ({
       <div
         className={clsx(
           styles.container,
-          isCurrent && styles.current,
           isCurrent && !isPlaying && styles.paused,
           isSpent && styles.spent,
           isErrored && styles.errored,
@@ -136,10 +135,13 @@ const QueueItem = ({
         )}
 
         <div className={styles.imageContainer}>
-          <UserImage userId={userId} dateUpdated={userDateUpdated} />
-          {isUpcoming && (wait || isPaused) && (
-            <div className={clsx(styles.wait, isOwner && styles.waitIsOwner)}>
-              {isPaused ? <Icon icon='PAUSE' size={12} /> : wait}
+          <UserImage userId={userId} dateUpdated={userDateUpdated} className={styles.avatar} />
+          {/* the chip marks the playing row and the waits ahead of it. The
+              current row reads NOW — without it the amber state is
+              unreachable, since isUpcoming and isCurrent are exclusive. */}
+          {(isCurrent || (isUpcoming && (wait || isPaused))) && (
+            <div className={clsx(styles.wait, isCurrent && styles.waitIsCurrent)}>
+              {isPaused ? <Icon icon='PAUSE' size={12} /> : isCurrent ? 'NOW' : wait}
             </div>
           )}
         </div>
