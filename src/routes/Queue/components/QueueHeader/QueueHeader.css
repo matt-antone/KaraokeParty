@@ -1,39 +1,7 @@
-/* tabs match the artists/songs tabs in LibraryHeader */
+/* The tab row is components/Tabs — its CSS used to be duplicated here and in
+   LibraryHeader. What is left is the gutter around it. */
 .container {
   display: flex;
   flex-direction: column;
-  padding: var(--space-xs) var(--space-s) var(--space-s);
-}
-
-.tabRow {
-  display: flex;
-  gap: var(--space-s);
-}
-
-.tab {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  flex: 1;
-  min-height: 44px;
-  padding: 6px 0;
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-gray-6) !important;
-  cursor: pointer;
-  background-color: var(--faceplate-lo);
-  border: none;
-  border-radius: var(--border-radius);
-}
-
-.tabActive {
-  color: #000 !important;
-  background-color: var(--btn-active-bg-color);
-}
-
-.tabCount {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-normal);
-  opacity: .8;
+  padding: 0 var(--gutter) var(--gap-3);
 }

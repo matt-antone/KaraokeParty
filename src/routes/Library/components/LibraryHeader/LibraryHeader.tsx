@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { setFilterStr, resetFilterStr, setTab, toggleFilterStarred, setFilterTag, SONG_FACETS, FILTER_FACETS } from '../../modules/library'
 import getSearchResults, { getFacetValues } from '../../selectors/getSearchResults'
 import Button from 'components/Button/Button'
+import Tabs from 'components/Tabs/Tabs'
 import styles from './LibraryHeader.css'
 
 // each facet gets an emoji so all of them fit on one row
@@ -109,28 +110,14 @@ const LibraryHeader = () => {
         />
       </div>
 
-      <div className={styles.tabRow} role='tablist'>
-        <button
-          type='button'
-          role='tab'
-          aria-selected={tab === 'artists'}
-          className={clsx(styles.tab, tab === 'artists' && styles.tabActive)}
-          onClick={() => dispatch(setTab('artists'))}
-        >
-          Artists
-          <span className={styles.tabCount}>{artistsResult.length}</span>
-        </button>
-        <button
-          type='button'
-          role='tab'
-          aria-selected={tab === 'songs'}
-          className={clsx(styles.tab, tab === 'songs' && styles.tabActive)}
-          onClick={() => dispatch(setTab('songs'))}
-        >
-          Songs
-          <span className={styles.tabCount}>{songsResult.length}</span>
-        </button>
-      </div>
+      <Tabs<'artists' | 'songs'>
+        active={tab}
+        onChange={id => dispatch(setTab(id))}
+        tabs={[
+          { id: 'artists', label: 'Artists', count: artistsResult.length },
+          { id: 'songs', label: 'Songs', count: songsResult.length },
+        ]}
+      />
     </div>
   )
 }
