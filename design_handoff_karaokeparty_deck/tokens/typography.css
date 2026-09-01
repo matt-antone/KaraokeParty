@@ -1,0 +1,38 @@
+/* Three faces, three jobs, no overlap.
+   Michroma is wide and slow to read — it is never used below 12px and never for
+   more than three words. JetBrains Mono carries every label on the panel, always
+   uppercase and letterspaced, like silkscreen printing. Figtree does the reading. */
+:root {
+  --font-display: 'Michroma', 'Arial Narrow', sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* body scale — phone-first; inputs never below 16px (iOS zooms) */
+  --text-xs: 0.5938rem;   /* 9.5px  — silkscreen labels, meter legends */
+  --text-s: 0.75rem;      /* 12px   — tab labels, chips, counts */
+  --text-m: 0.875rem;     /* 14px   — queue artist, table cells */
+  --text-l: 1rem;         /* 16px   — form fields, banner copy */
+  --text-xl: 1.0625rem;   /* 17px   — artist name, search field */
+  --text-2xl: 1.125rem;   /* 18px   — queue title */
+  --text-3xl: 1.375rem;   /* 22px   — panel titles */
+
+  /* display scale — wordmark and player only */
+  --display-s: 0.7813rem; /* 12.5px — the app-header wordmark */
+  --display-m: 1.625rem;  /* 26px   — player singer name on a phone-sized stage */
+  --display-l: 5.5vh;     /* player singer name, on the TV */
+  --display-xl: 11vh;     /* player countdown numeral */
+
+  /* silkscreen labels are a package, not just a size */
+  --silkscreen-size: var(--text-xs);
+  --silkscreen-tracking: 0.14em;
+
+  --icon-s: 1rem;         /* 16px */
+  --icon-m: 1.375rem;     /* 22px — row actions */
+  --icon-l: 1.625rem;     /* 26px — transport, nav */
+  --icon-xl: 1.875rem;    /* 30px — play/pause */
+}

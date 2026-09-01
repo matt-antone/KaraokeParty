@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>KaraokeParty — app</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+
+  body { width: 390px; margin: 0 auto; }
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* Your Turn is pinned to the top of the viewport; the wordmark row above it scrolls away.
+     Only the bottom nav stays pinned. */
+  .hdr { background: var(--brush); box-shadow: var(--edge-top); }
+  .hdr-top { display: flex; align-items: center; gap: var(--gap-3); padding: var(--gap-3) var(--gutter); }
+  .knob { position: relative; width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
+          background: linear-gradient(145deg,#3a3d42,#1a1c1e); box-shadow: var(--bevel); display: grid; place-items: center; }
+  .knob i { width: 52%; height: 52%; border-radius: 50%; background: linear-gradient(145deg,#222427,#2f3237); box-shadow: var(--well-deep); }
+  .knob b { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); width: 3px; height: 20%; border-radius: 2px; background: var(--vu); }
+  .wm { font-family: var(--font-display); font-size: var(--display-s); letter-spacing: .13em; line-height: 1.55; }
+  .wm span { color: var(--vu); }
+  .room { margin-left: auto; flex-shrink: 0; }
+
+  .header-turn { position: sticky; top: 0; z-index: 5; border-radius: 0; box-shadow: var(--edge-top);
+                border-top: var(--seam-rule); border-bottom: var(--hair-rule); }
+  /* superseded: the one-row strip */
+  .status { display: flex; align-items: center; gap: var(--gap-3); width: 100%; min-height: var(--target);
+            padding: 0 var(--gap-4); text-align: left; border: none; cursor: pointer;
+            border-top: 2px solid var(--vu); background: var(--key-well); font-family: var(--font-body); }
+  .status .s-lbl { font-family: var(--font-mono); font-size: var(--silkscreen-size);
+                   letter-spacing: var(--silkscreen-tracking); text-transform: uppercase; color: var(--ink-3); flex-shrink: 0; }
+  .status .s-val { font-family: var(--font-display); font-size: 1rem; letter-spacing: .08em; text-transform: uppercase;
+                   line-height: 1; font-weight: 400; color: var(--vu); }
+  .status.now { background-image: var(--key-face-vu); background-color: transparent; border-top: none; }
+  .status.now .s-lbl, .status.now .s-val { color: var(--on-vu); }
+  .status.paused { border-top-color: var(--hairline); }
+  .status.paused .s-val { color: var(--ink-3); }
+
+  .transport { display: flex; align-items: center; gap: var(--gap-3); padding: var(--gap-3) var(--gap-4); }
+  /* the transport is a player control: it lives in the Settings > Player panel, not the header */
+  .panel-transport { padding: var(--gap-2) 0 var(--gap-3); }
+  /* narrower than the old header row: drop the silkscreen label so the meter reads */
+  .panel-transport .vol .silkscreen { display: none; }
+  .panel-transport .vol { gap: var(--gap-2); }
+  .transport > .key { flex: 0 0 auto; width: var(--target-l); padding: 0; }
+  .transport > .vol { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--gap-2); }
+  .transport > .vol .vumeter { flex: 1 1 auto; min-width: 40px; }
+  .key { display: inline-flex; align-items: center; justify-content: center; gap: var(--gap-2); min-width: var(--target);
+         min-height: var(--target); border: none; border-radius: var(--radius-key); cursor: pointer;
+         font-family: var(--font-body); font-size: var(--text-m); font-weight: var(--weight-bold);
+         background-image: var(--key-face); color: var(--ink); box-shadow: var(--bevel); transition: transform var(--dur-key) var(--ease-key); }
+  .key:active { transform: translateY(1px); }
+  .key.vu { background-image: var(--key-face-vu); color: var(--on-vu); }
+  .key.block { display: flex; width: 100%; padding: 0 var(--gap-5); }
+  .key.lg { min-width: var(--target-l); min-height: var(--target-l); }
+  .flush { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: var(--target); min-height: var(--target);
+           background: transparent; border: none; cursor: pointer; color: var(--ink-2); font-family: var(--font-body); }
+  .transport .amber-glyph { color: var(--vu); }
+
+  /* the level meter. NOT .vu — that is the amber key tone, and one class name must mean one thing */
+  .vumeter { display: flex; gap: var(--gap-1); height: 12px; width: 100%; }
+  .vumeter.thin { height: 8px; }
+  .vumeter.tiny { height: 6px; }
+  .vumeter i { flex: 1; border-radius: 1px; background: var(--key-well); box-shadow: var(--well); }
+  .vumeter i.on { background: var(--vu-dim); box-shadow: none; }
+  .vumeter i.hot { background: var(--vu); box-shadow: none; }
+
+  .tabs { display: flex; gap: var(--gap-1); margin: var(--gap-4) var(--gutter) 0; padding: 3px;
+          border-radius: var(--radius-panel); background: var(--key-well); box-shadow: var(--well); }
+  .tab { display: flex; align-items: center; justify-content: center; gap: var(--gap-2); flex: 1; min-height: var(--target);
+         font-family: var(--font-body); font-size: var(--text-s); font-weight: var(--weight-bold);
+         border: none; border-radius: var(--radius-tab); cursor: pointer; color: var(--ink-3); background: transparent; }
+  .tab b { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  .tab.on { color: var(--vu); background-image: var(--key-face); box-shadow: var(--bevel); }
+
+  .body { flex: 1; display: flex; flex-direction: column; gap: var(--gap-4); padding: 0 var(--gutter) var(--gap-5); }
+
+  /* YourTurn */
+  .mystatus { background: var(--brush); border-radius: var(--radius-panel); box-shadow: var(--bevel);
+              overflow: hidden; }
+  .ms-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--gap-3);
+            padding: var(--gap-3) var(--gap-4) var(--gap-2); }
+  .ms-head { font-family: var(--font-display); font-size: 1.15rem; letter-spacing: .08em; text-transform: uppercase;
+             line-height: 1; color: var(--vu); }
+  .mystatus.paused .ms-head { color: var(--ink-3); }
+  .ms-meter { padding: 0 var(--gap-4); }
+  .ms-label { margin-top: 5px; }
+  .ms-btn { padding: var(--gap-2) var(--gap-4) var(--gap-3); }
+
+  /* queue rows */
+  /* swipe shell: keys sit underneath, the row slides over them */
+  /* the owner rule lives on the shell so it survives the swipe */
+  .swipe { position: relative; margin-bottom: 3px; border-radius: var(--radius-panel);
+           overflow: hidden; box-shadow: var(--bevel); border-left: 2px solid var(--vu); }
+  .keys { position: absolute; top: 0; right: 0; bottom: 0; display: flex; }
+  .keys button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+                 width: 72px; border: none; border-left: 1px solid var(--chassis-deep); cursor: pointer;
+                 font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+                 background-image: var(--key-face-alert); color: #fff; }
+  .keys button.tone-vu { background-image: var(--key-face-vu); color: var(--on-vu); }
+  .slider { position: relative; transform: translateX(0); transition: transform var(--dur-ui) var(--ease-key); touch-action: pan-y; }
+  .slider.dragging { transition: none; }
+
+  .q { position: relative; display: flex; align-items: center; gap: var(--gap-3); min-height: var(--row-queue);
+       padding: var(--gap-2) var(--gap-2) var(--gap-2) var(--gap-3); background: var(--brush); }
+  /* dim by colour, never opacity: .q is the only opaque layer over the action keys */
+  .paused-list .q-title { color: var(--ink-4); }
+  .paused-list .q-artist, .paused-list .q-singer { color: var(--ink-5); }
+  .paused-list .av-wrap { filter: grayscale(1) brightness(.7); }
+  .paused-list .swipe { border-left-color: var(--hairline); }
+  .drag { display: grid; place-items: center; color: var(--ink-5); flex-shrink: 0; cursor: grab; }
+  .av-wrap { position: relative; width: var(--avatar-queue); flex-shrink: 0; align-self: center; }
+  .av { aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--radius-key);
+        background: var(--key-well); box-shadow: var(--well-deep); color: var(--ink-5); }
+  .wait { position: absolute; bottom: 0; right: 0; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .06em;
+          padding: 2px 4px; border-radius: 2px 0 3px 0; background: var(--chassis-deep); color: var(--ink-2); }
+  .q-main { flex: 1; min-width: 0; }
+  .q-title { font-size: var(--text-2xl); font-weight: var(--weight-semibold); line-height: 1.2; text-wrap: pretty; }
+  .q-artist { font-size: var(--text-m); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .q-singer { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
+              margin-top: 3px; color: var(--vu); }
+  .tray { display: flex; align-items: center; flex-shrink: 0; }
+  .tray .flush { min-width: 46px; min-height: var(--target); }
+  .star { color: var(--ink-5); font-size: 15px; }
+  .star.on { color: var(--vu); }
+  .star b { font-family: var(--font-mono); font-size: 9px; font-weight: 400; }
+
+  /* panel + history */
+  .panel { background: var(--brush); border-radius: var(--radius-panel); box-shadow: var(--bevel); overflow: hidden; }
+  .panel-hd { display: flex; align-items: center; min-height: var(--header-bar); padding: 0 var(--gap-4);
+              border-bottom: var(--hair-rule); }
+  .panel-hd h2 { margin: 0; font-family: var(--font-mono); font-size: var(--silkscreen-size); font-weight: 400;
+                 letter-spacing: var(--silkscreen-tracking); text-transform: uppercase; color: var(--ink-2); }
+  .h-row { display: flex; align-items: center; gap: var(--gap-3); min-height: var(--target);
+           padding: var(--gap-2) var(--gap-4); border-top: var(--seam-rule); }
+  .h-row.first { border-top: none; }
+  .h-main { flex: 1; min-width: 0; }
+  .h-title { font-size: var(--text-m); font-weight: var(--weight-semibold); color: var(--ink-2);
+             line-height: 1.3; text-wrap: pretty; }
+  .h-artist { letter-spacing: .06em; margin-top: 2px; }
+  .h-date { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); flex-shrink: 0; }
+
+  .nav { position: sticky; bottom: 0; z-index: 10; display: flex; background: var(--brush); box-shadow: var(--edge-bottom); }
+  .nav a { flex: 1; display: grid; place-items: center; min-height: var(--nav-bar); color: var(--ink-5);
+           border-top: 2px solid transparent; }
+  .nav a.on { color: var(--vu); border-top-color: var(--vu); }
+
+
+  /* ---------- library ---------- */
+  .search { display: flex; align-items: center; gap: var(--gap-2); padding: var(--gap-4) var(--gutter) 0; }
+  .search input { flex: 1; min-width: 0; min-height: var(--target); padding: 0; font-size: var(--text-xl);
+                  background: transparent; box-shadow: none; border: none; outline: none; border-radius: 0;
+                  color: var(--ink); }
+  .search input:focus-visible { box-shadow: none; outline: none; }
+  .s-ic { display: grid; place-items: center; width: 30px; flex-shrink: 0; color: var(--ink-3); }
+  .facets { display: flex; gap: var(--gap-2); padding: var(--gap-4) var(--gutter) 0; }
+  .facet { flex: 1; min-width: 0; min-height: var(--target); padding: 0 var(--gap-2); font-family: var(--font-body);
+           font-size: var(--text-s); font-weight: 600; border: none; border-radius: var(--radius-key); cursor: pointer;
+           color: var(--ink-3); background: var(--key-well); box-shadow: var(--well); }
+  .facet.on { color: var(--on-vu); background-image: var(--key-face-vu); box-shadow: var(--bevel); }
+  .listwrap { display: flex; padding: var(--gap-4) 0 var(--gap-5); }
+  .list { flex: 1; min-width: 0; padding: 0 var(--gap-3) 0 var(--gutter); }
+  .rail { width: 26px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px;
+          font-family: var(--font-mono); font-size: 11px; color: var(--ink-5); }
+  .rail i { font-style: normal; }
+  .rail i.on { color: var(--vu); }
+  .folder { display: flex; align-items: center; gap: var(--gap-3); min-height: var(--row-artist);
+            border-bottom: var(--seam-rule); }
+  .fic { position: relative; display: grid; place-items: center; color: var(--ink-5); flex-shrink: 0; }
+  .fic b, .fic .fchev { position: absolute; font-family: var(--font-mono); font-size: 10px; font-weight: 400; color: var(--ink); top: 54%; transform: translateY(-50%); }
+  .fic .fchev { display: grid; place-items: center; }
+  .fname { flex: 1; min-width: 0; font-size: var(--text-xl); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fname.up { color: var(--vu); }
+  .folder .fname.star ~ *, .fname.star { color: var(--ink); }
+  .folder:has(.fname.star) .fic { color: var(--vu); }
+  .folder:has(.fname.star) .fic b { color: var(--on-vu); }
+  .song { display: flex; align-items: center; gap: var(--gap-3); min-height: var(--row-song);
+          margin-bottom: 3px; padding: var(--gap-2) var(--gap-2) var(--gap-2) 0;
+          border-radius: var(--radius-key); background-image: var(--key-face); box-shadow: var(--bevel); }
+  .song .dur { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); width: 38px; text-align: right;
+               flex-shrink: 0; align-self: center; }
+  .s-main { flex: 1; min-width: 0; }
+  .s-title { font-size: var(--text-m); font-weight: 600; line-height: 1.3; text-wrap: pretty; }
+  .s-meta { font-family: var(--font-mono); font-size: 9px; letter-spacing: .06em; color: var(--ink-3); margin-top: 3px; }
+  .song.queued { background: var(--standby-well); background-image: none; box-shadow: none; }
+  .song.queued .s-title { color: var(--standby); }
+  .song.played { background: transparent; background-image: none; box-shadow: inset 0 0 0 1px var(--seam); }
+  .song.played .s-title { color: var(--ink-4); }
+  .song.played .s-meta { color: var(--ink-5); }
+  .qtag { font-family: var(--font-mono); font-size: 9px; letter-spacing: .1em; color: var(--standby); flex-shrink: 0;
+          padding-right: var(--gap-2); }
+
+  /* ---------- queue extras ---------- */
+  .swipe.plain { border-left-color: transparent; }
+  .swipe .keys button.tone-vu { background-image: var(--key-face-vu); color: var(--on-vu); }
+  .q.current .fill { position: absolute; top: 0; bottom: 0; left: 0; pointer-events: none;
+                     background: linear-gradient(180deg, rgba(255,138,30,.26), rgba(255,138,30,.08));
+                     border-right: 2px solid var(--vu); }
+  .q.current .sweep { position: absolute; top: 0; bottom: 0; left: 0; pointer-events: none;
+                      background: linear-gradient(90deg, transparent 35%, rgba(255,196,120,.16) 50%, transparent 65%);
+                      background-size: 55% 100%; background-repeat: no-repeat; animation: vu-sweep 4s linear infinite; }
+  .wait.now { background: var(--vu); color: var(--on-vu); }
+  .swipe.spent .q-title { color: var(--ink-4); }
+  .swipe.spent .q-artist, .swipe.spent .q-singer { color: var(--ink-5); }
+  .swipe.spent .av-wrap { filter: grayscale(1) brightness(.7); }
+  .q-singer.you { color: var(--vu); }
+
+  /* ---------- panels / settings ---------- */
+  .pad-body { padding: var(--gap-4); }
+  .panel-hd select { max-width: 50%; }
+  .ell { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* the only way into a room or user editor — give it a real target */
+  tbody td { height: var(--target); }
+  tbody td a { display: flex; align-items: center; height: var(--target); overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+  .mono-cell { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+  .avpick { position: relative; width: 96px; height: 96px; flex-shrink: 0; display: grid; place-items: center;
+            border-radius: var(--radius-key); background: var(--key-well); box-shadow: var(--well); color: var(--ink-5); }
+  .avpick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .acc { border-radius: var(--radius-key); overflow: hidden; background: var(--key-well); box-shadow: var(--well); }
+  .acc-hd { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-3); width: 100%;
+            min-height: var(--target); padding: 0 var(--gap-3); font-family: var(--font-body); font-size: var(--text-m);
+            font-weight: 600; text-align: left; color: var(--ink); background-image: var(--key-face); border: none;
+            box-shadow: var(--bevel); cursor: pointer; }
+  .acc-hd svg { color: var(--ink-3); flex-shrink: 0; }
+  .acc.open .acc-hd svg { transform: rotate(90deg); }
+  .acc-body { padding: var(--gap-3); }
+  .folder-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+  .mono-path { font-family: var(--font-mono); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--vu); flex-shrink: 0; }
+  .player-note { margin: 0 0 var(--gap-3); font-family: var(--font-mono); font-size: 10.5px; line-height: 1.7; color: var(--ink-2); }
+
+  /* ---------- routing ---------- */
+  .lsub { display: none; }
+  .lsub.on { display: flex; }
+  .lsub[data-lsub="songs"].on { display: block; }
+  .cbx { display: flex; align-items: center; gap: var(--gap-3); min-height: var(--target); cursor: pointer; font-size: var(--text-l); }
+  .cbx .box { width: 22px; height: 22px; flex-shrink: 0; border-radius: 2px; display: grid; place-content: center;
+              background: var(--key-well); box-shadow: var(--well); }
+  .cbx .box.on { background: var(--vu); box-shadow: var(--bevel); }
+  .cbx .box i { width: 12px; height: 12px; background: var(--on-vu); transform: scale(0);
+                clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+  .cbx .box.on i { transform: scale(1); }
+  .fader { position: relative; height: var(--target); }
+  .fader-track { position: absolute; top: calc(50% - 4px); left: 0; right: 0; height: 8px; border-radius: 4px;
+                 background: var(--key-well); box-shadow: var(--well); }
+  .fader-fill { position: absolute; top: calc(50% - 4px); left: 0; height: 8px; border-radius: 4px; background: var(--vu); }
+  .fader-cap { position: absolute; top: calc(50% - 14px); width: 14px; height: 28px; border-radius: 2px;
+               transform: translateX(-50%); background-image: var(--key-face); box-shadow: var(--bevel); }
+  .screen { display: none; }
+  .screen.on { display: block; }
+  .qsub { display: none; }
+  .qsub.on { display: block; }
+  .pad { display: flex; flex-direction: column; gap: var(--gap-4); padding: var(--gap-4) 0 var(--gap-5); }
+  .qlist > .swipe:last-child { margin-bottom: 0; }
+  .pad.qsub { display: none; }
+  .pad.qsub.on { display: flex; }
+
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KaraokeParty app">
+  <rect width="200" height="200" fill="#141414"/>
+  <rect x="60" y="60" width="80" height="80" rx="12" fill="#ff8a1e"/>
+  <text x="100" y="118" text-anchor="middle" font-family="ui-monospace, monospace" font-size="44" font-weight="700" fill="#20130a">KP</text>
+</svg>
+</template>
+
+<div class="app">
+
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="knob"><i></i><b></b></div>
+      <div class="wm">KARAOKE<br><span>PARTY</span></div>
+      <span class="silkscreen room">Living&nbsp;Room</span>
+    </div>
+  </div>
+
+  <div class="mystatus header-turn" id="mystatus">
+    <div class="ms-top">
+      <div>
+        <div class="silkscreen" style="margin-bottom:3px">your turn</div>
+        <div class="ms-head" id="ms-head">4 min</div>
+      </div>
+      <div class="silkscreen" style="text-align:right">2 songs</div>
+    </div>
+    <div class="ms-meter">
+      <div id="ms-meter"><div class="vumeter tiny"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="hot"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></div>
+      <div class="silkscreen ms-label" id="ms-label">2 of 4 in the rotation</div>
+    </div>
+    <div class="ms-btn">
+      <button class="key block" id="pause-btn"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg><span>Pause my songs</span></button>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <section class="screen on" data-screen="library">
+  <div class="search">
+    <span class="s-ic"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
+    <input placeholder="search" aria-label="Search the library" />
+    <button class="flush star" id="starred-only" aria-label="Starred only">★</button>
+  </div>
+  <div class="facets">
+    <button class="facet">Rock</button>
+    <button class="facet">Pop</button>
+    <button class="facet">80s</button>
+    <button class="facet">Belter</button>
+  </div>
+  <div class="tabs" role="tablist" id="ltabs">
+    <button class="tab on" role="tab" data-ltab="artists" aria-selected="true">Artists <b>214</b></button>
+    <button class="tab" role="tab" data-ltab="songs">Songs <b>1809</b></button>
+  </div>
+  <div class="lsub" data-lsub="songs" style="padding:var(--gap-4) 0 var(--gap-5)">
+    <div class="list" style="padding:0 var(--gutter)">
+      <div class="song">
+        <div class="dur">4:14</div>
+        <div class="s-main"><div class="s-title">Dreams</div><div class="s-meta">FLEETWOOD MAC · ROCK · 70s</div></div>
+        <button class="flush star on" aria-label="Star">★<b>3</b></button>
+      </div>
+      <div class="song queued">
+        <div class="dur">4:19</div>
+        <div class="s-main"><div class="s-title">Once in a Lifetime</div><div class="s-meta">TALKING HEADS · ROCK · 80s</div></div>
+        <span class="qtag">QUEUED</span>
+      </div>
+      <div class="song">
+        <div class="dur">4:52</div>
+        <div class="s-main"><div class="s-title">I Wanna Dance with Somebody</div><div class="s-meta">WHITNEY HOUSTON · POP · 80s</div></div>
+        <button class="flush star" aria-label="Star">★<b>6</b></button>
+      </div>
+      <div class="song">
+        <div class="dur">4:11</div>
+        <div class="s-main"><div class="s-title">Don&rsquo;t Stop Believin&rsquo;</div><div class="s-meta">JOURNEY · ROCK · 80s</div></div>
+        <button class="flush star on" aria-label="Star">★<b>7</b></button>
+      </div>
+      <div class="song">
+        <div class="dur">2:41</div>
+        <div class="s-main"><div class="s-title">Jolene</div><div class="s-meta">DOLLY PARTON · COUNTRY · 70s</div></div>
+        <button class="flush star" aria-label="Star">★<b>2</b></button>
+      </div>
+      <div class="song played">
+        <div class="dur">3:21</div>
+        <div class="s-main"><div class="s-title">Sweet Caroline</div><div class="s-meta">NEIL DIAMOND · POP · 60s</div></div>
+        <button class="flush star" aria-label="Star">★<b>9</b></button>
+      </div>
+    </div>
+  </div>
+  <div class="listwrap lsub on" data-lsub="artists">
+    <div class="list">
+      <div class="folder open"><div class="fic"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg><span class="fchev"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/></svg></span></div><div class="fname up">Talking Heads</div></div>
+      
+    <div class="song queued">
+      <div class="dur">4:19</div>
+      <div class="s-main">
+        <div class="s-title">Once in a Lifetime</div>
+        <div class="s-meta">ROCK · 80s</div>
+      </div>
+      <span class="qtag">QUEUED</span>
+    </div>
+      
+    <div class="song ">
+      <div class="dur">4:56</div>
+      <div class="s-main">
+        <div class="s-title">This Must Be the Place (Naive Melody)</div>
+        <div class="s-meta">ROCK</div>
+      </div>
+      <button class="flush star on" aria-label="Star">★<b>2</b></button>
+    </div>
+      
+    <div class="song played">
+      <div class="dur">4:22</div>
+      <div class="s-main">
+        <div class="s-title">Psycho Killer</div>
+        <div class="s-meta">ROCK · 70s</div>
+      </div>
+      <button class="flush star on" aria-label="Star">★<b>1</b></button>
+    </div>
+      <div class="folder"><div class="fic"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg><b>12</b></div><div class="fname star">Fleetwood Mac</div></div>
+      <div class="folder"><div class="fic"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg><b>15</b></div><div class="fname">Whitney Houston</div></div>
+      <div class="folder"><div class="fic"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg><b>9</b></div><div class="fname">Neil Diamond</div></div>
+      <div class="folder"><div class="fic"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg><b>6</b></div><div class="fname star">Journey</div></div>
+      <div class="folder"><div class="fic"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg><b>11</b></div><div class="fname">Dolly Parton</div></div>
+    </div>
+    <div class="rail"><i class="">#</i><i class="">A</i><i class="">D</i><i class="">F</i><i class="">J</i><i class="">M</i><i class="">P</i><i class="">S</i><i class="on">T</i><i class="">W</i><i class="">Z</i></div>
+  </div></section>
+
+    <section class="screen" data-screen="queue">
+      <div class="tabs" role="tablist" id="qtabs">
+        <button class="tab on" role="tab" data-qtab="queue">Queue <b>4</b></button>
+        <button class="tab" role="tab" data-qtab="me">Me <b>2</b></button>
+        <button class="tab" role="tab" data-qtab="history">History <b>2</b></button>
+      </div>
+      <div class="pad qsub on" data-qsub="queue">
+<div class="qlist">  
+    <div class="swipe plain">
+      <div class="keys"><button class="alert" aria-label="Replay"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8"/></svg>Replay</button><button class="alert" aria-label="Skip"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>Skip</button></div>
+      <div class="slider">
+        <div class="q current">
+          <div class="fill" style="width:38%"></div><div class="sweep" style="width:38%"></div>
+          
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait now">NOW</div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Dreams</div>
+            <div class="q-artist">Fleetwood Mac</div>
+            <div class="q-singer">Dana</div>
+          </div>
+          <button class="flush star on" aria-label="Star">★<b>3</b></button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="swipe">
+      <div class="keys"><button class="tone-vu" aria-label="Top"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M5 4v2h14V4H5zm0 10h4v6h6v-6h4l-7-7-7 7z"/></svg>Top</button><button class="alert" aria-label="Remove"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Remove</button></div>
+      <div class="slider">
+        <div class="q">
+          
+          <div class="drag"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait">4 MIN</div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Once in a Lifetime</div>
+            <div class="q-artist">Talking Heads</div>
+            <div class="q-singer you">You</div>
+          </div>
+          <button class="flush star" aria-label="Star">★<b>4</b></button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="swipe plain">
+      <div class="keys"><button class="tone-vu" aria-label="Top"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M5 4v2h14V4H5zm0 10h4v6h6v-6h4l-7-7-7 7z"/></svg>Top</button><button class="alert" aria-label="Remove"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Remove</button></div>
+      <div class="slider">
+        <div class="q">
+          
+          <div class="drag"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait">8 MIN</div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Jolene</div>
+            <div class="q-artist">Dolly Parton</div>
+            <div class="q-singer">Priya</div>
+          </div>
+          <button class="flush star" aria-label="Star">★<b>2</b></button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="swipe plain">
+      <div class="keys"><button class="tone-vu" aria-label="Top"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M5 4v2h14V4H5zm0 10h4v6h6v-6h4l-7-7-7 7z"/></svg>Top</button><button class="alert" aria-label="Remove"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Remove</button></div>
+      <div class="slider">
+        <div class="q">
+          
+          <div class="drag"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait">12 MIN</div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Total Eclipse of the Heart</div>
+            <div class="q-artist">Bonnie Tyler</div>
+            <div class="q-singer">Sam</div>
+          </div>
+          <button class="flush star" aria-label="Star">★</button>
+        </div>
+      </div>
+    </div></div>
+</div>
+      <div class="pad qsub" data-qsub="me">
+  <div>
+    <div class="silkscreen" style="margin-bottom:var(--gap-2)">my songs &mdash; drag to reorder, swipe to remove</div>
+    <div id="my-songs">
+      
+    <div class="swipe">
+      <div class="keys"><button class="alert" aria-label="Remove"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Remove</button></div>
+      <div class="slider">
+        <div class="q">
+          
+          <div class="drag"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait">4 MIN</div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Once in a Lifetime</div>
+            <div class="q-artist">Talking Heads</div>
+            <div class="q-singer you">You</div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+      
+    <div class="swipe">
+      <div class="keys"><button class="alert" aria-label="Remove"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Remove</button></div>
+      <div class="slider">
+        <div class="q">
+          
+          <div class="drag"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait">16 MIN</div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Total Eclipse of the Heart</div>
+            <div class="q-artist">Bonnie Tyler</div>
+            <div class="q-singer you">You</div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <button class="key block"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg><span>Queue another song</span></button>
+
+  
+    <div class="panel">
+      <div class="panel-hd"><h2>Sung Tonight</h2></div>
+      
+    <div class="h-row first">
+      <div class="h-main">
+        <div class="h-title">Sweet Caroline</div>
+        <div class="silkscreen h-artist">Neil Diamond</div>
+      </div>
+      <span class="h-date">Aug 29</span>
+      <button class="flush star on" aria-label="Star">★</button>
+    </div>
+    <div class="h-row">
+      <div class="h-main">
+        <div class="h-title">Africa</div>
+        <div class="silkscreen h-artist">Toto</div>
+      </div>
+      <span class="h-date">Aug 15</span>
+      <button class="flush star" aria-label="Star">★</button>
+    </div>
+    <div class="h-row">
+      <div class="h-main">
+        <div class="h-title">Total Eclipse of the Heart</div>
+        <div class="silkscreen h-artist">Bonnie Tyler</div>
+      </div>
+      <span class="h-date">Jul 4</span>
+      <button class="flush star" aria-label="Star">★</button>
+    </div>
+    </div></div>
+      <div class="pad qsub" data-qsub="history">
+  <div class="silkscreen" style="padding:0 0 var(--gap-2)">sung tonight &mdash; these are locked</div>
+<div class="qlist">  
+    <div class="swipe plain spent">
+      
+      <div class="slider">
+        <div class="q">
+          
+          
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait"></div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Sweet Caroline</div>
+            <div class="q-artist">Neil Diamond</div>
+            <div class="q-singer">Sam</div>
+          </div>
+          <button class="flush star" aria-label="Star">★<b>9</b></button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="swipe plain spent">
+      
+      <div class="slider">
+        <div class="q">
+          
+          
+          <div class="av-wrap">
+            <div class="av"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"/></svg></div>
+            <div class="wait"></div>
+          </div>
+          <div class="q-main">
+            <div class="q-title">Psycho Killer</div>
+            <div class="q-artist">Talking Heads</div>
+            <div class="q-singer">Dana</div>
+          </div>
+          <button class="flush star" aria-label="Star">★<b>1</b></button>
+        </div>
+      </div>
+    </div></div>
+</div>
+    </section>
+
+    <section class="screen" data-screen="account"><div class="pad">
+  
+    <div class="panel">
+      <div class="panel-hd"><h2>My Account</h2></div>
+      
+      <div class="pad-body">
+        <p class="silkscreen" style="margin:0 0 var(--gap-3)">signed in as you</p>
+        <div style="display:flex;gap:var(--gap-3);margin-bottom:var(--gap-3)">
+          <div class="avpick"><svg viewBox="0 0 24 24" width="38" height="38" aria-hidden="true"><path fill="currentColor" d="M21 6h-3.17L16 4h-6v2h5.12l1.83 2H21v12H5v-9H3v9c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2M8 14c0 2.76 2.24 5 5 5s5-2.24 5-5-2.24-5-5-5-5 2.24-5 5m5-3c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3M5 6h3V4H5V1H3v3H0v2h3v3h2z"/></svg><input type="file" aria-label="Choose a photo" /></div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--gap-2)">
+            <input type="text" value="You" aria-label="Display name" />
+            <input type="email" value="you@example.com" aria-label="Username or email" />
+          </div>
+        </div>
+        <button class="key block">Sign Out</button>
+      </div>
+    </div>
+  
+    <div class="panel">
+      <div class="panel-hd"><h2>Song History</h2></div>
+      
+    <div class="h-row first">
+      <div class="h-main">
+        <div class="h-title">Sweet Caroline</div>
+        <div class="silkscreen h-artist">Neil Diamond</div>
+      </div>
+      <span class="h-date">Aug 29</span>
+      <button class="flush star on" aria-label="Star">★</button>
+    </div>
+    <div class="h-row">
+      <div class="h-main">
+        <div class="h-title">Africa</div>
+        <div class="silkscreen h-artist">Toto</div>
+      </div>
+      <span class="h-date">Aug 15</span>
+      <button class="flush star" aria-label="Star">★</button>
+    </div>
+    <div class="h-row">
+      <div class="h-main">
+        <div class="h-title">Total Eclipse of the Heart</div>
+        <div class="silkscreen h-artist">Bonnie Tyler</div>
+      </div>
+      <span class="h-date">Jul 4</span>
+      <button class="flush star" aria-label="Star">★</button>
+    </div>
+    </div></div></section>
+
+    <section class="screen" data-screen="settings"><div class="pad">
+  
+    <div class="panel">
+      <div class="panel-hd"><h2>Rooms</h2></div>
+      
+      <div class="pad-body">
+        <table>
+          <thead><tr><th style="width:100%">Name</th><th>Status</th><th>Made</th></tr></thead>
+          <tbody>
+            <tr><td class="ell"><a href="#room">Living Room</a></td><td class="mono-cell">open (6)</td><td class="mono-cell">Aug 29</td></tr>
+            <tr><td class="ell"><a href="#room">Back Patio</a></td><td class="mono-cell">open (2)</td><td class="mono-cell">Aug 29</td></tr>
+            <tr><td class="ell"><a href="#room">New Year 2026</a></td><td class="mono-cell">closed</td><td class="mono-cell">Dec 31</td></tr>
+          </tbody>
+        </table>
+        <button class="key block" style="margin-top:var(--gap-3)">Create Room</button>
+      </div>
+    </div>
+  
+    <div class="panel">
+      <div class="panel-hd"><h2>Users</h2></div>
+      
+      <div class="pad-body">
+        <table>
+          <thead><tr><th style="width:100%">Username</th><th>Role</th><th>Joined</th></tr></thead>
+          <tbody>
+            <tr><td class="ell"><a href="#user">dana</a></td><td class="mono-cell">standard</td><td class="mono-cell">Aug 29</td></tr>
+            <tr><td class="ell"><a href="#user">sam</a></td><td class="mono-cell">guest</td><td class="mono-cell">Aug 29</td></tr>
+            <tr><td class="ell"><a href="#user">host</a></td><td class="mono-cell">admin</td><td class="mono-cell">Jan 4</td></tr>
+          </tbody>
+        </table>
+        <button class="key block" style="margin-top:var(--gap-3)">Create User</button>
+      </div>
+    </div>
+  
+    <div class="panel">
+      <div class="panel-hd"><h2>Player</h2></div>
+      <div class="pad-body">
+        <div style="display:flex;align-items:center;gap:var(--gap-3);margin-bottom:var(--gap-3)">
+          <span class="dot"></span><span class="silkscreen">connected &middot; living room</span>
+        </div>
+        <p class="player-note">Runs fullscreen on whatever machine drives the room&rsquo;s audio. Open it there, or scan the join code it shows.</p>
+        <div class="transport panel-transport">
+      <button class="key vu lg" aria-label="Pause"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+      <button class="key lg amber-glyph" aria-label="Skip"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+      <div class="vol">
+        <div class="knob" style="width:34px;height:34px"><i></i><b style="transform:translateX(-50%) rotate(66deg);transform-origin:50% 13.6px"></b></div>
+        <span class="silkscreen">vol</span>
+        <div class="vumeter "><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class=""></i><i class=""></i><i class=""></i></div>
+      </div>
+      <button class="key lg" aria-label="Display options"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3,17V19H9V17H3M3,5V7H13V5H3M13,21V19H21V17H13V15H11V21H13M7,9V11H3V13H7V15H9V9H7M21,13V11H11V13H21M15,9H17V7H21V5H17V3H15V9Z"/></svg></button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:var(--gap-2);margin-top:var(--gap-3)">
+          <button class="key vu block"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M21,3H3C1.89,3 1,3.89 1,5V17A2,2 0 0,0 3,19H8V21H16V19H21A2,2 0 0,0 23,17V5C23,3.89 22.1,3 21,3M21,17H3V5H21M16,11L9,15V7"/></svg><span>Open player here</span></button>
+          <button class="key block"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M3 11h8V3H3zm2-6h4v4H5zM3 21h8v-8H3zm2-6h4v4H5zm8-12v8h8V3zm6 6h-4V5h4zm0 10h2v2h-2zm-6-6h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm2 2h2v2h-2zm2-2h2v2h-2zm0-4h2v2h-2zm2 2h2v2h-2z"/></svg><span>Show join code</span></button>
+        </div>
+        <div class="acc open" style="margin-top:var(--gap-3)">
+          <button class="acc-hd">Display <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg></button>
+          <div class="acc-body" style="display:flex;flex-direction:column;gap:var(--gap-3)">
+            <label class="cbx"><span class="box on"><i></i></span>Visualizer</label>
+            <label class="cbx"><span class="box"><i></i></span>Video keying</label>
+            <div>
+              <label class="silkscreen">Lyrics size</label>
+              <div class="fader"><div class="fader-track"></div><div class="fader-fill" style="width:55%"></div><div class="fader-cap" style="left:55%"></div></div>
+            </div>
+            <div>
+              <label class="silkscreen">QR code size</label>
+              <div class="fader"><div class="fader-track"></div><div class="fader-fill" style="width:50%"></div><div class="fader-cap" style="left:50%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><h2>Preferences</h2></div>
+      
+      <div class="pad-body" style="display:flex;flex-direction:column;gap:var(--gap-2)">
+        <div class="acc open">
+          <button class="acc-hd">Media Folders <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg></button>
+          <div class="acc-body">
+            <div class="folder-row"><span class="mono-path">/media/karaoke</span><span class="silkscreen">1809 songs</span></div>
+            <div class="vumeter tiny"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i></div>
+            <div class="folder-row" style="margin-top:10px"><span class="mono-path">/media/new-2026</span><span class="silkscreen">62 songs</span></div>
+            <div class="vumeter tiny"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div>
+          </div>
+        </div>
+
+      </div>
+    </div></div></section>
+
+  </div>
+
+  <div class="nav" id="nav">
+    <a href="#library" class="on" data-route="library" aria-label="Library"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 5h-3v5.5c0 1.38-1.12 2.5-2.5 2.5S10 13.88 10 12.5s1.12-2.5 2.5-2.5c.57 0 1.08.19 1.5.51V5h4v2zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z"/></svg></a>
+    <a href="#queue" data-route="queue" aria-label="Queue"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M20 8H4V6h16v2zm-2-6H6v2h12V2zm4 10v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2zm-6 4l-6-3.27v6.53L16 16z"/></svg></a>
+    <a href="#account" data-route="account" aria-label="Account"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2M12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8m3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5m-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.32-1.45 5.12-3.5h-1.67c-.69 1.19-1.97 2-3.45 2s-2.75-.81-3.45-2H6.88c.8 2.05 2.79 3.5 5.12 3.5"/></svg></a>
+    <a href="#settings" data-route="settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M3,17V19H9V17H3M3,5V7H13V5H3M13,21V19H21V17H13V15H11V21H13M7,9V11H3V13H7V15H9V9H7M21,13V11H11V13H21M15,9H17V7H21V5H17V3H15V9Z"/></svg></a>
+  </div>
+
+</div>
+
+<script>
+  const seg = (lit, total) => Array.from({ length: total }, (_, i) =>
+    '<i class="' + (i < lit ? (i / total >= 0.55 ? 'hot' : 'on') : '') + '"></i>').join('');
+
+  // swipe-to-reveal: the row tracks the finger and snaps past 40% of its travel
+  document.querySelectorAll('.swipe').forEach((shell) => {
+    const slider = shell.querySelector('.slider');
+    const keys = shell.querySelector('.keys');
+    if (!keys) return; // a locked row has no actions to reveal
+    // derived from the DOM, not measured: at init the Queue screen is display:none,
+    // so a getBoundingClientRect() here reads 0 and silently caps every multi-action
+    // row at one key of travel
+    const KEY_W = 72;
+    const span = () => keys.children.length * KEY_W;
+    let open = shell.classList.contains('open');
+    let start = null;
+
+    const settle = () => { slider.style.transform = 'translateX(' + (open ? -span() : 0) + 'px)'; };
+    settle();
+
+    slider.addEventListener('pointerdown', (e) => {
+      start = { x: e.clientX, y: e.clientY, base: open ? -span() : 0, captured: false, id: e.pointerId };
+    });
+
+    slider.addEventListener('pointermove', (e) => {
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (!start.captured) {
+        if (Math.abs(dy) > Math.abs(dx)) { start = null; return; }
+        if (Math.abs(dx) < 8) return;
+        start.captured = true;
+        slider.classList.add('dragging');
+        slider.setPointerCapture(start.id);
+      }
+      const x = Math.max(-span(), Math.min(0, start.base + dx));
+      slider.style.transform = 'translateX(' + x + 'px)';
+      slider.dataset.x = x;
+    });
+
+    const end = () => {
+      if (!start) return;
+      const captured = start.captured;
+      start = null;
+      slider.classList.remove('dragging');
+      if (!captured) { settle(); return; }
+      open = parseFloat(slider.dataset.x || 0) < -span() * 0.4;
+      shell.classList.toggle('open', open);
+      settle();
+    };
+    slider.addEventListener('pointerup', end);
+    slider.addEventListener('pointercancel', end);
+
+    shell.querySelectorAll('.keys button').forEach(b => b.addEventListener('click', () => {
+      open = false; shell.classList.remove('open'); settle();
+    }));
+  });
+
+
+  // bottom nav
+  document.querySelectorAll('#nav a').forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const route = a.dataset.route;
+    document.querySelectorAll('#nav a').forEach(x => x.classList.toggle('on', x === a));
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.dataset.screen === route));
+    window.scrollTo(0, 0);
+  }));
+
+  // queue sub-tabs
+  document.querySelectorAll('#qtabs .tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('#qtabs .tab').forEach(x => x.classList.toggle('on', x === t));
+    document.querySelectorAll('.qsub').forEach(s => s.classList.toggle('on', s.dataset.qsub === t.dataset.qtab));
+  }));
+
+  // library tabs
+  document.querySelectorAll('#ltabs .tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('#ltabs .tab').forEach((x) => {
+      const on = x === t;
+      x.classList.toggle('on', on);
+      x.setAttribute('aria-selected', String(on));
+    });
+    document.querySelectorAll('.lsub').forEach(s => s.classList.toggle('on', s.dataset.lsub === t.dataset.ltab));
+  }));
+
+  // accordions
+  document.querySelectorAll('.acc-hd').forEach(h => h.addEventListener('click', () => {
+    h.parentElement.classList.toggle('open');
+  }));
+
+  // starred-only + checkboxes latch
+  document.getElementById('starred-only').addEventListener('click', (e) => e.currentTarget.classList.toggle('on'));
+  document.querySelectorAll('.cbx').forEach(c => c.addEventListener('click', (e) => {
+    e.preventDefault();
+    c.querySelector('.box').classList.toggle('on');
+  }));
+
+  // library facet keys latch
+  document.querySelectorAll('.facet').forEach(f => f.addEventListener('click', () => f.classList.toggle('on')));
+
+  // pause my songs
+  let paused = false;
+  const btn = document.getElementById('pause-btn');
+  const card = document.getElementById('mystatus');
+  const head = document.getElementById('ms-head');
+  const label = document.getElementById('ms-label');
+  const meter = document.getElementById('ms-meter');
+  const list = document.getElementById('my-songs');
+
+  btn.addEventListener('click', () => {
+    paused = !paused;
+    card.classList.toggle('paused', paused);
+    list.classList.toggle('paused-list', paused);
+    btn.classList.toggle('vu', paused);
+    btn.innerHTML = (paused
+      ? '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5v14l11-7z"/></svg><span>Resume my songs</span>'
+      : '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg><span>Pause my songs</span>');
+    head.textContent = paused ? 'Paused' : '4 min';
+    label.textContent = paused ? 'you are out of the rotation' : '2 of 4 in the rotation';
+    meter.innerHTML = '<div class="vumeter tiny">' + seg(paused ? 0 : 15, 24) + '</div>';
+  });
+</script>
+</body>
+</html>

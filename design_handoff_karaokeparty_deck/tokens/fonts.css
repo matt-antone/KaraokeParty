@@ -1,0 +1,9 @@
+/* DECK uses three Google faces. They are loaded from the Google Fonts CDN rather
+   than self-hosted: no licensed binaries were supplied with this rebrand.
+   To self-host, drop the woff2 files in assets/fonts/ and replace this @import
+   with real @font-face rules — nothing else in the system changes.
+
+   Michroma      — display. Wordmark, player headlines, big numerals. Wide, technical.
+   Figtree       — body. Everything a person reads as a sentence or a song title.
+   JetBrains Mono — silkscreen. Labels, counts, waits, meters. The panel legends. */
+@import url('https://fonts.googleapis.com/css2?family=Michroma&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');

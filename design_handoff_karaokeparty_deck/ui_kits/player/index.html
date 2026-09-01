@@ -1,0 +1,32 @@
+<!-- @dsCard group="Player" viewport="900x400" subtitle="The TV screen — playing, intermission, idle, empty" -->
+<!-- @startingPoint section="Player" subtitle="Room player with every overlay state" viewport="900x680" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KaraokeParty — Player UI Kit</title>
+<link rel="stylesheet" href="../../styles.css">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 16px; }
+  .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-panel); overflow: hidden; background: #000; box-shadow: var(--bevel); }
+  .rig { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .rig button {
+    font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+    min-height: 34px; padding: 0 12px; cursor: pointer; border: none; border-radius: var(--radius-key);
+    color: var(--ink-3); background: var(--key-well); box-shadow: var(--well);
+  }
+  .rig button[data-on] { color: var(--on-vu); background: var(--key-face-vu); box-shadow: var(--bevel); }
+  .rig span { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-5); width: 100%; }
+  .note { font-family: var(--font-mono); font-size: 10.5px; line-height: 1.75; color: var(--ink-2); max-width: 74ch; margin: 16px 0 0; }
+  .note em { color: var(--ink); font-style: normal; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="PlayerScreen.jsx"></script>
+</body>
+</html>

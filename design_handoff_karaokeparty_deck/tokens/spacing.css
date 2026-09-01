@@ -1,0 +1,27 @@
+/* A faceplate is laid out on a 2px unit: key gaps are 6-10px, panel padding is 14px,
+   and every pressable thing clears 44px.
+
+   Row heights are MINIMUMS, not fixed heights: song titles always show in full, so a
+   long title wraps and its row grows. Never put a row in a fixed-height container. */
+:root {
+  --gap-1: 2px;   /* the seam between adjacent keys */
+  --gap-2: 6px;
+  --gap-3: 10px;
+  --gap-4: 14px;  /* panel padding — the standard screen gutter */
+  --gap-5: 20px;
+  --gap-6: 28px;
+
+  --gutter: 14px;
+
+  --target: 44px;         /* absolute minimum for anything tappable */
+  --target-l: 46px;       /* transport keys */
+
+  --row-artist: 46px;     /* library folder row */
+  --row-song: 56px;       /* library song row */
+  --row-queue: 86px;      /* queue row — sized by the 62px avatar */
+  --avatar-queue: 62px;
+  --avatar-form: 96px;
+
+  --header-bar: 44px;
+  --nav-bar: 52px;
+}

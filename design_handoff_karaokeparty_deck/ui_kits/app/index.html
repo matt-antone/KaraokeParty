@@ -1,0 +1,46 @@
+<!-- @dsCard group="App" viewport="390x400" subtitle="Phone app — sign in, library, queue, account, settings" -->
+<!-- @startingPoint section="App" subtitle="Full click-through of the phone app" viewport="390x844" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>KaraokeParty — App UI Kit</title>
+<link rel="stylesheet" href="../../styles.css">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { width: 390px; margin: 0; overflow-x: hidden; }
+  #root { display: flex; flex-direction: column; min-height: 100vh; }
+  .app { flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .hdr { position: sticky; top: 0; z-index: 10; background: var(--brush); box-shadow: var(--edge-top); }
+  .body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .body::-webkit-scrollbar { display: none; }
+  .nav { position: sticky; bottom: 0; z-index: 10; }
+  .rig {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    padding: 10px var(--gutter); border-top: var(--seam-rule); background: var(--chassis-deep);
+  }
+  .rig button {
+    font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+    min-height: 32px; padding: 0 10px; cursor: pointer; border: none; border-radius: var(--radius-key);
+    color: var(--ink-3); background: var(--key-well); box-shadow: var(--well);
+  }
+  .rig button[data-on] { color: var(--on-vu); background: var(--key-face-vu); box-shadow: var(--bevel); }
+  .rig span { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-5); width: 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="data.js"></script>
+<script type="text/babel" src="LibraryScreen.jsx"></script>
+<script type="text/babel" src="MeScreen.jsx"></script>
+<script type="text/babel" src="QueueScreen.jsx"></script>
+<script type="text/babel" src="AccountScreen.jsx"></script>
+<script type="text/babel" src="SettingsScreen.jsx"></script>
+<script type="text/babel" src="SignInScreen.jsx"></script>
+<script type="text/babel" src="App.jsx"></script>
+</body>
+</html>

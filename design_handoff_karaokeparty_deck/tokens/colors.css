@@ -1,0 +1,52 @@
+/* DECK — a graphite component-hi-fi faceplate.
+   Neutrals are warm-cool graphite, machined in steps of light rather than hue.
+   Exactly one signal colour (amber) plus one secondary indicator (teal) and a fault red.
+   If you find yourself wanting a fifth colour, you want a different indicator, not a new hue. */
+:root {
+  /* chassis — the box the panel is mounted in */
+  --chassis: #141414;
+  --chassis-deep: #0d0e0f;   /* seams, insets, the gap between keys */
+
+  /* faceplate — the brushed panel */
+  --faceplate: #1e1f21;
+  --faceplate-lo: #1a1c1e;
+  --faceplate-hi: #232528;
+
+  /* keys — anything you press */
+  --key: #282a2d;
+  --key-hi: #34373b;         /* top of the key's gradient */
+  --key-lo: #25272a;         /* bottom of the key's gradient */
+  --key-well: #17181a;       /* the recess a key sits in; also input fields */
+
+  /* engraving */
+  --hairline: #4a4e54;
+  --seam: #16181a;
+
+  /* ink */
+  --ink: #e6e4de;            /* primary text — warm off-white, not pure white */
+  --ink-2: #b4b6ba;          /* secondary: artist, silkscreen labels */
+  --ink-3: #8b8d92;          /* tertiary: meta, counts, placeholders */
+  --ink-4: #63666b;          /* spent: already sung */
+  --ink-5: #4c5055;          /* off: unlit icons, empty meter segments */
+
+  /* signal — amber. Level, progress, now playing, primary action. */
+  --vu: #ff8a1e;
+  --vu-hi: #ff9c3c;          /* top of the amber key gradient */
+  --vu-lo: #e87510;          /* bottom of the amber key gradient */
+  --vu-dim: #7a4310;         /* lit-but-low meter segments */
+  --vu-well: #2a2118;        /* amber at panel value, for fills and washes */
+  --on-vu: #20130a;          /* text on amber */
+
+  /* indicator — teal. Queued, standby, "armed but not running". */
+  --standby: #35c8b0;
+  --standby-well: #17211f;
+
+  /* fault */
+  --alert: #e5484d;
+  --alert-hi: #ec5b60;
+  --alert-lo: #c9383d;
+
+  /* the you-channel: amber is also "your row", because on a deck the lit channel
+     is the one that's live. There is no separate personal colour. */
+  --mine: var(--vu);
+}
