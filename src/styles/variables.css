@@ -1,168 +1,333 @@
+/* DECK — a graphite component-hi-fi faceplate.
+   Machined in steps of light rather than hue. One signal colour (amber), one
+   secondary indicator (teal), one fault red. Wanting a fifth colour means
+   wanting a fifth indicator — reconsider instead of adding one.
+
+   Source of truth: design_handoff_karaokeparty_deck/tokens/*.css
+   The DECK block below is lifted verbatim from those files. The LEGACY block
+   at the bottom re-points the old Karaoke Eternal variable names onto DECK
+   values so the ~500 existing var() references repaint without touching each
+   component. Components adopt the DECK names directly as they are rebuilt;
+   the legacy aliases die with the last consumer. */
+
 :root {
-  --hue-blue: 209;
-  --hue-pink: 270;
-  --color-gray-1: hsl(var(--hue-blue), 10%, 10%);
-  --color-gray-2: hsl(var(--hue-blue), 10%, 20%);
-  --color-gray-3: hsl(var(--hue-blue), 10%, 30%);
-  --color-gray-4: hsl(var(--hue-blue), 10%, 40%);
-  --color-gray-5: hsl(var(--hue-blue), 10%, 50%);
-  --color-gray-6: hsl(var(--hue-blue), 10%, 60%);
-  --color-gray-7: hsl(var(--hue-blue), 10%, 70%);
-  --color-gray-8: hsl(var(--hue-blue), 10%, 80%);
-  --color-gray-9: hsl(var(--hue-blue), 10%, 90%);
+  /* ---- colour ------------------------------------------------------ */
 
-  --font-family: system-ui, sans-serif;
-  --font-family-custom: system-ui, sans-serif;
-  --font-weight-light: 300;
-  --font-weight-normal: 400;
-  --font-weight-bold: 600;
+  /* chassis — the box the panel is mounted in */
+  --chassis: #141414;
+  --chassis-deep: #0d0e0f;   /* seams, insets, the gap between keys */
 
-  /* scale is tuned for phones first; everything else keys off these */
-  --font-size-xs: 0.6875rem;
-  --font-size-s: 0.875rem;
-  --font-size-m: 1.0625rem;
-  --font-size-l: 1.25rem;
-  --font-size-xl: 1.625rem;
+  /* faceplate — the brushed panel */
+  --faceplate: #1e1f21;
+  --faceplate-lo: #1a1c1e;
+  --faceplate-hi: #232528;
 
-  --icon-size-s: 0.875rem;
-  --icon-size-m: 1.25rem;
-  --icon-size-l: 1.625rem;
-  --icon-size-xl: 2.25rem;
+  /* keys — anything you press */
+  --key: #282a2d;
+  --key-hi: #34373b;         /* top of the key's gradient */
+  --key-lo: #25272a;         /* bottom of the key's gradient */
+  --key-well: #17181a;       /* the recess a key sits in; also input fields */
 
-  --space-xs: 4px;
-  --space-s: 8px;
-  --space-m: 12px;
-  --space-l: 18px;
-  --space-xl: 24px;
-  --container-padding: 10px;
+  /* engraving */
+  --hairline: #4a4e54;
+  --seam: #16181a;
 
-  --bg-color: hsl(var(--hue-blue), 40%, 2%);
-  --text-color: var(--color-gray-8);
-  --link-color: hsl(var(--hue-blue), 92%, 69%);
-  --mark-bg-color: hsl(var(--hue-blue), 50%, 30%);
+  /* ink */
+  --ink: #e6e4de;            /* primary text — warm off-white, not pure white */
+  --ink-2: #b4b6ba;          /* secondary: artist, silkscreen labels */
+  --ink-3: #8b8d92;          /* tertiary: meta, counts, placeholders */
+  --ink-4: #63666b;          /* spent: already sung */
+  --ink-5: #4c5055;          /* off: unlit icons, empty meter segments */
 
-  --text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-  --box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
-  --drop-shadow-filter: drop-shadow(0 2px 5px #222);
-  --border-radius: 8px;
-  --focus-outline: 4px solid var(--btn-danger-bg-color);
+  /* signal — amber. Level, progress, now playing, primary action. */
+  --vu: #ff8a1e;
+  --vu-hi: #ff9c3c;          /* top of the amber key gradient */
+  --vu-lo: #e87510;          /* bottom of the amber key gradient */
+  --vu-dim: #7a4310;         /* lit-but-low meter segments */
+  --vu-well: #2a2118;        /* amber at panel value, for fills and washes */
+  --on-vu: #20130a;          /* text on amber */
 
-  --input-color: var(--color-gray-1);
-  --input-placeholder-color: var(--color-gray-5);
-  --input-bg-color: hsl(var(--hue-blue), 10%, 80%);
-  --input-outline-color: hsl(var(--hue-blue), 90%, 50%);
-  --input-margin: 7px;
+  /* indicator — teal. Queued, standby, "armed but not running". */
+  --standby: #35c8b0;
+  --standby-well: #17211f;
 
-  --btn-bg-color: hsl(var(--hue-blue), 40%, 30%);
-  --btn-active-bg-color: var(--link-color);
-  --btn-active-filter: drop-shadow(0 0 10px hsla(var(--hue-blue), 100%, 100%, .5));
-  --btn-activate-filter: drop-shadow(-.25rem 0 .75rem hsl(var(--hue-blue), 80%, 50%)) drop-shadow(.25rem 0 .75rem hsl(var(--hue-blue), 80%, 50%)) drop-shadow(0 0 1rem hsla(var(--hue-blue), 80%, 50%, 0.5));
+  /* fault */
+  --alert: #e5484d;
+  --alert-hi: #ec5b60;
+  --alert-lo: #c9383d;
 
-  --btn-danger-bg-color: hsl(var(--hue-pink), 60%, 57%);
-  --btn-danger-filter: drop-shadow(0 0 10px hsla(var(--hue-pink), 100%, 100%, .5));
-  --btn-danger-activate-filter:
-    drop-shadow(-5px 0 10px hsl(var(--hue-pink), 80%, 70%)) drop-shadow(5px 0 10px hsl(var(--hue-pink), 80%, 70%)) drop-shadow(0 0 10px hsla(var(--hue-pink), 80%, 70%, 0.5));
+  /* A *filled* destructive key has to carry 14px text, and --alert cannot:
+     it measures 2.65:1 against --ink and 3.55:1 against --on-vu, both under
+     AA's 4.5. These two are the same hue stepped down in lightness until ink
+     clears the bar (4.89:1) — the signal colour above is untouched, and this
+     is the same -hi/-lo relationship --vu already has. Used only by
+     --key-face-alert; a red *label* on graphite still uses --alert. */
+  --alert-key-hi: #b62b2f;
+  --alert-key-lo: #9d2529;
 
-  /* UI chrome (header/footer) */
-  --chrome-bg-color: hsla(var(--hue-blue), 100%, 5%, .8);
-  --chrome-border-color: hsla(var(--hue-blue), 24%, 26%, 0.5);
-  --header-notice-color: var(--text-color);
-  --header-notice-bg-color: hsl(var(--hue-blue), 100%, 27%);
+  /* the you-channel: amber is also "your row", because on a deck the lit
+     channel is the one that's live. There is no separate personal colour. */
+  --mine: var(--vu);
+
+  /* ---- depth ------------------------------------------------------- */
+  /* Light comes from above and the panel is machined. A key is raised, a well
+     is recessed. There is no glow anywhere — an indicator is lit by being
+     amber, not by bleeding light. */
+
+  --radius-key: 3px;      /* keys, chips, fields, song rows */
+  --radius-panel: 4px;    /* panels, queue rows, the player stage */
+  --radius-tab: 3px;
+  --radius-round: 50%;    /* knobs only */
+
+  --bevel: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(0, 0, 0, .5), 0 1px 2px rgba(0, 0, 0, .6);
+  --well: inset 0 1px 3px rgba(0, 0, 0, .7);
+  --well-deep: inset 0 1px 3px rgba(0, 0, 0, .8);
+
+  --edge-top: 0 2px 6px rgba(0, 0, 0, .6);
+  --edge-bottom: 0 -2px 6px rgba(0, 0, 0, .6);
+  --hair-rule: 1px solid var(--hairline);
+  --seam-rule: 1px solid var(--seam);
+
+  /* brushed metal: a very low-contrast vertical grade, never a visible gradient */
+  --brush: linear-gradient(180deg, var(--faceplate-hi) 0%, var(--faceplate-lo) 100%);
+  --key-face: linear-gradient(180deg, var(--key-hi) 0%, var(--key-lo) 100%);
+  --key-face-vu: linear-gradient(180deg, var(--vu-hi) 0%, var(--vu-lo) 100%);
+  --key-face-alert: linear-gradient(180deg, var(--alert-key-hi) 0%, var(--alert-key-lo) 100%);
+
+  /* focus: a hard amber ring. Visible, unambiguous, no blur. */
+  --focus-ring: 0 0 0 2px var(--chassis), 0 0 0 4px var(--vu);
+
+  --stage-wash: radial-gradient(120% 140% at 15% 0%, var(--vu-well) 0%, #101011 60%);
+
+  /* ---- type -------------------------------------------------------- */
+
+  --font-display: 'Michroma', 'Arial Narrow', sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* body scale — phone-first; inputs never below 16px (iOS zooms) */
+  --text-xs: 0.5938rem;   /* 9.5px  — silkscreen labels, meter legends */
+  --text-s: 0.75rem;      /* 12px   — tab labels, chips, counts */
+  --text-m: 0.875rem;     /* 14px   — queue artist, table cells */
+  --text-l: 1rem;         /* 16px   — form fields, banner copy */
+  --text-xl: 1.0625rem;   /* 17px   — artist name, search field */
+  --text-2xl: 1.125rem;   /* 18px   — queue title */
+  --text-3xl: 1.375rem;   /* 22px   — panel titles */
+
+  /* display scale — wordmark and player only */
+  --display-s: 0.7813rem; /* 12.5px — the app-header wordmark */
+  --display-m: 1.625rem;  /* 26px   — player singer name on a phone-sized stage */
+  --display-l: 5.5vh;     /* player singer name, on the TV */
+  --display-xl: 11vh;     /* player countdown numeral */
+
+  --silkscreen-size: var(--text-xs);
+  --silkscreen-tracking: 0.14em;
+
+  --icon-s: 1rem;         /* 16px */
+  --icon-m: 1.375rem;     /* 22px — row actions */
+  --icon-l: 1.625rem;     /* 26px — transport, nav */
+  --icon-xl: 1.875rem;    /* 30px — play/pause */
+
+  /* ---- spacing ----------------------------------------------------- */
+  /* Row heights are MINIMUMS, not fixed heights: song titles always show in
+     full, so a long title wraps and its row grows. */
+
+  --gap-1: 2px;   /* the seam between adjacent keys */
+  --gap-2: 6px;
+  --gap-3: 10px;
+  --gap-4: 14px;  /* panel padding — the standard screen gutter */
+  --gap-5: 20px;
+  --gap-6: 28px;
+
+  --gutter: 14px;
+
+  --target: 44px;         /* absolute minimum for anything tappable */
+  --target-l: 46px;       /* transport keys */
+
+  --row-artist: 46px;     /* library folder row */
+  --row-song: 56px;       /* library song row */
+  --row-queue: 86px;      /* queue row — sized by the 62px avatar */
+  --avatar-queue: 62px;
+  --avatar-form: 96px;
+
+  --header-bar: 44px;
+  --nav-bar: 52px;
+
+  /* ---- motion ------------------------------------------------------ */
+  /* Mechanical, not bouncy. A key travels 1px and stops. */
+
+  --ease-key: cubic-bezier(.2, .8, .3, 1);
+  --dur-key: 90ms;        /* key press */
+  --dur-ui: 180ms;        /* tab change, tray open */
+  --dur-slow: 320ms;      /* screen-level change */
+
+  /* ================================================================== */
+  /* LEGACY ALIASES — old Karaoke Eternal names, re-pointed onto DECK.   */
+  /* Do not add to this block. Delete entries as components adopt the    */
+  /* DECK tokens above.                                                  */
+  /* ================================================================== */
+
+  /* The two brand hues are gone. These remain only so that any hsl() call
+     site still holding a raw hue resolves to neutral graphite instead of
+     blue or pink. Every known call site was migrated; this is the backstop. */
+  --hue-blue: 210;
+  --hue-pink: 210;
+
+  --color-gray-1: var(--chassis);
+  --color-gray-2: var(--key-hi);
+  --color-gray-3: var(--hairline);
+  --color-gray-4: var(--ink-4);
+  --color-gray-5: var(--ink-3);
+  --color-gray-6: var(--ink-3);
+  --color-gray-7: var(--ink-2);
+  --color-gray-8: var(--ink-2);
+  --color-gray-9: var(--ink);
+
+  --font-family: var(--font-body);
+  --font-family-custom: var(--font-display);
+  --font-weight-light: var(--weight-regular);
+  --font-weight-normal: var(--weight-regular);
+  --font-weight-bold: var(--weight-bold);
+
+  --font-size-xs: var(--text-s);
+  --font-size-s: var(--text-m);
+  --font-size-m: var(--text-l);
+  --font-size-l: var(--text-2xl);
+  --font-size-xl: var(--text-3xl);
+
+  --icon-size-s: var(--icon-s);
+  --icon-size-m: var(--icon-m);
+  --icon-size-l: var(--icon-l);
+  --icon-size-xl: var(--icon-xl);
+
+  --space-xs: var(--gap-1);
+  --space-s: var(--gap-2);
+  --space-m: var(--gap-3);
+  --space-l: var(--gap-4);
+  --space-xl: var(--gap-5);
+  --container-padding: var(--gutter);
+
+  --bg-color: var(--chassis);
+  --text-color: var(--ink);
+  --link-color: var(--vu);
+  --mark-bg-color: var(--vu-well);
+
+  --text-shadow: none;
+  --box-shadow: var(--bevel);
+  --drop-shadow-filter: none;
+  --border-radius: var(--radius-key);
+  /* a hard amber ring, never blurred. 9 components route focus through this. */
+  --focus-outline: 2px solid var(--vu);
+
+  --input-color: var(--ink);
+  --input-placeholder-color: var(--ink-3);
+  --input-bg-color: var(--key-well);
+  --input-outline-color: var(--vu);
+  --input-margin: var(--gap-2);
+
+  --btn-bg-color: var(--key);
+  --btn-active-bg-color: var(--vu);
+  --btn-active-filter: none;
+  --btn-activate-filter: none;
+
+  --btn-danger-bg-color: var(--alert);
+  --btn-danger-filter: none;
+  --btn-danger-activate-filter: none;
+
+  /* UI chrome (header/footer) — a deck's faceplate is opaque. No blur. */
+  --chrome-bg-color: var(--faceplate);
+  --chrome-border-color: var(--seam);
+  --header-notice-color: var(--ink);
+  --header-notice-bg-color: var(--vu-well);
 
   /* Library */
-  --artist-folder-color: var(--text-color);
-  --artist-folder-bg-color: hsl(var(--hue-blue), 90%, 25%);
-  --artist-folder-starred-color: #000;
-  --artist-folder-starred-bg-color: var(--link-color);
-  --artist-folder-starred-filter: var(--btn-active-filter);
-  --artist-name-color: hsl(var(--hue-blue), 10%, 85%);
+  --artist-folder-color: var(--ink);
+  --artist-folder-bg-color: var(--key);
+  --artist-folder-starred-color: var(--on-vu);
+  --artist-folder-starred-bg-color: var(--vu);
+  --artist-folder-starred-filter: none;
+  --artist-name-color: var(--ink-2);
 
-  --song-item-btn-bg-color: hsl(var(--hue-blue), 100%, 15%);
-  --song-item-btn-active-color: #333;
-  --song-item-btn-active-bg-color: var(--btn-active-bg-color);
-  --song-item-btn-active-filter: var(--btn-active-filter);
+  --song-item-btn-bg-color: var(--key);
+  --song-item-btn-active-color: var(--on-vu);
+  --song-item-btn-active-bg-color: var(--vu);
+  --song-item-btn-active-filter: none;
 
-  --alpha-picker-color: var(--artist-folder-bg-color);
-  --queued-item-color: hsl(var(--hue-pink), 70%, 80%);
-  --queued-item-text-shadow: var(--text-shadow-glow);
+  --alpha-picker-color: var(--ink-3);
+  --queued-item-color: var(--standby);
+  --queued-item-text-shadow: none;
 
   /* Account panels */
-  --panel-bg-color: hsl(var(--hue-blue), 20%, 10%);
+  --panel-bg-color: var(--faceplate);
 
   /* PlaybackCtrl */
-  --transport-btn-bg-color: var(--btn-danger-bg-color);
-  --transport-btn-filter: var(--btn-danger-filter);
-  --transport-volume-track-color: var(--btn-bg-color);
-  --transport-volume-track-active-color: var(--btn-active-bg-color);
-  --transport-volume-track-active-filter: var(--btn-active-filter);
+  --transport-btn-bg-color: var(--key);
+  --transport-btn-filter: none;
+  --transport-volume-track-color: var(--key-well);
+  --transport-volume-track-active-color: var(--vu);
+  --transport-volume-track-active-filter: none;
 
   /* Up Next header/banner */
-  --up-next-bg-color-from: hsl(var(--hue-blue), 70%, 20%);
-  --up-next-bg-color-to: hsl(var(--hue-blue), 70%, 35%);
+  --up-next-bg-color-from: var(--faceplate-hi);
+  --up-next-bg-color-to: var(--faceplate-lo);
   --up-next-filter: none;
 
-  --up-now-bg-color-from: hsl(var(--hue-pink), 70%, 20%);
-  --up-now-bg-color-to: hsl(var(--hue-pink), 50%, 40%);
+  --up-now-bg-color-from: var(--vu-well);
+  --up-now-bg-color-to: var(--vu-dim);
   --up-now-filter: none;
 
   /* <button> colors */
-  --btn-primary-color: #333;
-  --btn-primary-bg-color: var(--btn-active-bg-color);
+  --btn-primary-color: var(--on-vu);
+  --btn-primary-bg-color: var(--vu);
 
-  /* Animation */
-  --spring-duration: .5s;
-  --spring-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --animation-text-shadow-glow: glow .25s ease-out;
-  --animation-btn-danger-activate: btn-danger-activate 1s var(--activate-1);
-  --text-shadow-glow: 0 0 .25em hsl(var(--hue-pink), 100%, 50%), 0 0 .5em hsl(var(--hue-pink), 100%, 50%);
+  /* Animation — mechanical. Nothing overshoots, springs, or pulses. */
+  --spring-duration: var(--dur-ui);
+  --spring-function: var(--ease-key);
+  --animation-text-shadow-glow: none;
+  --animation-btn-danger-activate: none;
+  --text-shadow-glow: none;
 
-  --animation-btn-star: starBounce .5s var(--bounce-1);
-  --bounce-1: linear(0, 0.74 5.9%, 0.911 8.5%, 0.954 9.8%, 0.969 11.1%, 0.956 12.4%, 0.919 13.7%, 0.766 16.5%, -0.246 28.6%, -0.382 31.4%, -0.449 34.2%, -0.456 35.4%, -0.452 36.6%, -0.405 39.3%, 0.012 50.9%, 0.09 54.1%, 0.131 57.3%, 0.138 59.7%, 0.127 62.4%, 0.022 72.7%, -0.011 78.2%, -0.016 82.9%, 0);
+  --animation-btn-star: none;
+  --bounce-1: var(--ease-key);
 
-  --animation-btn-activate: btn-activate 1s var(--activate-1);
-  --activate-1: ease-out;
+  --animation-btn-activate: none;
+  --activate-1: var(--ease-key);
 }
 
-@keyframes starBounce {
-  0% {
-    transform: scale(1);
-  }
-
-  100% {
-    transform: scale(1.5);
-  }
-}
-
-@keyframes glow {
-  from {
-    text-shadow: none;
-  }
-
-  25% {
-    text-shadow: 0 0 4px hsl(var(--hue-pink), 100%, 100%), 0 0 8px hsl(var(--hue-pink), 100%, 100%), 0 0 12px hsl(var(--hue-pink), 100%, 100%);
-  }
-
-  to {
-    text-shadow: var(--text-shadow-glow);
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-key: 0ms;
+    --dur-ui: 0ms;
+    --dur-slow: 0ms;
   }
 }
 
-@keyframes btn-activate {
-  from {
-    filter: var(--btn-activate-filter);
-  }
-
-  to {
-    filter: var(--btn-active-filter);
-  }
+/* key press: the face drops into its well */
+@keyframes key-press {
+  from { transform: translateY(0); }
+  to { transform: translateY(1px); }
 }
 
-@keyframes btn-danger-activate {
-  from {
-    filter: var(--btn-danger-activate-filter);
-  }
+/* meter segments settling — used on mount only, never in a loop */
+@keyframes vu-settle {
+  from { opacity: .3; }
+  to { opacity: 1; }
+}
 
-  to {
-    filter: var(--btn-danger-filter);
-  }
+/* the amber sweep across the playing queue row's fill. Slow, low-contrast,
+   and paused (not hidden) when audio pauses. */
+@keyframes vu-sweep {
+  0% { background-position: -40% 0; }
+  100% { background-position: 140% 0; }
+}
+
+/* intermission countdown numeral ticking over */
+@keyframes tick {
+  from { opacity: .55; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
 }

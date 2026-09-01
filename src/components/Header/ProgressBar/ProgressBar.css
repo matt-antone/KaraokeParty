@@ -1,5 +1,5 @@
 .container {
-  --progress-color: hsl(var(--hue-blue), 100%, 20%);
+  --progress-color: var(--vu-well);
 
   display: flex;
   align-items: center;

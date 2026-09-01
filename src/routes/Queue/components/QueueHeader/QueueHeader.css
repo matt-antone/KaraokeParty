@@ -22,7 +22,7 @@
   font-weight: var(--font-weight-bold);
   color: var(--color-gray-6) !important;
   cursor: pointer;
-  background-color: hsl(var(--hue-blue), 30%, 12%);
+  background-color: var(--faceplate-lo);
   border: none;
   border-radius: var(--border-radius);
 }
@@ -49,7 +49,7 @@
   padding: 6px var(--space-m);
   font-size: var(--font-size-m);
   color: var(--color-gray-7);
-  background-color: hsl(var(--hue-blue), 30%, 12%);
+  background-color: var(--faceplate-lo);
   border-radius: var(--border-radius);
 }
 

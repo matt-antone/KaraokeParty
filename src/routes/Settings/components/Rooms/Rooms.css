@@ -15,7 +15,7 @@
 }
 
 .table th {
-  color: hsl(var(--hue-blue), 10%, 60%);
+  color: var(--ink-3);
   font-weight: normal;
   text-align: left;
 }

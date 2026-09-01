@@ -14,14 +14,6 @@
   text-align: center;
 }
 
-@supports (backdrop-filter: blur(20px) brightness(50%) saturate(50%)) or (-webkit-backdrop-filter: blur(20px) brightness(50%) saturate(50%)) {
-  .innerContainer {
-    background-color: transparent !important;
-    -webkit-backdrop-filter: blur(20px) brightness(50%) saturate(50%);
-    backdrop-filter: blur(20px) brightness(50%) saturate(50%);
-  }
-}
-
 .enterActive {
   animation: slide-in .25s ease-out;
   animation-fill-mode: forwards;

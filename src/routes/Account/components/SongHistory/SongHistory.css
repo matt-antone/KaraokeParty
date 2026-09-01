@@ -20,7 +20,7 @@
 }
 
 .item + .item {
-  border-top: 1px solid hsl(var(--hue-blue), 20%, 16%);
+  border-top: 1px solid var(--faceplate);
 }
 
 .primary {

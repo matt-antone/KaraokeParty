@@ -7,7 +7,7 @@
     margin: var(--space-l) 0 var(--space-m) 0;
     font-family: var(--font-family-custom);
     font-size: var(--font-size-l);
-    color: hsl(var(--hue-blue), 10%, 60%);
+    color: var(--ink-3);
   }
 }
 

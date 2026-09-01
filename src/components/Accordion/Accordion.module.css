@@ -1,5 +1,5 @@
 .container {
-  background: hsl(var(--hue-blue), 20%, 15%);
+  background: var(--faceplate);
   border-radius: var(--border-radius);
   
   &[data-expanded] {
@@ -21,8 +21,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: hsl(var(--hue-blue), 20%, 25%);
-  background-image: linear-gradient(135deg, hsl(var(--hue-blue), 20%, 25%) 0%, hsl(var(--hue-blue), 20%, 15%) 100%);
+  background-color: var(--key);
+  background-image: linear-gradient(135deg, var(--key) 0%, var(--faceplate) 100%);
   border-radius: var(--border-radius);
   cursor: pointer;
 

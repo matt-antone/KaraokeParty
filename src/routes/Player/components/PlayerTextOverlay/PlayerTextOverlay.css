@@ -7,10 +7,8 @@
   justify-content: center;
   flex-direction: column;
 
-  --color-pink: hsl(var(--hue-pink), 62%, 57%);
-  --color-blue: hsl(var(--hue-blue), 90%, 50%);
-  --color-pink-glow: hsla(var(--hue-pink), 62%, 57%, 0.8);
-  --color-blue-glow: hsla(var(--hue-blue), 90%, 50%, 0.8);
+  --color-pink: var(--alert);
+  --color-blue: var(--vu);
 }
 
 .intermission {
@@ -85,14 +83,6 @@
   border-radius: var(--border-radius);
 }
 
-@supports (backdrop-filter: blur(20px) brightness(50%) saturate(50%)) or (-webkit-backdrop-filter: blur(20px) brightness(50%) saturate(50%)) {
-  .upNext {
-    background-color: transparent !important;
-    -webkit-backdrop-filter: blur(20px) brightness(50%) saturate(50%);
-    backdrop-filter: blur(20px) brightness(50%) saturate(50%);
-  }
-}
-
 .playButton {
   cursor: pointer;
   background: transparent;
@@ -106,7 +96,6 @@
     width: 33vh;
     height: 33vh;
     fill: url(#play-icon-gradient);
-    animation: bloom-pulse 6s infinite;
     will-change: filter;
 
     path {
@@ -139,28 +128,9 @@
   }
 }
 
-@keyframes bloom-pulse {
-
-  0%,
-  100% {
-    filter: var(--drop-shadow-filter) drop-shadow(0 0 10px var(--color-pink-glow));
-  }
-
-  50% {
-    filter: var(--drop-shadow-filter) drop-shadow(0 0 20px var(--color-blue-glow));
-  }
-}
-
 .backdrop {
   background-color: var(--chrome-bg-color);
   border-radius: var(--border-radius);
   padding: var(--space-m) var(--space-xl);
 }
 
-@supports (backdrop-filter: saturate(50%) blur(20px)) or (-webkit-backdrop-filter: saturate(50%) blur(20px)) {
-  .backdrop {
-    background-color: transparent !important;
-    -webkit-backdrop-filter: saturate(50%) blur(20px);
-    backdrop-filter: saturate(50%) blur(20px);
-  }
-}

@@ -5,7 +5,7 @@
   align-items: center;
   margin-left: var(--space-s);
   margin-bottom: var(--space-s);
-  background-color: hsl(var(--hue-blue), 40%, 6%);
+  background-color: var(--chassis);
   border-left: 3px solid var(--song-item-btn-bg-color);
   height: 44px;
 

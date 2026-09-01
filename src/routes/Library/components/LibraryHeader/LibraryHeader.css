@@ -146,7 +146,7 @@
   font-size: var(--font-size-s);
   font-weight: var(--font-weight-bold);
   color: var(--color-gray-6) !important;
-  background-color: hsl(var(--hue-blue), 30%, 12%);
+  background-color: var(--faceplate-lo);
   border: none;
   border-radius: var(--border-radius);
 }
