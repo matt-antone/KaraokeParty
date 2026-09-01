@@ -1,5 +1,6 @@
 import React from 'react'
 import Button from 'components/Button/Button'
+import VuMeter from 'components/VuMeter/VuMeter'
 import styles from './ProgressBar.css'
 
 interface ProgressBarProps {
@@ -38,13 +39,23 @@ export default class ProgressBar extends React.Component<ProgressBarProps> {
     if (!state.isVisible) return null
 
     return (
-      <div className={styles.container} style={{ backgroundSize: props.pct + '% 100%' }}>
-        <p className={styles.text}>{state.isCanceling ? 'Stopping...' : props.text}</p>
-        <Button
-          className={props.isActive ? styles.cancel : styles.close}
-          icon='CLEAR'
-          onClick={this.handleCancelClick}
-          size={40}
+      <div className={styles.container}>
+        <div className={styles.row}>
+          <p className={styles.text}>{state.isCanceling ? 'Stopping...' : props.text}</p>
+          <Button
+            className={props.isActive ? styles.cancel : styles.close}
+            icon='CLEAR'
+            onClick={this.handleCancelClick}
+            size={40}
+          />
+        </div>
+        {/* peaking off: a scan at 90% is good news, so it must never flash red */}
+        <VuMeter
+          value={props.pct / 100}
+          segments={20}
+          peakFrom={2}
+          height={6}
+          label='Scan progress'
         />
       </div>
     )

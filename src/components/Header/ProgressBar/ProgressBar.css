@@ -1,30 +1,45 @@
-.container {
-  --progress-color: var(--vu-well);
+/* Admin-only scanner status, in the header while a scan runs and until
+   dismissed. The panel is a brushed face with a seam under it; progress is a
+   VU meter with peaking off, because a scan reaching 90% is good news. */
 
+.container {
   display: flex;
-  align-items: center;
-  height: 40px;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gap-2);
   width: 100%;
-  background-image: linear-gradient(to right, var(--progress-color), var(--progress-color));
-  background-repeat: no-repeat;
+  padding: var(--gap-2) var(--gap-4);
+  background: var(--brush);
+  border-bottom: var(--seam-rule);
 }
 
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+}
+
+/* the path being scanned is data printed on the panel, so it is silkscreen */
 .text {
   flex: 1;
-  font-size: 16px;
-  text-align: center;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  color: var(--text-color);
+  margin: 0;
 }
 
+/* red X while running, because it cancels real work */
 .cancel {
-  color: var(--btn-danger-bg-color);
-  filter: var(--btn-danger-filter);
+  color: var(--alert);
 }
 
+/* grey X once finished, because it only dismisses */
 .close {
-  color: var(--btn-active-bg-color);
-  filter: var(--btn-active-filter);
+  color: var(--ink-3);
 }
