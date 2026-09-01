@@ -44,7 +44,7 @@ const CoreLayout = () => {
 
       {ui.isErrored && (
         <Modal
-          title='Oops...'
+          title='Fault'
           onClose={closeError}
           buttons={<Button variant='primary' onClick={closeError}>OK</Button>}
         >

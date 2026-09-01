@@ -1,13 +1,41 @@
+/* The app's chrome: a solid brushed faceplate with a seam under it. No blur —
+   a deck's faceplate is opaque.
+
+   The handoff has the wordmark row scrolling away above a sticky YourTurn.
+   That needs the page to own the scroll, and here the virtualized song list
+   owns it instead (PaddedList is a full-viewport react-window List with the
+   chrome overlaid on top), so nothing can sit above the chrome and scroll
+   under it. The wordmark row is therefore pinned with the rest of the header.
+   Cost is ~30px of fixed height on a 390px screen. Undoing this means moving
+   the lists to a window-scroller, which react-window v2 does not provide. */
+
 .container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  background-color: var(--chrome-bg-color);
-  border-bottom: 1px solid var(--chrome-border-color);
+  background: var(--brush);
+  border-bottom: var(--seam-rule);
+  box-shadow: var(--edge-top);
   z-index: 1;
 
   &:empty {
     display: none;
   }
+}
+
+/* wordmark left, the room you are in silkscreened right */
+.wordmarkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: var(--gap-3) var(--gutter);
+}
+
+.room {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

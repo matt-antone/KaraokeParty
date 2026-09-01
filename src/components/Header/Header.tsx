@@ -15,6 +15,7 @@ import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
 import getWaits from 'routes/Queue/selectors/getWaits'
 import LibraryHeader from 'routes/Library/components/LibraryHeader/LibraryHeader'
 import QueueHeader from 'routes/Queue/components/QueueHeader/QueueHeader'
+import Logo from 'components/Logo/Logo'
 import PlaybackCtrl from './PlaybackCtrl/PlaybackCtrl'
 import ProgressBar from './ProgressBar/ProgressBar'
 import YourTurn from './YourTurn/YourTurn'
@@ -59,6 +60,9 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   const { position, rotationSize } = useAppSelector(getMyRotation)
   const songCount = useAppSelector(getMyUpcoming).length
   const isPaused = useAppSelector(state => ensureState(state.queue).pausedUserIds.includes(userId))
+  const roomName = useAppSelector(state => (
+    state.user.roomId === null ? undefined : state.rooms.entities[state.user.roomId]?.name
+  ))
 
   const location = useLocation()
   const isPlayer = location.pathname.replace(/\/$/, '').endsWith('/player')
@@ -67,7 +71,16 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   const cancelScan = () => dispatch(requestScanStop())
 
   return (
-    <div className={clsx(styles.container, 'bg-blur')} ref={ref}>
+    <div className={styles.container} ref={ref}>
+      {/* the wordmark and the room you are in. Not on the player, which is a
+          room fixture rather than a screen someone navigates. */}
+      {!isPlayer && (
+        <div className={styles.wordmarkRow}>
+          <Logo withMark />
+          {roomName && <span className={clsx('silkscreen', styles.room)} translate='no'>{roomName}</span>}
+        </div>
+      )}
+
       {/* nothing queued and not sitting out means no status to report */}
       {!isPlayer && isPlayerPresent && (songCount > 0 || isPaused)
         && (

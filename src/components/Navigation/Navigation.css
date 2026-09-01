@@ -1,34 +1,38 @@
+/* The bottom nav: a brushed panel seamed to the chassis, pinned to the base.
+   A selected tab is marked by a 2px amber edge rule along its top, not by a
+   glow — on is amber, off is dim graphite. */
+
 .container {
   position: fixed;
   bottom: 0;
   left: 0;
   display: flex;
   width: 100%;
-  background-color: var(--chrome-bg-color);
-  border-top: 1px solid var(--chrome-border-color);
+  background: var(--brush);
+  box-shadow: var(--edge-bottom);
   z-index: 99;
 
   a {
     flex: 1;
-    padding: var(--space-xs) 0;
+    display: grid;
+    place-items: center;
+    min-height: var(--nav-bar);
+    color: var(--ink-5);
+    border-top: 2px solid transparent;
   }
 
   span {
     display: flex;
     justify-content: center;
-    color: var(--ink-5);
 
     svg {
       height: var(--icon-l);
     }
   }
 
-  /* on is amber. Nothing bleeds light. */
-  .active span {
+  /* on is amber, and the edge rule lights with it */
+  a.active {
     color: var(--vu);
+    border-top-color: var(--vu);
   }
-}
-
-.btnAnimate {
-  animation: none;
 }
