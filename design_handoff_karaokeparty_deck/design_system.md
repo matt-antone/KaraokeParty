@@ -300,7 +300,7 @@ product shot). They are kept for provenance and are **not part of this brand**.
 | `directions/` | The three rebrand candidates. `1b-deck.html` is the one this system is built on. |
 | `ui_kits/app/` | The phone app: sign-in, library, queue, account, settings. |
 | `ui_kits/player/` | The room player and every overlay state. Admin-only; launched from the Settings screen. |
-| `SKILL.md` | Agent Skills entry point. |
+| `SKILL.md` | Agent Skills entry point. Not included in this handoff bundle. |
 
 ### Components
 

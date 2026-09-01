@@ -129,10 +129,16 @@ one. Every element gets `--bevel` or `--well`; nothing gets both, nothing gets n
 
 ## Assets
 
-**No image assets, by design.** There is no logo file: both the knob mark and the stacked
-wordmark are CSS geometry (`components/core/Logo.jsx`). Icons are a single path map in
-`components/core/Icon.jsx` — one shape per name, 24-box weight. If you need an icon that
-isn't there, add its real path data to the map at the same weight; don't draw a one-off.
+**No image assets in the brand, by design.** There is no logo file: both the knob mark and
+the stacked wordmark are CSS geometry (`components/core/Logo.jsx`). Icons are a single path
+map — 48 glyphs, one shape per name, 24-box weight — available two ways: inline in
+`components/core/Icon.jsx`, and as a plain module in `assets/icons/icons.js` with its
+generator source alongside. Both hold the same data; it was produced programmatically, so
+add new glyphs by their real path data at the same weight rather than hand-editing or
+drawing a one-off.
+
+`assets/legacy/` holds the old Karaoke Eternal marks (app icon, mic glyphs, product shot).
+They are kept for provenance and are **not part of this brand** — do not ship them.
 
 The Beon webfont, all glow filter tokens, all `backdrop-filter` tokens, the pink hue, and
 every emoji are removed. Don't reintroduce them.
@@ -155,7 +161,17 @@ ui_kits/app/                Six phone screens + App shell, with a README mapping
 ui_kits/player/             The player screen, with a README.
 previews/app.html           Clickable phone reference — every screen and state.
 previews/player.html        Clickable player reference — all six overlay states.
+guidelines/                 14 specimen cards — colour, type, spacing, effects, motion, brand.
+                            Open these when a token's intent is unclear.
+assets/icons/               The 48-glyph path map as a module, plus its generator source.
+assets/legacy/              Old Karaoke Eternal marks. Provenance only — do not ship.
+directions/                 The three rebrand candidates explored before this system.
+                            `1b-deck.html` is the one it was built on; the other two are
+                            context for why DECK looks the way it does.
 ```
+
+`SKILL.md`, referenced in `design_system.md`'s own index, is a design-tool entry point and
+is deliberately not part of this bundle.
 
 The `.card.html` files in each component directory are the design-system preview cards.
 They are documentation, not implementation targets.

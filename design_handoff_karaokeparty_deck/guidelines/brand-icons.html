@@ -1,0 +1,30 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Iconography" subtitle="48 single-path SVGs, monochrome, sized by height — and no emoji" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { padding: 16px; }
+  .grid { display: grid; gap: 6px; }
+  .sw { height: 46px; border-radius: var(--radius-key); display: flex; align-items: flex-end; padding: 5px; box-sizing: border-box; }
+  .sw span { font-family: var(--font-mono); font-size: 8.5px; white-space: nowrap; }
+  .lbl { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+  .note { font-family: var(--font-mono); font-size: 10.5px; line-height: 1.7; color: var(--ink-2); margin: 12px 0 0; }
+  .row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  
+</style>
+</head>
+<body>
+
+<div id="icons" style="display:flex;flex-wrap:wrap;gap:12px;color:var(--ink-2)"></div>
+<p class="note">Material Design Icons geometry, inlined as path data in <code>components/core/Icon.jsx</code>. Monochrome, colour from the parent, sized by height (--icon-s/m/l/xl = 16/22/26/30). <em style="color:var(--ink);font-style:normal">No emoji anywhere</em> — the favourite control is a text &#9733;, and library facets are labelled words on keys, not pictograms.</p>
+<script type="module">
+  const { default: icons } = await import('../assets/icons/icons.js');
+  document.getElementById('icons').innerHTML = Object.entries(icons)
+    .map(([n, i]) => `<svg viewBox="${i.viewBox}" height="24" style="display:block"><path fill="currentColor" d="${i.d}"/></svg>`).join('');
+</script>
+
+</body>
+</html>
