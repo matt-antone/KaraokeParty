@@ -1,6 +1,4 @@
 import { createAction, createReducer } from '@reduxjs/toolkit'
-import { RootState, AppDispatch, AppThunk } from 'store/store'
-import getUpcoming from '../selectors/getUpcoming'
 import {
   QUEUE_ADD,
   QUEUE_MOVE,
@@ -24,11 +22,6 @@ export const queueSong = createAction(QUEUE_ADD, (songId: number) => ({
   payload: { songId },
   meta: { isOptimistic: true },
 }))
-
-export const removeUpcomingItems = (userId: number): AppThunk => (dispatch: AppDispatch, getState: () => RootState) => {
-  const upcomingQueueIds = getUpcoming(getState(), userId)
-  dispatch(removeItem({ queueId: upcomingQueueIds }))
-}
 
 // ------------------------------------
 // Reducer

@@ -36,7 +36,7 @@ export default defineConfig(
     // the repo root would lint every worktree's copy of every file
     ignores: [
       'build/**', 'docs/**', 'dist/**', 'node_modules/**',
-      'design_handoff_karaokeparty_deck/**', '.claude/**',
+      '.claude/**',
     ],
   },
   // client-only config

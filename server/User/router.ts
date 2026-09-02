@@ -1,10 +1,10 @@
-import { promisify } from 'util'
-import fs from 'fs'
+import fsPromises from 'node:fs/promises'
 import { db } from '../lib/Database.js'
 import sql from 'sqlate'
 import jsonWebToken from 'jsonwebtoken'
 import crypto from '../lib/crypto.js'
 import KoaRouter from '@koa/router'
+import { requireAdmin } from '../lib/util.js'
 import Prefs from '../Prefs/Prefs.js'
 import Queue from '../Queue/Queue.js'
 import Rooms from '../Rooms/Rooms.js'
@@ -30,8 +30,7 @@ interface RequestWithBody {
 }
 
 const router = new KoaRouter({ prefix: '/api' })
-const readFile = promisify(fs.readFile)
-const deleteFile = promisify(fs.unlink)
+const { readFile, unlink: deleteFile } = fsPromises
 const { sign: jwtSign } = jsonWebToken
 
 // The JWT carries the room association (see createUserCtx), so a session-scoped
@@ -131,11 +130,7 @@ router.get('/user', (ctx) => {
 })
 
 // list all users (admin only)
-router.get('/users', async (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.get('/users', requireAdmin, async (ctx) => {
   const userRooms = {} // { userId: [roomId, roomId, ...]}
   const sockets = await ctx.io.fetchSockets()
 

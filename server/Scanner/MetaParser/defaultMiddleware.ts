@@ -1,4 +1,5 @@
-const m = new Map()
+// the default parse pipeline, in order; each step mutates ctx
+const m = new Map<string, (ctx) => void>()
 
 export default m
 
@@ -6,34 +7,31 @@ export default m
 // begin middleware stack
 // ----------------------
 
-m.set('normalize whitespace', (ctx, next) => {
+m.set('normalize whitespace', (ctx) => {
   ctx.name = ctx.name.replace(/_/g, ' ') // underscores to spaces
   ctx.name = ctx.name.replace(/ {2,}/g, ' ') // multiple spaces to single
-  next()
 })
 
 // trailing [genre, tag, tag] group; must run before de-karaoke, whose
 // regex also matches [] and would eat a tag named 'vocal'
-m.set('extract taxonomy', (ctx, next) => {
+m.set('extract taxonomy', (ctx) => {
   const match = ctx.name.match(/\s*\[([^[\]]+)\]\s*$/)
-  if (!match) return next()
+  if (!match) return
 
   const tags = match[1].split(',')
     .map(tag => tag.trim().toLowerCase())
     .filter(tag => tag && !/karaoke|vocal/i.test(tag))
 
   // nothing left: it was a karaoke marker, not taxonomy; leave it for de-karaoke
-  if (!tags.length) return next()
+  if (!tags.length) return
 
   ctx.tags = tags
   ctx.name = ctx.name.slice(0, match.index)
-  next()
 })
 
-m.set('de-karaoke', (ctx, next) => {
+m.set('de-karaoke', (ctx) => {
   // 'karaoke' or 'vocal' surrounded by (), [], or {}
   ctx.name = ctx.name.replace(/[([{](?=[^([{]*$).*(?:karaoke|vocal).*[)\]}]/i, '')
-  next()
 })
 
 // --------------
@@ -41,7 +39,7 @@ m.set('de-karaoke', (ctx, next) => {
 // --------------
 
 // detect delimiter and split to parts
-m.set('split', (ctx, next) => {
+m.set('split', (ctx) => {
   const inTheStyleOf = ctx.name.match(/ in the style of /i)
 
   ctx.cfg = {
@@ -66,8 +64,6 @@ m.set('split', (ctx, next) => {
   if (ctx.parts.length < 2) {
     throw new Error('no artist/title delimiter in filename')
   }
-
-  next()
 })
 
 m.set('clean parts', cleanParts([
@@ -77,24 +73,22 @@ m.set('clean parts', cleanParts([
 ]))
 
 // set title
-m.set('set title', (ctx, next) => {
+m.set('set title', (ctx) => {
   // skip if already set
-  if (ctx.title) return next()
+  if (ctx.title) return
 
   // @todo this assumes delimiter won't appear in title
   ctx.title = ctx.cfg.artistOnLeft ? ctx.parts.pop() : ctx.parts.shift()
   ctx.title = ctx.title.trim()
-  next()
 })
 
 // set artist
-m.set('set artist', (ctx, next) => {
+m.set('set artist', (ctx) => {
   // skip if already set
-  if (ctx.artist) return next()
+  if (ctx.artist) return
 
   ctx.artist = ctx.parts.join(ctx.cfg.delimiter)
   ctx.artist = ctx.artist.trim()
-  next()
 })
 
 // -----------
@@ -102,14 +96,13 @@ m.set('set artist', (ctx, next) => {
 // -----------
 
 // remove any surrounding quotes
-m.set('remove quotes', (ctx, next) => {
+m.set('remove quotes', (ctx) => {
   ctx.artist = ctx.artist.replace(/^['|"](.*)['|"]$/, '$1')
   ctx.title = ctx.title.replace(/^['|"](.*)['|"]$/, '$1')
-  next()
 })
 
 // some artist-specific tweaks
-m.set('artist tweaks', (ctx, next) => {
+m.set('artist tweaks', (ctx) => {
   // Last, First [Middle] -> First [Middle] Last
   // Use negative lookahead to avoid matching when second part starts with an article (e.g., "Tyler, The Creator")
   const articles = Array.isArray(ctx.cfg.articles) ? ctx.cfg.articles.join(' |') + ' ' : ''
@@ -120,33 +113,29 @@ m.set('artist tweaks', (ctx, next) => {
   // featuring/feat/ft -> ft.
   ctx.artist = ctx.artist.replace(/ featuring /i, ' ft. ')
   ctx.artist = ctx.artist.replace(/ f(ea)?t\.? /i, ' ft. ')
-  next()
 })
 
 // move leading articles to end
-m.set('move leading articles', (ctx, next) => {
+m.set('move leading articles', (ctx) => {
   ctx.artist = moveArticles(ctx.artist, ctx.cfg.articles)
   ctx.title = moveArticles(ctx.title, ctx.cfg.articles)
-  next()
 })
 
 // ---------
 // normalize
 // ---------
-m.set('normalize artist', (ctx, next) => {
+m.set('normalize artist', (ctx) => {
   // skip if already set
-  if (ctx.artistNorm) return next()
+  if (ctx.artistNorm) return
 
   ctx.artistNorm = normalizeStr(ctx.artist, ctx.cfg.articles)
-  next()
 })
 
-m.set('normalize title', (ctx, next) => {
+m.set('normalize title', (ctx) => {
   // skip if already set
-  if (ctx.titleNorm) return next()
+  if (ctx.titleNorm) return
 
   ctx.titleNorm = normalizeStr(ctx.title, ctx.cfg.articles)
-  next()
 })
 
 // ---------------------
@@ -155,15 +144,13 @@ m.set('normalize title', (ctx, next) => {
 
 // clean left-to-right until a valid part is encountered (or only 2 parts left)
 function cleanParts (patterns) {
-  return function (ctx, next) {
+  return function (ctx) {
     for (let i = 0; i < ctx.parts.length; i++) {
       if (patterns.some(exp => exp.test(ctx.parts[i].trim())) && ctx.parts.length > 2) {
         ctx.parts.shift()
         i--
       } else break
     }
-
-    next()
   }
 }
 

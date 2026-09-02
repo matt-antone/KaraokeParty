@@ -6,7 +6,7 @@ import AppRouter from 'lib/AppRouter'
 import { RootState } from 'store/store'
 import { SongHistoryItem } from 'shared/types'
 import HttpApi from 'lib/HttpApi'
-import Persistor from 'store/Persistor'
+import * as Persistor from 'store/Persistor'
 import { fetchPrefs } from './prefs'
 import {
   ACCOUNT_RECEIVE,

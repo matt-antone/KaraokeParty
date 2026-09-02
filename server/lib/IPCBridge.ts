@@ -5,74 +5,76 @@ const log = getLogger('IPCBridge')
 const PROCESS_NAME = process.env.KES_CHILD_PROCESS || 'main'
 const isParent = typeof process.env.KES_CHILD_PROCESS === 'undefined' // @todo
 
-class IPCParent {
+class IPC {
   static children = new Map()
   static handlers = {}
+  static requests = {}
+  static reqId = 0
 
+  // parent: fan out to children (or one, by pid). child: up to the parent.
   static send (action, pid?) {
-    // log.debug(`${PROCESS_NAME} emit: `, action.type)
+    if (!isParent) return process.send(action)
 
     if (!this.children.size) throw new Error('no child processes')
 
-    if (!pid) {
-      this.children.forEach(p => p.send(action))
+    if (pid) this.children.get(pid)?.send(action)
+    else this.children.forEach(p => p.send(action))
+  }
+
+  // 'this' won't work when this method is passed as the message handler
+  // callback, so it uses the class name
+  static handle (action) {
+    const { error, meta, type } = action
+
+    // a response to a request we made?
+    if (meta?.pid === process.pid && IPC.requests[meta.reqId]) {
+      const { resolve, reject } = IPC.requests[meta.reqId]
+      delete IPC.requests[meta.reqId]
+
+      if (error) reject(error)
+      else resolve(action.payload)
       return
     }
 
-    const subprocess = this.children.get(pid)
-    if (subprocess) subprocess.send(action)
-  }
-
-  // 'this' keyword won't work when this method is passed as the
-  // message handler callback, so using the class name (IPCParent)
-  static handle (action) {
-    const { meta, type } = action
-
-    // log.debug(`${PROCESS_NAME} rcv:`, type)
-
-    if (!type || typeof IPCParent.handlers[type] !== 'function') {
+    if (!type || typeof IPC.handlers[type] !== 'function') {
       log.verbose(`${PROCESS_NAME}: no handler for action: ${type}`)
       return
     }
 
-    // synchronous handler: just fire and forget
-    const res = IPCParent.handlers[type](action)
+    const reply = (extra: object) => {
+      if (meta?.reqId) IPC.send({ ...action, ...extra }, meta?.pid)
+    }
 
-    if (res instanceof Promise) {
-      res.then((payload) => {
-        if (meta?.reqId) {
-          IPCParent.send({
-            ...action,
-            type: type + _SUCCESS,
-            payload,
-          }, meta?.pid)
-        }
-        return null
-      }).catch((err) => {
-        if (meta?.reqId) {
-          IPCParent.send({
-            ...action,
-            type: type + _ERROR,
-            error: err,
-          }, meta?.pid)
-        }
+    const res = IPC.handlers[type](action)
 
-        log.error(`${PROCESS_NAME}: error in ipc action ${type}: ${err.message}`)
-      })
+    // synchronous handler: fire and forget
+    if (!(res instanceof Promise)) {
+      reply({ type: type + _SUCCESS, payload: res })
       return
     }
 
-    if (meta?.reqId) {
-      IPCParent.send({
-        ...action,
-        type: type + _SUCCESS,
-        payload: res,
-      }, meta?.pid)
-    }
+    res.then((payload) => {
+      reply({ type: type + _SUCCESS, payload })
+      return null
+    }).catch((err) => {
+      reply({ type: type + _ERROR, error: err })
+      log.error(`${PROCESS_NAME}: error in ipc action ${type}: ${err.message}`)
+    })
+  }
+
+  // child only: send and await the parent's reply
+  static req (action) {
+    const reqId = ++this.reqId
+    const promise = new Promise((resolve, reject) => {
+      this.requests[reqId] = { resolve, reject }
+    })
+
+    this.send({ ...action, meta: { ...action.meta, reqId, pid: process.pid } })
+
+    return promise
   }
 
   static addChild (subprocess) {
-    // parent: handle messages from child process
     subprocess.on('message', action => this.handle(action))
     this.children.set(subprocess.pid, subprocess)
   }
@@ -82,117 +84,14 @@ class IPCParent {
   }
 
   static use (obj) {
-    this.handlers = {
-      ...this.handlers,
-      ...obj,
-    }
+    this.handlers = { ...this.handlers, ...obj }
   }
 }
 
-class IPCChild {
-  static handlers = {}
-  static requests = {}
-  static reqId = 0
-
-  static send (action) {
-    // console.log(`${PROCESS_NAME} emit: `, action.type)
-    process.send(action)
-  }
-
-  // 'this' keyword won't work when this method is passed as the
-  // message handler callback, so using the class name (IPCChild)
-  static handle (action) {
-    const { error, meta, type } = action
-
-    // is this a response to a pending request?
-    if (meta?.pid === process.pid && IPCChild.requests[meta.reqId]) {
-      if (error) {
-        IPCChild.requests[meta.reqId].reject(error)
-      } else {
-        IPCChild.requests[meta.reqId].resolve(action.payload)
-      }
-
-      // console.log(`${PROCESS_NAME} ack:`, type)
-
-      delete IPCChild.requests[meta.ipcId]
-      return
-    }
-
-    // console.log(`${PROCESS_NAME} rcv:`, type)
-
-    // handle request
-    if (!type || typeof IPCChild.handlers[type] !== 'function') {
-      log.verbose(`${PROCESS_NAME}: no handler for action: ${type}`)
-      return
-    }
-
-    const res = IPCChild.handlers[type](action)
-
-    if (res instanceof Promise) {
-      res.then((payload) => {
-        if (meta?.reqId) {
-          IPCChild.send({
-            ...action,
-            type: type + _SUCCESS,
-            payload,
-          })
-        }
-        return null
-      }).catch((err) => {
-        if (meta?.reqId) {
-          IPCChild.send({
-            ...action,
-            type: type + _ERROR,
-            error: err,
-          })
-        }
-
-        log.error(`${PROCESS_NAME}: error in ipc action ${type}: ${err.message}`)
-      })
-      return
-    }
-
-    if (meta?.reqId) {
-      IPCChild.send({
-        ...action,
-        type: type + _SUCCESS,
-        payload: res,
-      })
-    }
-  }
-
-  // used by child processes only
-  static req (action) {
-    const promise = new Promise((resolve, reject) => {
-      this.requests[++this.reqId] = { resolve, reject }
-    })
-
-    action = {
-      ...action,
-      meta: {
-        ...action.meta,
-        reqId: this.reqId,
-        pid: process.pid,
-      },
-    }
-
-    this.send(action)
-
-    return promise
-  }
-
-  static use (obj) {
-    this.handlers = {
-      ...this.handlers,
-      ...obj,
-    }
-  }
-}
-
-export default isParent ? IPCParent : IPCChild
+export default IPC
 
 if (!isParent) {
   // child: handle messages from parent process
   // this also prevents child processes from automatically exiting
-  process.on('message', IPCChild.handle)
+  process.on('message', IPC.handle)
 }

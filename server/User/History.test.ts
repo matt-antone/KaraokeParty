@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import Database, { db, open, close } from '../lib/Database.js'
+import { db, open, close } from '../lib/Database.js'
 import Queue from '../Queue/Queue.js'
 import User from './User.js'
 
@@ -9,7 +9,7 @@ const ALICE = 1
 
 describe('song history', () => {
   beforeEach(() => {
-    if (Database.db) close()
+    close()
     open({ file: ':memory:', ro: false })
 
     db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])

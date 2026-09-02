@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import Database, { db, open, close } from '../lib/Database.js'
+import { db, open, close } from '../lib/Database.js'
 import Library from './Library.js'
 
 const USER_ID = 1
@@ -11,7 +11,7 @@ const addSong = (title = 'Here Comes The Rain Again', titleNorm = 'here comes th
 
 describe('song stars survive songId churn', () => {
   beforeEach(() => {
-    if (Database.db) close()
+    close()
     open({ file: ':memory:', ro: false })
 
     db.run(`INSERT INTO users (userId, username, password, name, roleId)
@@ -78,7 +78,7 @@ describe('song stars survive songId churn', () => {
 
 describe('getPathSongCounts', () => {
   beforeEach(() => {
-    if (Database.db) close()
+    close()
     open({ file: ':memory:', ro: false })
 
     db.run('INSERT INTO artists (artistId, name, nameNorm) VALUES (1, ?, ?)', ['Eurythmics', 'eurythmics'])

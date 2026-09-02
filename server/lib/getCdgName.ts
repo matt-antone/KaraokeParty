@@ -1,18 +1,16 @@
 import fs from 'fs'
-import getPerms from './getPermutations.js'
+import path from 'path'
 
-export default function getCdgName (file) {
-  // upper and lowercase permutations since fs may be case-sensitive
-  for (const ext of getPerms('cdg')) {
-    const cdg = file.substring(0, file.lastIndexOf('.') + 1) + ext
+// the sibling .cdg for a media file, matched case-insensitively since the
+// filesystem may not be. null when there isn't one.
+export default function getCdgName (file: string): string | null {
+  const dir = path.dirname(file)
+  const want = path.basename(file, path.extname(file)).toLowerCase() + '.cdg'
 
-    try {
-      fs.statSync(cdg)
-      return cdg
-    } catch {
-      // try another permutation
-    }
-  } // end for
-
-  return false
+  try {
+    const match = fs.readdirSync(dir).find(f => f.toLowerCase() === want)
+    return match ? path.join(dir, match) : null
+  } catch {
+    return null
+  }
 }

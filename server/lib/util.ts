@@ -43,3 +43,6 @@ export const randomChars = (length) => {
 
   return result
 }
+
+// koa-router middleware: 401 unless the request is from an admin
+export const requireAdmin = (ctx, next) => ctx.user.isAdmin ? next() : ctx.throw(401)

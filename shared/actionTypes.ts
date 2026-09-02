@@ -13,7 +13,6 @@ export const SONG_STARRED = 'library/SONG_STARRED'
 export const SONG_UNSTARRED = 'library/SONG_UNSTARRED'
 export const STAR_COUNTS_PUSH = 'library/STAR_COUNTS_PUSH'
 export const LIBRARY_PUSH = 'library/PUSH'
-export const LIBRARY_PUSH_SONG = 'library/PUSH_SONG'
 
 // Queue
 export const QUEUE_ADD = 'server/QUEUE_ADD'
@@ -105,11 +104,6 @@ export const SHOW_ERROR_MESSAGE = 'ui/SHOW_ERROR_MESSAGE'
 export const CLEAR_ERROR_MESSAGE = 'ui/CLEAR_ERROR_MESSAGE'
 export const UI_WINDOW_RESIZE = 'ui/WINDOW_RESIZE'
 export const UI_SET_QUEUE_TAB = 'ui/SET_QUEUE_TAB'
-
-// Song Info
-export const SONG_INFO_REQUEST = 'songInfo/SONG_INFO_REQUEST'
-export const SONG_INFO_SET_PREFERRED = 'songInfo/SET_PREFERRED'
-export const SONG_INFO_CLOSE = 'songInfo/SONG_INFO_CLOSE'
 
 // IPC Messages
 export const REQUEST_SCAN = 'scannerWorker/REQUEST_SCAN'

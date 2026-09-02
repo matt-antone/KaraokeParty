@@ -5,27 +5,19 @@ import path from 'path'
 import { unzip } from 'unzipit'
 import getLogger from '../lib/Log.js'
 import getCdgName from '../lib/getCdgName.js'
-import { getExt } from '../lib/util.js'
+import { getExt, requireAdmin } from '../lib/util.js'
 import KoaRouter from '@koa/router'
-import Library from '../Library/Library.js'
 import Media from './Media.js'
 import Prefs from '../Prefs/Prefs.js'
-import Queue from '../Queue/Queue.js'
-import Rooms from '../Rooms/Rooms.js'
 import fileTypes from './fileTypes.js'
-import { LIBRARY_PUSH_SONG, QUEUE_PUSH } from '../../shared/actionTypes.js'
 const log = getLogger('Media')
 const router = new KoaRouter({ prefix: '/api/media' })
 
 const audioExts = Object.keys(fileTypes).filter(ext => fileTypes[ext].mimeType.startsWith('audio/'))
 
 // stream a media file
-router.get('/:mediaId', async (ctx) => {
+router.get('/:mediaId', requireAdmin, async (ctx) => {
   const { type } = ctx.query
-
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
 
   const mediaId = parseInt(ctx.params.mediaId, 10)
 
@@ -66,8 +58,9 @@ router.get('/:mediaId', async (ctx) => {
     buffer = Buffer.from(await entries[entry].arrayBuffer())
   } else {
     if (type === 'cdg') {
-      file = getCdgName(file)
-      if (!file) ctx.throw(404, 'The .cdg file could not be found')
+      const cdg = getCdgName(file)
+      if (!cdg) ctx.throw(404, 'The .cdg file could not be found')
+      file = cdg
     }
 
     const stats = await fsPromises.stat(file)
@@ -79,36 +72,6 @@ router.get('/:mediaId', async (ctx) => {
 
   log.verbose('streaming %s (%sMB): %s', ctx.type, (ctx.length / 1000000).toFixed(2), file)
   ctx.body = buffer ? Readable.from(buffer) : fs.createReadStream(file)
-})
-
-// set isPreferred flag
-router.all('/:mediaId/prefer', (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
-  const mediaId = parseInt(ctx.params.mediaId, 10)
-
-  if (Number.isNaN(mediaId) || (ctx.request.method !== 'PUT' && ctx.request.method !== 'DELETE')) {
-    ctx.throw(422)
-  }
-
-  const songId = Media.setPreferred(mediaId, ctx.request.method === 'PUT')
-  ctx.status = 200
-
-  // emit (potentially) updated queues to each room
-  for (const { room, roomId } of Rooms.getActive(ctx.io)) {
-    ctx.io.to(room).emit('action', {
-      type: QUEUE_PUSH,
-      payload: Queue.get(roomId),
-    })
-  }
-
-  // emit (potentially) new duration
-  ctx.io.emit('action', {
-    type: LIBRARY_PUSH_SONG,
-    payload: Library.getSong(songId),
-  })
 })
 
 export default router

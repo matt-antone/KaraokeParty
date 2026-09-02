@@ -2,9 +2,7 @@ import getLogger from './lib/Log.js'
 import path from 'path'
 import getIPAddress from './lib/getIPAddress.js'
 import http from 'http'
-import fs from 'fs'
-import { promisify } from 'util'
-import parseCookie from './lib/parseCookie.js'
+import fsPromises from 'node:fs/promises'
 import jsonWebToken from 'jsonwebtoken'
 import Koa from 'koa'
 import koaRouter from '@koa/router'
@@ -16,7 +14,6 @@ import koaRange from 'koa-range'
 import koaStatic from 'koa-static'
 import Media from './Media/Media.js'
 import Prefs from './Prefs/Prefs.js'
-import libraryRouter from './Library/router.js'
 import mediaRouter from './Media/router.js'
 import prefsRouter from './Prefs/router.js'
 import roomsRouter from './Rooms/router.js'
@@ -151,8 +148,7 @@ async function serverWorker ({ env, startScanner, stopScanner, shutdownHandlers 
 
     // verify JWT
     try {
-      const { keToken } = parseCookie(ctx.request.header.cookie)
-      ctx.user = jwtVerify(keToken, jwtKey)
+      ctx.user = jwtVerify(ctx.cookies.get('keToken'), jwtKey)
     } catch {
       ctx.user = {
         dateUpdated: null,
@@ -178,7 +174,6 @@ async function serverWorker ({ env, startScanner, stopScanner, shutdownHandlers 
     prefix: urlPath.replace(/\/$/, ''), // avoid double slashes with /api prefix
   })
 
-  baseRouter.use(libraryRouter.routes())
   baseRouter.use(mediaRouter.routes())
   baseRouter.use(prefsRouter.routes())
   baseRouter.use(roomsRouter.routes())
@@ -211,7 +206,7 @@ async function serverWorker ({ env, startScanner, stopScanner, shutdownHandlers 
   if (env.NODE_ENV !== 'development') {
     // make sure we handle index.html before koaStatic,
     // otherwise it'll be served without dynamic base tag
-    app.use(createIndexMiddleware(await promisify(fs.readFile)(indexFile, 'utf8')))
+    app.use(createIndexMiddleware(await fsPromises.readFile(indexFile, 'utf8')))
 
     // serve build and asset folders
     app.use(koaMount(urlPath, koaStatic(env.KES_PATH_WEBROOT)))

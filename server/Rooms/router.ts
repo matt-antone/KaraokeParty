@@ -1,4 +1,5 @@
 import KoaRouter from '@koa/router'
+import { requireAdmin } from '../lib/util.js'
 import sql from 'sqlate'
 import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
@@ -34,11 +35,7 @@ router.get(['/', '/:roomId'], (ctx) => {
 })
 
 // create room
-router.post('/', async (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.post('/', requireAdmin, async (ctx) => {
   try {
     const res = await Rooms.set(undefined, (ctx.request as unknown as RequestWithBody).body)
     log.verbose('%s created a room (roomId: %s)', ctx.user.name, res.lastID)
@@ -52,11 +49,7 @@ router.post('/', async (ctx) => {
 })
 
 // update room
-router.put('/:roomId', async (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.put('/:roomId', requireAdmin, async (ctx) => {
   const roomId = parseInt(ctx.params.roomId, 10)
 
   try {
@@ -84,11 +77,7 @@ router.put('/:roomId', async (ctx) => {
 })
 
 // remove room
-router.delete('/:roomId', (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.delete('/:roomId', requireAdmin, (ctx) => {
   const roomId = parseInt(ctx.params.roomId, 10)
 
   if (typeof roomId !== 'number') {

@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useAppDispatch } from 'store/hooks'
 import { createRoom, removeRoom, updateRoom, requestPrefsPush } from 'store/modules/rooms'
-import { getFormData } from 'lib/util'
 import Button from 'components/Button/Button'
 import Modal from 'components/Modal/Modal'
 import UserPrefs from './UserPrefs/UserPrefs'
@@ -30,8 +29,10 @@ const EditRoom = ({ onClose, room }: EditRoomProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const data = getFormData(new FormData(formRef.current)) as Record<string, string | IRoomPrefs>
-    data.prefs = prefs
+    const data: Record<string, string | IRoomPrefs> = { prefs }
+    new FormData(formRef.current).forEach((value, key) => {
+      data[key] = value as string
+    })
 
     if (room) {
       if (!isPasswordDirty) delete data.password
