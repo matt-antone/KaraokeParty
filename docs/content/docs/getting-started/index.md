@@ -39,13 +39,13 @@ Make sure you use a strong password and store it someplace safe, since admins ca
 
 ## 4. Add Media Folders
 
-Once signed in, you'll see an (unsurprisingly) empty library. Head to the Account view by following the "Add media folders" link or tapping the face icon in the bottom navigation area:
+Once signed in, you'll see an (unsurprisingly) empty library. Head to the Settings view by following the "Add media folders" link or tapping the knob icon in the bottom navigation area (it's there because you're an admin):
 
 <div class="row">
-  {{% img "app-account.png" "Account view" /%}}
+  {{% img "app-settings.png" "Settings view" /%}}
 </div>
 
-Since you're an admin, the Account view will have a number of sections. In the **Preferences** section, select **Media Folders** and add the folder(s) containing your songs.
+In the **Preferences** panel, select **Media Folders** and add the folder(s) containing your songs.
 
 ## 5. Queue a Song
 
@@ -63,18 +63,18 @@ You can do a lot more in the Library view, but for now let's play some music!
 
 KaraokeParty's player is just another part of the browser app, but it's meant to run fullscreen on the system connected to your display and speakers. If you aren't using the system you intend to use as the player, go to it now, browse to the **server URL**, and sign in with your admin account.
 
-By now you've probably noticed a **"No player in room"** message at the top of the app. Click the **Start Player** link to do just that!
+Go to **Settings**, where the **Player** panel reports **"no player in room"**. Press **Open Player Here** to start one in a new tab.
 
 <aside class="info">
   {{% icon-info %}}
-  <p>If you don't see the <strong>"No player in room"</strong> message, your browser doesn't support fullscreen mode and may not be suitable as a player. You can still manually navigate to <code>/player</code>, though.</p>
+  <p>You can also navigate to <code>/player</code> directly. Browsers without fullscreen support can still run a player, they just won't fill the screen.</p>
 </aside>
 
 <div class="row">
   {{% img "app-player.jpg" "Player view" /%}}
 </div>
 
-Now that there's a player in the room, playback and display controls will appear. Admins will always see these, as well as the user who is currently singing.
+Now that there's a player in the room, the playback and display controls appear in that same **Settings > Player** panel, along with the **Show Join Code** button for getting everyone else's phones into the room.
 
 Go ahead and press play in the player to start the party!
 
@@ -88,8 +88,8 @@ Go ahead and press play in the player to start the party!
 
 To get the most out of KaraokeParty, continue with the <a href="{{< ref "docs/karaokeparty-app" >}}">app documentation</a>. Seriously, there's quite a bit going on beneath the surface!
 
-You can also join the <a href="{{% baseurl %}}discord" rel="noopener">KaraokeParty Discord Server</a>{{% icon-external %}} for general support and development chat, or just to say hi!
+Found a bug or have a request? Open an <a href="https://github.com/matt-antone/KaraokeParty/issues" rel="noopener">issue</a>{{% icon-external %}}. For general karaoke-system support and development chat, there's the <a href="https://discord.gg/PgqVtFq" rel="noopener">Karaoke Eternal Discord Server</a>{{% icon-external %}}.
 
-Lastly, if you are able, please consider [sponsoring](https://github.com/bhj/KaraokeParty). This project relies on its community to sustain it, and your support has a direct impact.
+KaraokeParty is a fork of <a href="https://github.com/bhj/KaraokeEternal" rel="noopener">Karaoke Eternal</a>{{% icon-external %}}; if you are able, please consider [sponsoring the upstream project](https://www.karaoke-eternal.com/sponsor) that made this possible.
 
 Now, go get singing!

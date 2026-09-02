@@ -22,6 +22,8 @@ Host awesome karaoke parties where everyone can easily find and queue songs from
 - Easy joining with QR codes and guest accounts
 - Multiple simultaneous rooms/queues (optionally password-protected)
 - Dynamic queues keep parties fair, fun and no-fuss
+- Singers manage their own spot: a **Me** tab with drag-to-reorder, a wait-time readout with a pause key, and a history of what's been sung
+- A short intermission between songs that names and shows the next singer
 - Fully self-hosted
 - No ads or telemetry
 
@@ -41,7 +43,7 @@ There are several <a href='{{< ref "docs/karaokeparty-server#installation" >}}'>
 
 ## Discord & Support
 
-Join the <a href="{{% baseurl %}}discord" rel="noopener">KaraokeParty Discord Server</a>{{% icon-external %}} for general support and development chat, or just to say hi!
+For bugs and requests specific to KaraokeParty, open an <a href="https://github.com/matt-antone/KaraokeParty/issues" rel="noopener">issue</a>{{% icon-external %}}. For general karaoke-system support and development chat, there's the <a href="https://discord.gg/PgqVtFq" rel="noopener">Karaoke Eternal Discord Server</a>{{% icon-external %}}, home of the <a href="https://github.com/bhj/KaraokeEternal" rel="noopener">project KaraokeParty is forked from</a>{{% icon-external %}}.
 
 ## Contributing & Development
 
