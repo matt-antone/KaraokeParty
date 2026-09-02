@@ -1,16 +1,13 @@
-/* The bottom nav: a brushed panel seamed to the chassis, pinned to the base.
-   A selected tab is marked by a 2px amber edge rule along its top, not by a
-   glow — on is amber, off is dim graphite. */
+/* The bottom nav: a brushed panel seamed to the chassis, at the base of the
+   footer stack that CoreLayout pins there. A selected tab is marked by a 2px
+   amber edge rule along its top, not by a glow — on is amber, off is dim
+   graphite. */
 
 .container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
   display: flex;
   width: 100%;
   background: var(--brush);
   box-shadow: var(--edge-bottom);
-  z-index: 99;
 
   a {
     flex: 1;

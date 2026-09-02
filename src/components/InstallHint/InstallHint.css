@@ -1,0 +1,41 @@
+/* A hint seamed to the top of the nav, sharing its brushed faceplate so it
+   reads as one more panel on the deck rather than a notification. It sits in
+   the footer stack, so CoreLayout measures it into --nav-h and the views pad
+   themselves clear of it. */
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  width: 100%;
+  padding: var(--gap-3) var(--gutter);
+  background: var(--brush);
+  border-top: var(--hair-rule);
+}
+
+.copy {
+  flex: 1;
+  margin: 0;
+  font-size: var(--text-m);
+  color: var(--ink-2);
+}
+
+.title {
+  display: block;
+  font-size: var(--text-l);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.dismiss {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--target);
+  min-height: var(--target);
+  color: var(--ink-3);
+
+  svg {
+    height: var(--icon-m);
+  }
+}

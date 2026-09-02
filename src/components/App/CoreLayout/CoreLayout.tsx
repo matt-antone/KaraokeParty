@@ -7,10 +7,12 @@ import useResizeObserver from 'use-resize-observer'
 import '../../../styles/global.css'
 import Button from 'components/Button/Button'
 import Header from 'components/Header/Header'
+import InstallHint from 'components/InstallHint/InstallHint'
 import Navigation from 'components/Navigation/Navigation'
 import Modal from 'components/Modal/Modal'
 import Routes from '../Routes/Routes'
 import { clearErrorMessage, setFooterHeight, setHeaderHeight } from 'store/modules/ui'
+import styles from './CoreLayout.css'
 
 const CoreLayout = () => {
   const isPlayerRoute = useMatch('/player')
@@ -47,7 +49,12 @@ const CoreLayout = () => {
 
       <Routes />
 
-      {!isPlayerRoute && <Navigation ref={navRef} />}
+      {!isPlayerRoute && (
+        <div className={styles.footer} ref={navRef}>
+          <InstallHint />
+          <Navigation />
+        </div>
+      )}
 
       {ui.isErrored && (
         <Modal
