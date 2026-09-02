@@ -82,4 +82,22 @@ describe('DECK palette contrast', () => {
     // still be wrong; a missing step of an existing indicator was the gap.
     expect(signals).toBe(13)
   })
+
+  it('keeps the QR plate colour in step with --ink', () => {
+    // A QR code is painted to a canvas, so its background has to be a real
+    // colour rather than var(--ink). These two files are the only place a
+    // palette value is written outside variables.css; this is what keeps them
+    // honest, and it is cheaper than the DOM-reading effect it replaced.
+    const consumers = [
+      'routes/Player/components/PlayerQR/PlayerQR.tsx',
+      'routes/Settings/components/Player/JoinCode/JoinCode.tsx',
+    ]
+
+    for (const file of consumers) {
+      const src = readFileSync(join(__dirname, '..', file), 'utf8')
+      const m = src.match(/^const INK = '(#[0-9a-fA-F]{3,8})'$/m)
+      expect(m, `${file} should declare a literal INK constant`).toBeTruthy()
+      expect(m![1].toLowerCase(), file).toBe(token('ink').toLowerCase())
+    }
+  })
 })

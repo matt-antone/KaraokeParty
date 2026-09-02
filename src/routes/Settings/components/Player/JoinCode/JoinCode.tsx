@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React from 'react'
 import { QRCode } from 'react-qrcode-logo'
 import Modal, { ModalProps } from 'components/Modal/Modal'
 import Button from 'components/Button/Button'
@@ -6,8 +6,9 @@ import styles from './JoinCode.css'
 
 const QR_SIZE = 176
 
-// falls back to this if the token isn't reachable yet — the value --ink resolves to
-const INK_FALLBACK = '#e6e4de'
+// the value --ink resolves to. The code is painted to a canvas, so it needs a
+// real colour rather than the token; keep the two in step.
+const INK = '#e6e4de'
 
 interface JoinCodeProps {
   roomId: number
@@ -17,23 +18,11 @@ interface JoinCodeProps {
 }
 
 const JoinCode = ({ roomId, serverUrl, qrPassword, onClose }: JoinCodeProps) => {
-  const plateRef = useRef<HTMLDivElement>(null)
-  const [inkColor, setInkColor] = useState(INK_FALLBACK)
-
-  // panel and code share one ink-colored plate — read the token off the panel
-  // itself rather than duplicating its hex here
-  useEffect(() => {
-    if (!plateRef.current) return
-    const value = getComputedStyle(plateRef.current).getPropertyValue('--ink').trim()
-    if (value) setInkColor(value)
-  }, [])
-
   // Built from the server's own LAN address, not this browser's — a guest's
   // phone must reach the server, not whatever machine is viewing this modal.
   let joinUrl: string | undefined
   if (serverUrl) {
     const url = new URL(serverUrl)
-    url.pathname = url.pathname.replace(/\/player$/, '')
     url.searchParams.set('roomId', String(roomId))
     if (qrPassword) url.searchParams.set('password', btoa(qrPassword))
     joinUrl = url.href
@@ -49,13 +38,13 @@ const JoinCode = ({ roomId, serverUrl, qrPassword, onClose }: JoinCodeProps) => 
         {joinUrl
           ? (
               <>
-                <div className={styles.plate} ref={plateRef}>
+                <div className={styles.plate}>
                   <QRCode
                     value={joinUrl}
                     ecLevel='L'
                     size={QR_SIZE}
                     quietZone={10}
-                    bgColor={inkColor}
+                    bgColor={INK}
                     qrStyle='dots'
                   />
                 </div>

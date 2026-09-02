@@ -25,39 +25,23 @@ const getIsAtQueueEnd = (state: RootState) => state.status.isAtQueueEnd
 const getQueueId = (state: RootState) => state.status.queueId
 const getUserId = (state: RootState) => state.user.userId
 
-const getUserWait = createSelector(
-  [getRoundRobinQueue, getQueueId, getUserId, getWaits],
-  (queue, queueId, userId, waits) => {
-    const curIdx = queue.result.indexOf(queueId)
-
-    for (let i = curIdx + 1; i < queue.result.length; i++) {
-      if (queue.entities[queue.result[i]].userId === userId) {
-        return waits[queue.result[i]]
-      }
-    }
-  },
-)
-
 /**
- * The singer's next song and the wait until it, in seconds.
- *
- * Both come from getWaits, which is recomputed from song durations and the
- * live playhead, so the wait ticks down every second the player reports.
+ * The singer's next song: its queue id, the wait until it in seconds, and its
+ * title. One lookup — the headline, the meter and the label all describe the
+ * same song, and getWaits is recomputed from song durations and the live
+ * playhead, so the wait ticks down every second the player reports.
  */
-const getMyNextWait = createSelector(
-  [getMyUpcoming, getWaits],
-  (upcoming, waits): { queueId?: number, wait?: number } => {
+const getMyNext = createSelector(
+  [getMyUpcoming, getWaits, (state: RootState) => ensureState(state.queue).entities, (state: RootState) => state.songs],
+  (upcoming, waits, queueItems, songs): { queueId?: number, wait?: number, title?: string } => {
     const queueId = upcoming[0]
-    return { queueId, wait: waits[queueId] }
-  },
-)
+    const item = queueItems[queueId]
 
-/** Title of the singer's next song — what they are actually waiting for. */
-const getMyNextSong = createSelector(
-  [getMyUpcoming, (state: RootState) => ensureState(state.queue).entities, (state: RootState) => state.songs],
-  (upcoming, queueItems, songs) => {
-    const item = queueItems[upcoming[0]]
-    return item ? songs.entities[item.songId]?.title : undefined
+    return {
+      queueId,
+      wait: waits[queueId],
+      title: item ? songs.entities[item.songId]?.title : undefined,
+    }
   },
 )
 
@@ -87,11 +71,9 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   const scannerPct = useAppSelector(state => state.prefs.scannerPct)
   const userId = useAppSelector(getUserId)
   const isUpNow = useAppSelector(getIsUpNow)
-  const wait = useAppSelector(getUserWait)
   const { position, rotationSize } = useAppSelector(getMyRotation)
   const songCount = useAppSelector(getMyUpcoming).length
-  const nextSong = useAppSelector(getMyNextSong)
-  const { queueId: nextQueueId, wait: nextWait } = useAppSelector(getMyNextWait)
+  const { queueId: nextQueueId, wait, title: nextSong } = useAppSelector(getMyNext)
 
   // The meter's full scale is the singer's OWN wait when this song became their
   // next, remembered so it survives the wait ticking down. Measuring against the
@@ -101,18 +83,18 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   // the wait grows, which is someone being inserted ahead of them.
   const [horizon, setHorizon] = useState<{ queueId?: number, wait: number }>({ wait: 0 })
   const isSameSong = nextQueueId === horizon.queueId
-  const scale = nextWait === undefined
+  const scale = wait === undefined
     ? horizon.wait
-    : isSameSong ? Math.max(horizon.wait, nextWait) : nextWait
+    : isSameSong ? Math.max(horizon.wait, wait) : wait
 
-  if (nextWait !== undefined && (!isSameSong || nextWait > horizon.wait)) {
-    setHorizon({ queueId: nextQueueId, wait: nextWait })
+  if (wait !== undefined && (!isSameSong || wait > horizon.wait)) {
+    setHorizon({ queueId: nextQueueId, wait })
   }
 
-  const waitLevel = nextWait === undefined || scale <= 0
+  const waitLevel = wait === undefined || scale <= 0
     ? undefined
     // floored so a singer who just queued reads as lit-but-low, not switched off
-    : Math.max(0.06, 1 - nextWait / scale)
+    : Math.max(0.06, 1 - wait / scale)
 
   const isPaused = useAppSelector(state => ensureState(state.queue).pausedUserIds.includes(userId))
   const roomName = useAppSelector(state => (

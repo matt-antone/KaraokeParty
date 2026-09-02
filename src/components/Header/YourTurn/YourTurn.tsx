@@ -59,11 +59,9 @@ const YourTurn = ({
     ? 0
     : isUpNow
       ? 1
-      : waitLevel !== undefined
-        ? waitLevel
-        : position && rotationSize
-          ? Math.max(0.06, 1 - (position - 1) / rotationSize)
-          : 0.5
+      : waitLevel ?? (position && rotationSize
+        ? Math.max(0.06, 1 - (position - 1) / rotationSize)
+        : 0.5)
 
   const headline = isPaused ? 'Paused' : isUpNow ? 'Now' : wait || '--'
 
@@ -71,11 +69,9 @@ const YourTurn = ({
     ? 'you are out of the rotation'
     : isUpNow
       ? 'you are on stage'
-      : nextSong
-        ? nextSong
-        : position
-          ? `${position} of ${rotationSize} in the rotation`
-          : 'nothing queued'
+      : nextSong ?? (position
+        ? `${position} of ${rotationSize} in the rotation`
+        : 'nothing queued')
 
   // Queued but not on stage is the same state the library gives a queued song:
   // "armed but not running", which the system says in standby teal. Amber is

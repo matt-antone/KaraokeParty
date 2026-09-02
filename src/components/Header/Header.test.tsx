@@ -156,5 +156,9 @@ describe('YourTurn pause against the real store', () => {
     expect(atStart).toBeLessThan(0.1) // the floor, not two thirds full
     expect(halfway).toBeGreaterThan(atStart)
     expect(nearlyUp).toBeGreaterThan(halfway)
+
+    // headline and meter read the same wait; it used to come from a second
+    // selector that walked the queue for the same number
+    expect(document.querySelector('.wait')?.textContent).toBe('10s')
   })
 })
