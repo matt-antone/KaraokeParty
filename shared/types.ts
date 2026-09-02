@@ -77,6 +77,8 @@ export interface Path {
   pathId: number
   path: string
   priority: number
+  /** Number of distinct songs with media under this path. */
+  numSongs: number
   prefs: {
     isVideoKeyingEnabled: boolean
     isWatchingEnabled: boolean

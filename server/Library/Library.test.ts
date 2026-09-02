@@ -75,3 +75,43 @@ describe('song stars survive songId churn', () => {
     expect(Library.getUserStars(USER_ID).starredSongs).toEqual([rain])
   })
 })
+
+describe('getPathSongCounts', () => {
+  beforeEach(() => {
+    if (Database.db) close()
+    open({ file: ':memory:', ro: false })
+
+    db.run('INSERT INTO artists (artistId, name, nameNorm) VALUES (1, ?, ?)', ['Eurythmics', 'eurythmics'])
+    db.run('INSERT INTO paths (pathId, path, priority) VALUES (1, ?, 0)', ['/media/karaoke'])
+    db.run('INSERT INTO paths (pathId, path, priority) VALUES (2, ?, 1)', ['/media/new'])
+  })
+
+  afterEach(close)
+
+  const addMedia = (pathId: number, songId: number, relPath: string) => {
+    db.run(
+      'INSERT INTO media (songId, pathId, relPath, duration) VALUES (?, ?, ?, ?)',
+      [songId, pathId, relPath, 180],
+    )
+  }
+
+  it('counts distinct songs per path, not media rows', () => {
+    const rain = addSong()
+    const sweet = addSong('Sweet Dreams', 'sweet dreams')
+
+    // rain has two media files under the same path (e.g. .cdg + .mp3) — one song
+    addMedia(1, rain, 'rain.cdg')
+    addMedia(1, rain, 'rain.mp3')
+    addMedia(1, sweet, 'sweet.mp4')
+    addMedia(2, sweet, 'sweet-copy.mp4')
+
+    expect(Library.getPathSongCounts()).toEqual({ 1: 2, 2: 1 })
+  })
+
+  it('omits a path with no media entirely', () => {
+    const rain = addSong()
+    addMedia(1, rain, 'rain.mp4')
+
+    expect(Library.getPathSongCounts()).toEqual({ 1: 1 })
+  })
+})

@@ -10,17 +10,18 @@ const PASSWORD_MIN_LENGTH = 5
 export const STATUSES = ['open', 'closed']
 
 /**
- * Role prefs a room is created with: guests may join, standard accounts may
- * not. Guests are the one-field path the product is built around; a standard
- * account is a commitment the host should opt into.
+ * Role prefs a room is created with: both guests and new standard accounts may
+ * join. A singer arriving at the room for the first time has to be able to get
+ * in without an admin editing settings first, whichever kind of account they
+ * want; a host who wants it tighter turns either off in Settings > Rooms.
  */
-function guestDefaultRoles (): Record<number, { allowNew: boolean }> {
-  const query = sql`SELECT roleId FROM roles WHERE name = 'guest'`
-  const row = db.get<{ roleId: number }>(String(query), query.parameters)
+function defaultRoles (): Record<number, { allowNew: boolean }> {
+  const query = sql`SELECT roleId, name FROM roles WHERE name IN ('guest', 'standard')`
+  const rows = db.all<{ roleId: number, name: string }>(String(query), query.parameters)
 
-  // no guest role means a schema older than this default; a room with no role
-  // prefs is the previous behaviour, so fall back to it rather than throwing
-  return row ? { [row.roleId]: { allowNew: true } } : {}
+  // no rows means a schema older than these roles; a room with no role prefs
+  // is the previous behaviour, so fall back to it rather than throwing
+  return Object.fromEntries(rows.map(row => [row.roleId, { allowNew: true }]))
 }
 
 // Remember which users have been seen in each room
@@ -76,6 +77,12 @@ class Rooms {
       row.prefs = data.prefs ?? {}
       delete row.data
 
+      // Rooms created before role prefs existed carry no 'roles' key at all,
+      // which reads as "no new accounts" and quietly stops a room accepting
+      // singers after an upgrade. Default on read, not just on insert; a host
+      // who actually turned guest signup off has a 'roles' key and is left be.
+      if (!row.prefs.roles) row.prefs.roles = defaultRoles()
+
       row.hasPassword = !!row.password
       if (!includePassword) delete row.password
 
@@ -125,7 +132,7 @@ class Rooms {
       // finds Settings > Rooms > Edit makes that impossible on a fresh
       // install, which is the first five minutes of every party. Only applied
       // on INSERT, so an admin who later turns guests off stays turned off.
-      const newPrefs = prefs?.roles ? prefs : { ...prefs, roles: guestDefaultRoles() }
+      const newPrefs = prefs?.roles ? prefs : { ...prefs, roles: defaultRoles() }
 
       query = sql`
         INSERT INTO rooms (name, password, status, dateCreated, data)

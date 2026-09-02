@@ -35,6 +35,10 @@ function getServerUrl (ctx: { request: { host: string } }): string | undefined {
 }
 const router = new KoaRouter({ prefix: '/api/prefs' })
 
+/**
+ * All prefs, with each media path's song count merged in from the real
+ * media/path relationship (rather than tracked separately and going stale).
+ */
 // get all prefs (including media paths)
 router.get('/', (ctx) => {
   const prefs = Prefs.get() as unknown as PrefsType
