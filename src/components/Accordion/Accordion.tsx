@@ -3,7 +3,7 @@ import clsx from 'clsx'
 import Icon from 'components/Icon/Icon'
 import styles from './Accordion.module.css'
 
-export type AccordionProps = {
+type AccordionProps = {
   className?: string
   children: React.ReactNode
   headingComponent: React.ReactElement<{ children?: React.ReactNode }>

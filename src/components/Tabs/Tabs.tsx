@@ -2,13 +2,13 @@ import React from 'react'
 import clsx from 'clsx'
 import styles from './Tabs.css'
 
-export interface Tab<T extends string = string> {
+interface Tab<T extends string = string> {
   id: T
   label: string
   count?: number
 }
 
-export interface TabsProps<T extends string = string> {
+interface TabsProps<T extends string = string> {
   tabs: Array<Tab<T>>
   active: T
   onChange?: (id: T) => void

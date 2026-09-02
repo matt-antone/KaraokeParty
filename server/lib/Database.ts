@@ -13,7 +13,7 @@ const toArgs = (params: unknown[] | Record<string, unknown>) =>
 // not set until open(); every consumer runs after that, as it did before
 export let db: DatabaseWrapper
 
-export class DatabaseWrapper {
+class DatabaseWrapper {
   private db: DatabaseSync
   public config: { filename: string }
 

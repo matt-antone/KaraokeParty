@@ -2,7 +2,7 @@ import { Action, Middleware, UnknownAction } from '@reduxjs/toolkit'
 import { BEGIN, COMMIT, REVERT } from 'redux-optimistic-ui'
 import { SOCKET_AUTH_ERROR } from 'shared/actionTypes'
 import { Socket } from 'socket.io-client'
-import { OptimisticAction } from './store'
+import type { OptimisticAction } from './store'
 
 // optimistic actions need a transaction id to match BEGIN to COMMIT/REVERT
 let transactionID = 0

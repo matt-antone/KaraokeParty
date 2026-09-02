@@ -1,5 +1,5 @@
 import React from 'react'
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 import { useAppSelector } from 'store/hooks'
 import getSearchResults from '../../selectors/getSearchResults'
 import PaddedList from 'components/PaddedList/PaddedList'

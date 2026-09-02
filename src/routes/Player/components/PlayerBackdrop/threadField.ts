@@ -18,7 +18,7 @@ const rgb = (style: CSSStyleDeclaration, name: string) => {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
 
-export interface ThreadField {
+interface ThreadField {
   /** Cancels the loop, drops the observer and releases the canvas' backing store. */
   stop(): void
 }

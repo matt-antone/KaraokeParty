@@ -5,7 +5,7 @@ import Queue from '../Queue/Queue.js'
 import { randomChars } from '../lib/util.js'
 import { SongHistoryItem, User as UserType } from '../../shared/types.js'
 
-export type ServerUser = UserType & {
+type ServerUser = UserType & {
   role: string
   password?: string // only populated if requesting creds
   image?: string

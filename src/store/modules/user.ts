@@ -2,8 +2,8 @@ import { createAction, createAsyncThunk, createReducer } from '@reduxjs/toolkit'
 import { persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import socket from 'lib/socket'
-import AppRouter from 'lib/AppRouter'
-import { RootState } from 'store/store'
+import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import type { RootState } from 'store/store'
 import { SongHistoryItem } from 'shared/types'
 import HttpApi from 'lib/HttpApi'
 import * as Persistor from 'store/Persistor'
@@ -24,10 +24,32 @@ const basename = new URL(document.baseURI).pathname
 
 const receiveAccount = createAction<object>(ACCOUNT_RECEIVE)
 
+// login and createAccount both land here
+const completeSignIn = async (user: object, dispatch: ThunkDispatch<RootState, unknown, UnknownAction>) => {
+  // signing in can cause additional reducers to be injected and
+  // trigger rehydration with stale data, so purge here first
+  Persistor.get().purge()
+
+  dispatch(receiveAccount(user))
+  dispatch(fetchPrefs())
+  dispatch(connectSocket())
+  socket.open()
+
+  // redirect in query string?
+  const redirect = new URLSearchParams(window.location.search).get('redirect')
+  if (!redirect) return
+
+  // imported here, not at module scope: AppRouter renders <App/>, which reaches
+  // this module back through the store — a cycle that only works by luck of
+  // evaluation order
+  const { default: AppRouter } = await import('lib/AppRouter')
+  AppRouter.navigate(basename.replace(/\/$/, '') + redirect)
+}
+
 // ------------------------------------
 // Login
 // ------------------------------------
-export const login = createAsyncThunk(
+export const login = createAsyncThunk<void, object, { state: RootState }>(
   LOGIN,
   async (creds: object, thunkAPI) => {
     // calls api endpoint that should set an httpOnly cookie with
@@ -36,21 +58,7 @@ export const login = createAsyncThunk(
       body: creds,
     })
 
-    // signing in can cause additional reducers to be injected and
-    // trigger rehydration with stale data, so purge here first
-    Persistor.get().purge()
-
-    thunkAPI.dispatch(receiveAccount(user))
-    thunkAPI.dispatch(fetchPrefs())
-    thunkAPI.dispatch(connectSocket())
-    socket.open()
-
-    // redirect in query string?
-    const redirect = new URLSearchParams(window.location.search).get('redirect')
-
-    if (redirect) {
-      AppRouter.navigate(basename.replace(/\/$/, '') + redirect)
-    }
+    await completeSignIn(user, thunkAPI.dispatch)
   },
 )
 
@@ -87,21 +95,7 @@ export const createAccount = createAsyncThunk<void, FormData, { state: RootState
       body: data,
     })
 
-    // signing in can cause additional reducers to be injected and
-    // trigger rehydration with stale data, so purge here first
-    Persistor.get().purge()
-
-    thunkAPI.dispatch(receiveAccount(user))
-    thunkAPI.dispatch(fetchPrefs())
-    thunkAPI.dispatch(connectSocket())
-    socket.open()
-
-    // redirect in query string?
-    const redirect = new URLSearchParams(window.location.search).get('redirect')
-
-    if (redirect) {
-      AppRouter.navigate(basename.replace(/\/$/, '') + redirect)
-    }
+    await completeSignIn(user, thunkAPI.dispatch)
   },
 )
 

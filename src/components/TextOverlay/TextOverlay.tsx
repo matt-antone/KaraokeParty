@@ -7,7 +7,7 @@ interface TextOverlayProps {
   className?: string
 }
 
-export const TextOverlay = (props: TextOverlayProps) => (
+const TextOverlay = (props: TextOverlayProps) => (
   <div className={styles.container}>
     <div className={clsx(styles.text, props.className)}>
       {props.children}

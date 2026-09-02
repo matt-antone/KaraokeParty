@@ -1,5 +1,5 @@
 import { createAction, createAsyncThunk, createReducer } from '@reduxjs/toolkit'
-import { AppThunk, RootState } from 'store/store'
+import type { AppThunk, RootState } from 'store/store'
 import type { IRoomPrefs, Room } from 'shared/types'
 import {
   ROOMS_RECEIVE,
@@ -21,7 +21,7 @@ const api = new HttpApi('rooms')
 // ------------------------------------
 // Actions
 // ------------------------------------
-export const receiveRooms = createAction<object>(ROOMS_RECEIVE)
+const receiveRooms = createAction<object>(ROOMS_RECEIVE)
 
 export const fetchRooms = createAsyncThunk(
   ROOMS_REQUEST,

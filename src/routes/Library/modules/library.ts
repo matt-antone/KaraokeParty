@@ -34,7 +34,7 @@ export const setFilterStr = createAction(LIBRARY_FILTER_STRING, (payload: string
 // ------------------------------------
 // Reducer
 // ------------------------------------
-export type LibraryTab = 'artists' | 'songs'
+type LibraryTab = 'artists' | 'songs'
 
 interface LibraryState {
   isLoading: boolean
