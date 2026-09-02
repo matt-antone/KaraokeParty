@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd'
 import HttpApi from 'lib/HttpApi'
@@ -26,10 +26,17 @@ const PathPrefs = () => {
 
   const dispatch = useAppDispatch()
 
-  useEffect(() => {
-    // local state for immediate UI updates
+  // A drag reorders this list before the server has agreed to it, so the order
+  // is held locally and resynced whenever the store's copy changes. Adjusted
+  // during render rather than in an effect: an effect would paint the stale
+  // order first and then immediately repaint, which is the cascading render
+  // react-hooks/set-state-in-effect exists to stop.
+  const [prevPaths, setPrevPaths] = useState(paths)
+
+  if (paths !== prevPaths) {
+    setPrevPaths(paths)
     setPriority(paths.result)
-  }, [paths])
+  }
 
   const handleDragEnd = (dnd: DropResult) => {
     // dropped outside the list?

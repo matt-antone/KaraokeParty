@@ -44,10 +44,26 @@ const PathChooser = ({ onCancel, onChoose }: PathChooserProps) => {
     }
   }
 
-  // get initial list on first mount
+  // Fetch the first listing on mount. The state lands in a promise callback,
+  // not synchronously in the effect body — this is the "subscribe to an
+  // external system" case the rule allows, but it cannot see through `ls`.
   useEffect(() => {
-    ls(pathInfo.current ?? '.')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false
+
+    api.get<PathInfoType>(`/ls?dir=${encodeURIComponent('.')}`)
+      .then((result): null => {
+        if (!cancelled) setPathInfo(result)
+        return null
+      })
+      .catch((err) => {
+        // the modal can be closed mid-request; without this the alert lands
+        // after it is gone
+        if (!cancelled) alert(err)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // scroll to top when changing dirs
