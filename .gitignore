@@ -21,3 +21,6 @@ node_modules/
 
 # local test database (never the party/production db)
 .test-data/
+
+# browser-automation snapshots from local testing
+.playwright-mcp/
