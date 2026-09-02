@@ -4,6 +4,14 @@
   <title>KaraokeParty</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#141414">
+  <!-- paths are relative so they follow the <base href> the server rewrites for subpath installs -->
+  <link rel="manifest" href="assets/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/app.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- iOS below 17.4 only reads the apple- prefixed form -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="KaraokeParty">
 </head>
 <body>
   <div id="root" style="height: 100%"></div>
