@@ -1,7 +1,7 @@
 import { ensureState } from 'redux-optimistic-ui'
 import { createSelector } from '@reduxjs/toolkit'
 import { Searcher } from 'fast-fuzzy'
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 
 const getArtists = (state: RootState) => state.artists
 const getSongs = (state: RootState) => state.songs

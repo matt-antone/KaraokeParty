@@ -8,7 +8,6 @@ import applyLicenseConfig from './webpack.license.config.js'
 
 const NODE_ENV = process.env.NODE_ENV || 'production'
 const __DEV__ = NODE_ENV === 'development'
-const __TEST__ = NODE_ENV === 'test'
 const __PROD__ = NODE_ENV === 'production'
 const baseDir = path.resolve(import.meta.dirname, '..')
 
@@ -33,21 +32,14 @@ let config = {
       'node_modules',
     ],
     alias: {
-      '<PROJECT_ROOT>': baseDir,
-      'assets': path.join(baseDir, 'assets'),
-      'fonts': path.join(baseDir, 'docs', 'assets', 'fonts'),
-      'shared': path.join(baseDir, 'shared'),
+      // fonts: escape hatch for self-hosting woff2 offline; see src/styles/fonts.css
+      fonts: path.join(baseDir, 'docs', 'assets', 'fonts'),
+      shared: path.join(baseDir, 'shared'),
     },
     symlinks: false,
   },
   module: { rules: [] },
   plugins: [
-    new webpack.DefinePlugin(Object.assign({
-      __DEV__,
-      __TEST__,
-      __PROD__,
-      __KE_VERSION__: JSON.stringify(process.env.npm_package_version),
-    })),
     new CaseSensitivePathsPlugin(),
     new MiniCssExtractPlugin({
       filename: __DEV__ ? '[name].css' : '[name].[fullhash].css',
@@ -123,33 +115,10 @@ config.module.rules.push({
   ],
 })
 
-// Files
-config.module.rules.push(
-  {
-    test: /\.woff2(\?.*)?$/,
-    type: 'asset/resource',
-  },
-  {
-    test: /\.svg(\?.*)?$/,
-    type: 'asset',
-  },
-  {
-    test: /\.(png|jpg|gif)$/,
-    type: 'asset',
-  },
-)
-
-// Markdown
+// Fonts
 config.module.rules.push({
-  test: /\.md$/,
-  use: [
-    {
-      loader: 'html-loader',
-    },
-    {
-      loader: 'markdown-loader',
-    },
-  ],
+  test: /\.woff2(\?.*)?$/,
+  type: 'asset/resource',
 })
 
 if (__PROD__) config = applyLicenseConfig(config)

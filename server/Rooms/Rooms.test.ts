@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import Database, { db, open, close } from '../lib/Database.js'
+import { db, open, close } from '../lib/Database.js'
 import Rooms from './Rooms.js'
 
 /**
@@ -19,7 +19,7 @@ const prefsOf = (roomId: number) =>
 
 describe('room defaults', () => {
   beforeEach(() => {
-    if (Database.db) close()
+    close()
     open({ file: ':memory:', ro: false })
   })
 

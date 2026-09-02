@@ -1,10 +1,7 @@
 import path from 'path'
-import fs from 'fs'
-import { promisify } from 'util'
-const readdir = promisify(fs.readdir)
+import fs from 'node:fs/promises'
 
-const getFolders = dir => readdir(dir, { withFileTypes: true })
-  .then(list => Promise.all(list.map(ent => ent.isDirectory() ? path.resolve(dir, ent.name) : null)))
-  .then(list => list.filter(f => !!f).sort())
+const getFolders = (dir: string) => fs.readdir(dir, { withFileTypes: true })
+  .then(list => list.filter(ent => ent.isDirectory()).map(ent => path.resolve(dir, ent.name)).sort())
 
 export default getFolders

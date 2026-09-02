@@ -1,5 +1,5 @@
 import { createAction, createReducer } from '@reduxjs/toolkit'
-import { AppThunk } from 'store/store'
+import type { AppThunk } from 'store/store'
 import { CANCEL } from 'redux-throttle'
 import getWebGLSupport from 'lib/getWebGLSupport'
 import {
@@ -19,13 +19,13 @@ import {
 } from 'shared/actionTypes'
 
 // internal use
-export const playerUpdate = createAction<object>(PLAYER_UPDATE)
+const playerUpdate = createAction<object>(PLAYER_UPDATE)
 
 // triggered by media events
 export const playerError = createAction<string>(PLAYER_ERROR)
 export const playerLoad = createAction(PLAYER_LOAD)
 export const playerPlay = createAction(PLAYER_PLAY)
-export const playerCmdNext = createAction(PLAYER_CMD_NEXT)
+const playerCmdNext = createAction(PLAYER_CMD_NEXT)
 
 // triggered by clients
 const playerCmdPause = createAction(PLAYER_CMD_PAUSE)
@@ -73,7 +73,7 @@ export function playerStatus (status: Partial<PlayerState> = {}, deferEmit = fal
 }
 
 // cancel any throttled/queued status emits
-export function playerStatusCancel () {
+function playerStatusCancel () {
   return {
     type: CANCEL,
     payload: {

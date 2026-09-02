@@ -11,7 +11,7 @@ import {
   SOCKET_AUTH_ERROR,
   LOGOUT,
 } from 'shared/actionTypes'
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 
 // ------------------------------------
 // Actions

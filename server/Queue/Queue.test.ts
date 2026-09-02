@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import Database, { db, open, close } from '../lib/Database.js'
+import { db, open, close } from '../lib/Database.js'
 import Queue from './Queue.js'
 
 const ROOM_ID = 1
@@ -8,7 +8,7 @@ const BOB = 2
 
 describe('singer pause', () => {
   beforeEach(() => {
-    if (Database.db) close()
+    close()
     open({ file: ':memory:', ro: false })
 
     db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
@@ -45,7 +45,7 @@ describe('singer pause', () => {
 
 describe('move', () => {
   beforeEach(() => {
-    if (Database.db) close()
+    close()
     open({ file: ':memory:', ro: false })
 
     db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])

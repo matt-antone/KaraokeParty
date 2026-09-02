@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import clsx from 'clsx'
 import styles from './Knob.css'
 
-export interface KnobProps {
+interface KnobProps {
   /** 0-1. */
   value?: number
   onChange?: (value: number) => void

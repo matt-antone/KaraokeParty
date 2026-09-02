@@ -4,7 +4,7 @@ import Icon from 'components/Icon/Icon'
 import { CAPTURE_PX, SNAP_AT, SWIPE_ACTION_WIDTH, type SwipeAction } from './constants'
 import styles from './SwipeRow.css'
 
-export interface SwipeRowProps {
+interface SwipeRowProps {
   /** Revealed under the row, right-aligned, in order. Two or three at most —
    *  past that the row has to travel too far. */
   actions?: SwipeAction[]

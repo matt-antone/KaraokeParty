@@ -1,6 +1,7 @@
 import path from 'path'
 import getLogger from '../lib/Log.js'
 import KoaRouter from '@koa/router'
+import { requireAdmin } from '../lib/util.js'
 import getFolders from '../lib/getFolders.js'
 import getWindowsDrives from '../lib/getWindowsDrives.js'
 import getIPAddress from '../lib/getIPAddress.js'
@@ -58,12 +59,8 @@ router.get('/', (ctx) => {
 })
 
 // add a media path
-router.post('/path', (ctx) => {
+router.post('/path', requireAdmin, (ctx) => {
   const dir = decodeURIComponent(ctx.query.dir as string)
-
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
 
   // required
   if (!dir) {
@@ -85,11 +82,7 @@ router.post('/path', (ctx) => {
 })
 
 // set media path preferences
-router.put('/path/:pathId', (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.put('/path/:pathId', requireAdmin, (ctx) => {
   const pathId = parseInt(ctx.params.pathId, 10)
 
   if (isNaN(pathId)) {
@@ -119,11 +112,7 @@ router.put('/path/:pathId', (ctx) => {
 })
 
 // remove a media path
-router.delete('/path/:pathId', (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.delete('/path/:pathId', requireAdmin, (ctx) => {
   const pathId = parseInt(ctx.params.pathId, 10)
 
   if (isNaN(pathId)) {
@@ -147,11 +136,7 @@ router.delete('/path/:pathId', (ctx) => {
 })
 
 // scan a media path
-router.get('/path/:pathId/scan', async (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.get('/path/:pathId/scan', requireAdmin, async (ctx) => {
   const pathId = parseInt(ctx.params.pathId, 10)
 
   if (isNaN(pathId)) {
@@ -163,31 +148,19 @@ router.get('/path/:pathId/scan', async (ctx) => {
 })
 
 // scan all media paths
-router.get('/paths/scan', async (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.get('/paths/scan', requireAdmin, async (ctx) => {
   ctx.status = 200
   ctx.startScanner(true)
 })
 
 // stop scanning
-router.get('/paths/scan/stop', async (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.get('/paths/scan/stop', requireAdmin, async (ctx) => {
   ctx.status = 200
   ctx.stopScanner()
 })
 
 // get folder listing for path browser
-router.get('/path/ls', async (ctx) => {
-  if (!ctx.user.isAdmin) {
-    ctx.throw(401)
-  }
-
+router.get('/path/ls', requireAdmin, async (ctx) => {
   const dir = decodeURIComponent(ctx.query.dir as string)
 
   // windows is a special snowflake and gets an

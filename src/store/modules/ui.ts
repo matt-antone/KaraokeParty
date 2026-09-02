@@ -7,7 +7,7 @@ import {
   UI_SET_QUEUE_TAB,
   UI_WINDOW_RESIZE,
 } from 'shared/actionTypes'
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 
 const MAX_CONTENT_WIDTH = 768
 let scrollLockTimer: ReturnType<typeof setTimeout> | null
@@ -66,7 +66,7 @@ const headerHeightChange = createAction<number>(HEADER_HEIGHT_CHANGE)
 // ------------------------------------
 export type QueueTab = 'queue' | 'me' | 'history'
 
-export interface UIState {
+interface UIState {
   isErrored: boolean
   errorMessage: string | null
   footerHeight: number

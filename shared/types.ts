@@ -114,15 +114,6 @@ export interface PlaybackOptions {
 
 export type MediaType = 'cdg' | 'mp4' | ''
 
-export interface Media {
-  songId: number
-  mediaId: number
-  isPreferred: boolean
-  path: string
-  relPath: string
-  duration: number
-}
-
 export interface Prefs {
   isFirstRun?: boolean
   isScanning: boolean

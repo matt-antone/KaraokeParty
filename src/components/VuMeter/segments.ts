@@ -1,7 +1,7 @@
 /** Fraction of the scale above which a lit segment reads as amber, not dim. */
 const HOT_FROM = 0.55
 
-export type SegmentState = 'off' | 'dim' | 'hot' | 'peak'
+type SegmentState = 'off' | 'dim' | 'hot' | 'peak'
 
 /** Values arrive from live sources, so clamp rather than trusting the range. */
 export const clampValue = (value: number) =>

@@ -3,7 +3,7 @@ import clsx from 'clsx'
 import { clampValue, segmentState } from './segments'
 import styles from './VuMeter.css'
 
-export interface VuMeterProps {
+interface VuMeterProps {
   /** 0-1. Values outside the range are clamped; NaN reads as 0. */
   value?: number
   /**

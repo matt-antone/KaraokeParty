@@ -144,38 +144,6 @@ class Media {
     log.info('cleanup: vacuuming database')
     db.run('VACUUM')
   }
-
-  /**
-   * Set isPreferred flag for a given media item
-   */
-  static setPreferred (mediaId: number, isPreferred: boolean): number {
-    if (!Number.isInteger(mediaId) || typeof isPreferred !== 'boolean') {
-      throw new Error('invalid mediaId or value')
-    }
-
-    // get songId
-    const res = Media.search({ mediaId })
-
-    if (!res.result.length) {
-      throw new Error(`mediaId not found: ${mediaId}`)
-    }
-
-    const songId = res.entities[mediaId].songId
-
-    // clear any currently preferred items
-    const query = sql`
-      UPDATE media
-      SET isPreferred = 0
-      WHERE songId = ${songId}
-    `
-    db.run(String(query), query.parameters)
-
-    if (isPreferred) {
-      Media.update({ mediaId, isPreferred: 1 })
-    }
-
-    return songId
-  }
 }
 
 export default Media

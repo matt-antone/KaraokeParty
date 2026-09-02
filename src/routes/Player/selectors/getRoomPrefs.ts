@@ -1,4 +1,4 @@
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 import { createSelector } from '@reduxjs/toolkit'
 import type { IRoomPrefs } from 'shared/types'
 

@@ -1,18 +1,8 @@
 import getLogger from '../../lib/Log.js'
-import { composeSync } from 'ctx-compose'
 import jsone from 'json-e'
 import defaultMiddleware from './defaultMiddleware.js'
 const log = getLogger('MetaParser')
-const defaultParser = compose(...defaultMiddleware.values())
 const parserCfgProps = ['articles', 'artistOnLeft', 'delimiter']
-
-function compose (...args) {
-  const flattened = args.reduce(
-    (accumulator, currentValue) => accumulator.concat(currentValue), [],
-  )
-
-  return composeSync(flattened)
-}
 
 const customFunctions = {
   replace: (predicate, search, ...args) => {
@@ -22,20 +12,8 @@ const customFunctions = {
   },
 }
 
-// default parser creator
-function getDefaultParser (cfg: { articles?: string[] } = {}) {
-  if (typeof cfg.articles === 'undefined') {
-    cfg.articles = ['A', 'An', 'The']
-  }
-
-  return (ctx, next) => {
-    Object.assign(ctx.cfg, cfg)
-    return defaultParser(ctx, next)
-  }
-}
-
 const MetaParser = (userCfg = {}) => {
-  const parserCfg = {}
+  const parserCfg: { articles?: string[] } = {}
   const template = {}
 
   // we accept parser config and JSON-e template items (both
@@ -45,7 +23,7 @@ const MetaParser = (userCfg = {}) => {
     else template[key] = val
   }
 
-  const parser = getDefaultParser(parserCfg)
+  parserCfg.articles ??= ['A', 'An', 'The']
   const isUserTemplate = !!Object.keys(template).length
 
   return (scannerCtx) => {
@@ -54,7 +32,7 @@ const MetaParser = (userCfg = {}) => {
       ...scannerCtx,
     }
 
-    parser(ctx, () => {})
+    for (const step of defaultMiddleware.values()) step(ctx)
 
     if (isUserTemplate) {
       const res = jsone(template, { ...ctx, ...customFunctions })

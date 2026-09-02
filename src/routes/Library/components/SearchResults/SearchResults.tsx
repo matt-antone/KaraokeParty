@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from 'react'
 import { ensureState } from 'redux-optimistic-ui'
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { toggleArtistResultExpanded } from '../../modules/library'
 import getSearchResults from '../../selectors/getSearchResults'

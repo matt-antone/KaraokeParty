@@ -5,7 +5,7 @@ import store from './store/store'
 import socket from 'lib/socket'
 import AppRouter from 'lib/AppRouter'
 import { connectSocket } from './store/modules/user'
-import Persistor from 'store/Persistor'
+import * as Persistor from 'store/Persistor'
 
 Persistor.init(store, () => {
   // rehydration complete; open socket connection

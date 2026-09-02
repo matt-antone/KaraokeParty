@@ -3,8 +3,7 @@
    secondary indicator (teal), one fault red. Wanting a fifth colour means
    wanting a fifth indicator — reconsider instead of adding one.
 
-   Source of truth: design_handoff_karaokeparty_deck/tokens/*.css
-   The DECK block below is lifted verbatim from those files. The LEGACY block
+   This file is now the source of truth for these tokens. The LEGACY block
    at the bottom re-pointed the old Karaoke Eternal variable names onto DECK
    values so existing var() references repainted without touching each
    component. Components adopt the DECK names directly as they are rebuilt and

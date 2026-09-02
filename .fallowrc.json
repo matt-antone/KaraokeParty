@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.fallow.tools/schema/fallow.schema.json",
+  "entry": [
+    "src/main.tsx",
+    "server/main.ts",
+    "server/serverWorker.ts",
+    "server/scannerWorker.ts",
+    "server/watcherWorker.ts",
+    "server/lib/test-setup.ts"
+  ],
+  "ignorePatterns": [
+    "docs/**",
+    ".claude/**"
+  ],
+  "ignoreDependencies": [
+    "babel-loader",
+    "css-loader",
+    "modern-normalize",
+    "react-compiler-runtime",
+    "redux"
+  ],
+  "ignoreExports": [
+    {
+      "file": "src/**/*.ts",
+      "exports": [
+        "LazyLoadedSlices"
+      ]
+    }
+  ],
+  "rules": {
+    "unresolved-imports": "warn",
+    "duplicate-exports": "warn",
+    "circular-dependencies": "warn"
+  }
+}

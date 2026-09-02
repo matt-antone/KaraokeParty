@@ -3,7 +3,6 @@ import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
 import { performance } from 'perf_hooks'
 import { Song, Artist } from '../../shared/types.js'
-import Media from '../Media/Media.js'
 
 const log = getLogger('Library')
 
@@ -117,33 +116,6 @@ class Library {
     }
 
     return counts
-  }
-
-  /**
-  * Get single song in format similar to get()
-  */
-  static getSong (songId: number): Record<number, Song> {
-    const { result, entities } = Media.search({ songId })
-    if (!result.length) return {}
-
-    // should be in order of path priority...
-    let media = entities[result[0]]
-
-    // ...but are any preferred?
-    for (const mediaId of result) {
-      if (entities[mediaId].isPreferred) media = entities[mediaId]
-    }
-
-    return {
-      [songId]: {
-        artistId: media.artistId,
-        duration: media.duration,
-        songId: media.songId,
-        title: media.title,
-        tags: JSON.parse(media.tags),
-        numMedia: result.length,
-      },
-    }
   }
 
   /**

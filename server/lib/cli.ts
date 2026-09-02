@@ -2,8 +2,7 @@ import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
-import yargs from 'yargs'
-import { hideBin } from 'yargs/helpers'
+import { parseArgs } from 'node:util'
 
 // Resolve package root by walking up to nearest package.json
 function findProjectRoot (startDir: string) {
@@ -41,68 +40,23 @@ const env = {
   KES_PGID: parseInt(process.env.PGID, 10) || undefined,
 }
 
-const argv = yargs(hideBin(process.argv))
-  .version(false) // disable default handler
-  .option('data', {
-    describe: 'Absolute path of folder for database files',
-    requiresArg: true,
-    type: 'string',
-  })
-  .option('p', {
-    alias: 'port',
-    describe: 'Web server port (default=0/auto)',
-    number: true,
-    requiresArg: true,
-  })
-  .option('rotateKey', {
-    describe: 'Rotate the session key at startup',
-  })
-  .option('scan', {
-    describe: 'Run the media scanner at startup. Accepts a comma-separated list of pathIds, or "all"',
-    type: 'string',
-  })
-  .option('scannerConsoleLevel', {
-    describe: 'Media scanner console output level (default=4)',
-    number: true,
-    requiresArg: true,
-  })
-  .option('scannerLogLevel', {
-    describe: 'Media scanner log file level (default=3)',
-    number: true,
-    requiresArg: true,
-  })
-  .option('serverConsoleLevel', {
-    describe: 'Web server console output level (default=4)',
-    number: true,
-    requiresArg: true,
-  })
-  .option('serverLogLevel', {
-    describe: 'Web server log file level (default=3)',
-    number: true,
-    requiresArg: true,
-  })
-  .option('urlPath', {
-    describe: 'Web server URL base path (default=/)',
-    requiresArg: true,
-    type: 'string',
-  })
-  .option('v', {
-    alias: 'version',
-    describe: 'Output the KaraokeParty Server version and exit',
-  })
-  .usage('$0')
-  .usage('  Logging options use the following numeric levels:')
-  .usage('  0=off, 1=error, 2=warn, 3=info, 4=verbose, 5=debug')
-  .parseSync()
+const HELP = `KaraokeParty Server
 
-if (argv.version) {
-  console.log(process.env.npm_package_version)
-  process.exit(0) // eslint-disable-line n/no-process-exit
-}
+  --data <path>              Absolute path of folder for database files
+  -p, --port <n>             Web server port (default=0/auto)
+  --rotateKey                Rotate the session key at startup
+  --scan <ids>               Run the media scanner at startup. Accepts a
+                             comma-separated list of pathIds, or "all"
+  --scannerConsoleLevel <n>  Media scanner console output level (default=4)
+  --scannerLogLevel <n>      Media scanner log file level (default=3)
+  --serverConsoleLevel <n>   Web server console output level (default=4)
+  --serverLogLevel <n>       Web server log file level (default=3)
+  --urlPath <path>           Web server URL base path (default=/)
+  -v, --version              Output the KaraokeParty Server version and exit
+  -h, --help                 Show this help and exit
 
-if (argv.rotateKey) {
-  env.KES_ROTATE_KEY = true
-}
+  Logging options use the following numeric levels:
+  0=off, 1=error, 2=warn, 3=info, 4=verbose, 5=debug`
 
 // CLI options take precedence over env vars
 const opts = {
@@ -116,17 +70,46 @@ const opts = {
   urlPath: 'KES_URL_PATH',
 }
 
-for (const opt in opts) {
-  if (typeof argv[opt] !== 'undefined') {
-    env[opts[opt]] = argv[opt]
-    process.env[opts[opt]] = String(argv[opt])
-  }
+const numeric = new Set(['port', 'scannerConsoleLevel', 'scannerLogLevel', 'serverConsoleLevel', 'serverLogLevel'])
+
+const { values: argv } = parseArgs({
+  strict: false,
+  options: {
+    help: { type: 'boolean', short: 'h' },
+    rotateKey: { type: 'boolean' },
+    version: { type: 'boolean', short: 'v' },
+    ...Object.fromEntries(Object.keys(opts).map(opt => [
+      opt,
+      { type: 'string' as const, ...(opt === 'port' ? { short: 'p' } : {}) },
+    ])),
+  },
+})
+
+if (argv.help) {
+  console.log(HELP)
+  process.exit(0) // eslint-disable-line n/no-process-exit
+}
+
+if (argv.version) {
+  console.log(process.env.npm_package_version)
+  process.exit(0) // eslint-disable-line n/no-process-exit
+}
+
+if (argv.rotateKey) {
+  env.KES_ROTATE_KEY = true
+}
+
+for (const [opt, envVar] of Object.entries(opts)) {
+  if (typeof argv[opt] === 'undefined') continue
+
+  env[envVar] = numeric.has(opt) ? parseInt(argv[opt] as string, 10) : argv[opt]
+  process.env[envVar] = String(argv[opt])
 }
 
 export default env
 
 function getAppPath (appName) {
-  const home = os.homedir ? os.homedir() : process.env.HOME
+  const home = os.homedir()
 
   switch (process.platform) {
     case 'darwin': {

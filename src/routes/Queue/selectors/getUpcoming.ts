@@ -1,4 +1,4 @@
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 import { ensureState } from 'redux-optimistic-ui'
 import { createSelector } from '@reduxjs/toolkit'
 import getPlayerHistory from './getPlayerHistory'

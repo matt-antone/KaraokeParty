@@ -25,8 +25,8 @@ const getRandomPreset = () => getPreset(Math.floor(Math.random() * (_presetKeys.
 // Actions
 // ------------------------------------
 const playerCmdOptions = createAction<{ visualizer: PlaybackOptions['visualizer'] }>(PLAYER_CMD_OPTIONS)
-export const playerLoad = createAction(PLAYER_LOAD)
-export const playerVisualizerError = createAction<string>(PLAYER_VISUALIZER_ERROR)
+const playerLoad = createAction(PLAYER_LOAD)
+const playerVisualizerError = createAction<string>(PLAYER_VISUALIZER_ERROR)
 
 // ------------------------------------
 // Reducer

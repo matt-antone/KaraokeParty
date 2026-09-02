@@ -2,7 +2,7 @@ import React from 'react'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/es/integration/react'
 import store from 'store/store'
-import Persistor from 'store/Persistor'
+import * as Persistor from 'store/Persistor'
 import CoreLayout from './CoreLayout/CoreLayout'
 import Spinner from '../Spinner/Spinner'
 

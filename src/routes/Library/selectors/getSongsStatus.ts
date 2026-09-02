@@ -1,4 +1,4 @@
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 import { createSelector, type Selector } from '@reduxjs/toolkit'
 import { ensureState } from 'redux-optimistic-ui'
 

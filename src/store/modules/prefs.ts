@@ -1,5 +1,5 @@
 import { createAction, createAsyncThunk, createReducer } from '@reduxjs/toolkit'
-import { RootState } from 'store/store'
+import type { RootState } from 'store/store'
 import type { Path, Role } from 'shared/types'
 import {
   PREFS_RECEIVE,

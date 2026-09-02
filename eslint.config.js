@@ -1,6 +1,6 @@
 // @ts-check
 
-import eslint from '@eslint/js' // eslint-disable-line n/no-extraneous-import
+import eslint from '@eslint/js'
 import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 import stylistic from '@stylistic/eslint-plugin'
@@ -36,7 +36,7 @@ export default defineConfig(
     // the repo root would lint every worktree's copy of every file
     ignores: [
       'build/**', 'docs/**', 'dist/**', 'node_modules/**',
-      'design_handoff_karaokeparty_deck/**', '.claude/**',
+      '.claude/**',
     ],
   },
   // client-only config
