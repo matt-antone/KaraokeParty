@@ -189,4 +189,42 @@ describe('DECK rules', () => {
 
     expect(sized).toEqual([])
   })
+
+  it('gives every labelled Button a variant', () => {
+    // A Button with no variant renders bare — transparent, no key face, and no
+    // colour of its own, so its label inherits whatever ink the surrounding
+    // view uses. That is right for the icon keys it was built for (the star,
+    // the search clear, the visualizer chevrons) and wrong for anything with
+    // words on it: the Me tab's "Queue another song" inherited near-black onto
+    // the dark ground and was invisible until you knew to look.
+    const unlabelled: string[] = []
+
+    for (const file of files('*.tsx')) {
+      if (file.endsWith('.test.tsx')) continue
+      const text = readFileSync(join(SRC, file), 'utf8')
+
+      for (const match of text.matchAll(/<Button\b([^>]*?)(\/>|>)/gs)) {
+        if (match[2] === '/>' || match[1].includes('variant')) continue
+
+        const close = text.indexOf('</Button>', match.index + match[0].length)
+        if (close === -1) continue
+
+        // a label is text of its own: strip nested elements and {expressions}
+        // so an icon child or a bare ★ doesn't read as one. Braces nest, so
+        // the innermost pass repeats until there are none left to take
+        let label = text.slice(match.index + match[0].length, close)
+          .replace(/<[^>]*>/g, '')
+        for (let prev = ''; prev !== label;) {
+          prev = label
+          label = label.replace(/\{[^{}]*\}/g, '')
+        }
+
+        if (/[A-Za-z]/.test(label)) {
+          unlabelled.push(`${file}: ${label.trim().slice(0, 40)}`)
+        }
+      }
+    }
+
+    expect(unlabelled).toEqual([])
+  })
 })

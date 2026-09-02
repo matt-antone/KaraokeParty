@@ -120,7 +120,9 @@ const QueueView = () => {
 
       {!isLoading && queueTab === 'me' && (
         <div className={styles.meFooter}>
-          <Button icon='PLUS' size={20} onClick={() => navigate('/library')}>
+          {/* a labelled key needs a variant: without one it renders bare, and
+              the label inherits the view's dim ink onto the dark ground */}
+          <Button variant='default' icon='PLUS' size={20} onClick={() => navigate('/library')}>
             Queue another song
           </Button>
 
