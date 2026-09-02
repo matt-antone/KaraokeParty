@@ -1,17 +1,17 @@
 .itemEnter {
-  animation: enter .3s;
+  animation: enter var(--dur-ui);
 }
 
 .itemExit {
-  animation: exit .5s;
+  animation: exit var(--dur-ui);
 }
 
 @keyframes enter {
-  0% { opacity: 0; transform: scale3d(0, 0, 0); }
-  100% { opacity: 1; transform: scale3d(1, 1, 1); }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 @keyframes exit {
-  0% { opacity: 1; transform: scale3d(1, 1, 1); }
-  100% { opacity: 0; transform: scale3d(0, 0, 0); }
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }

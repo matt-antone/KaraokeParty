@@ -1,4 +1,4 @@
-/* The library's whole control surface: search, facet keys, tabs — in that order. */
+/* The library's whole control surface: search, tabs — in that order. */
 
 .container {
   display: flex;
@@ -60,77 +60,6 @@
 
 .starActive {
   color: var(--vu);
-}
-
-/* Latching keys, not selects: a lit amber key shows its state without being
-   opened, which is what you want filtering one-handed in a dark room. Each key
-   carries an invisible native select so a category with many values is still
-   reachable; the key itself is the visible control. */
-.facetRow {
-  display: flex;
-  gap: var(--gap-2);
-  padding: 0 var(--gutter) var(--gap-3);
-}
-
-.facetKey {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  min-width: 0;
-  min-height: var(--target);
-  padding: 0 var(--gap-2);
-  font-family: var(--font-body);
-  font-size: var(--text-s);
-  font-weight: var(--weight-semibold);
-  text-transform: capitalize;
-  white-space: nowrap;
-  overflow: hidden;
-  color: var(--ink-3);
-  background: var(--key-well);
-  box-shadow: var(--well);
-  border: none;
-  border-radius: var(--radius-key);
-  cursor: pointer;
-}
-
-.facetKeyOn {
-  color: var(--on-vu);
-  background: var(--key-face-vu);
-  box-shadow: var(--bevel);
-}
-
-/* dim by colour, never opacity */
-.facetKeyDisabled {
-  color: var(--ink-5);
-  cursor: default;
-}
-
-.facetLabel {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-/* the real control, laid over the key and invisible */
-.facetSelect {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  min-height: 0;
-  padding: 0;
-  opacity: 0;
-  cursor: pointer;
-  appearance: none;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-
-  &:disabled {
-    cursor: default;
-  }
 }
 
 .tabRow {

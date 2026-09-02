@@ -5,7 +5,8 @@ import { fetchRooms } from 'store/modules/rooms'
 import { createAccount, login } from 'store/modules/user'
 import SelectRoom from './SelectRoom/SelectRoom'
 import InputRadio from 'components/InputRadio/InputRadio'
-import Create from './Create/Create'
+import Button from 'components/Button/Button'
+import AccountForm from '../../components/AccountForm/AccountForm'
 import SignIn from './SignIn/SignIn'
 import styles from './SignedOutView.css'
 
@@ -15,7 +16,6 @@ const SignedOutView = () => {
 
   const prefs = useAppSelector(state => state.prefs)
   const rooms = useAppSelector(state => state.rooms)
-  const ui = useAppSelector(state => state.ui)
   const dispatch = useAppDispatch()
 
   const [mode, setMode] = useState('returning')
@@ -90,19 +90,9 @@ const SignedOutView = () => {
     }))
   }
 
-  const handleCreate = ({ name, image, passwordConfirm }: { name: string, image: Blob | undefined, passwordConfirm: string }) => {
-    const data = new FormData()
-
-    data.append('username', username.trim())
-    data.append('newPassword', password)
-    data.append('newPasswordConfirm', passwordConfirm)
+  const handleCreate = (data: FormData) => {
     data.append('roomId', String(roomId))
     data.append('roomPassword', roomPassword)
-    data.append('name', name.trim())
-
-    if (typeof image !== 'undefined') {
-      data.append('image', image)
-    }
 
     if (mode !== 'returning') {
       data.append('role', mode)
@@ -125,7 +115,7 @@ const SignedOutView = () => {
   }, [focusRequest, mode])
 
   return (
-    <div className={styles.container} style={{ maxWidth: Math.max(340, ui.contentWidth * 0.66) }}>
+    <div className={styles.container}>
       {showRoomSection && (
         <>
           <h2 className={clsx('silkscreen', styles.heading)}>join room</h2>
@@ -166,15 +156,16 @@ const SignedOutView = () => {
         )}
 
         {mode !== 'returning' && allowNew && (
-          <Create
-            guest={mode === 'guest'}
-            username={username}
-            password={password}
-            onUsernameChange={setUsername}
-            onPasswordChange={setPassword}
+          <AccountForm
+            showUsername={mode !== 'guest'}
+            showPassword={mode !== 'guest'}
             onSubmit={handleCreate}
             onFirstFieldRef={handleFirstFieldRef}
-          />
+          >
+            <Button type='submit' variant='primary'>
+              {mode === 'guest' ? 'Join as Guest' : 'Create Account'}
+            </Button>
+          </AccountForm>
         )}
       </div>
     </div>

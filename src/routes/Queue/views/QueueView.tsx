@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { ensureState } from 'redux-optimistic-ui'
 import { Link, useNavigate } from 'react-router'
@@ -105,6 +106,14 @@ const QueueView = () => {
             to queue it.
           </p>
         </TextOverlay>
+      )}
+
+      {!isLoading && queueTab === 'me' && mine.length > 0 && (
+        <div className={clsx('silkscreen', styles.caption)}>my songs &mdash; drag to reorder, swipe to remove</div>
+      )}
+
+      {!isLoading && queueTab === 'history' && played.length > 0 && (
+        <div className={clsx('silkscreen', styles.caption)}>sung tonight &mdash; these are locked</div>
       )}
 
       <QueueList />

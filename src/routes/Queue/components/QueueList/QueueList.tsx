@@ -83,14 +83,14 @@ const QueueList = () => {
         isCurrent={isCurrent}
         key={qId}
         isErrored={isCurrent && isErrored}
-        isMovable={isUpcoming && !isPaused && (isOwner || user.isAdmin)}
+        isMovable={isUpcoming && !isPaused && user.isAdmin && queueTab !== 'me'}
         isOwner={isOwner}
         isPaused={isPaused}
         isPlayed={!isUpcoming && !isCurrent}
         isPlaying={isCurrent && isPlaying}
         isRemovable={isUpcoming && (isOwner || user.isAdmin)}
-        isReplayable={(!isUpcoming || isCurrent) && user.isAdmin}
-        isSkippable={isCurrent && user.isAdmin}
+        isReplayable={(!isUpcoming || isCurrent) && (user.isAdmin || isOwner)}
+        isSkippable={isCurrent && (user.isAdmin || isOwner)}
         isStarred={starredSongs.includes(item.songId)}
         isUpcoming={isUpcoming}
         pctPlayed={isCurrent ? position / duration * 100 : 0}
@@ -104,7 +104,7 @@ const QueueList = () => {
     )
   }
 
-  if (queueTab === 'me' && result.length > 1) {
+  if ((queueTab === 'me' || (queueTab === 'queue' && user.isAdmin)) && result.length > 1) {
     return (
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId='myQueue'>

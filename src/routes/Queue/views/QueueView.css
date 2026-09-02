@@ -16,3 +16,7 @@
 .historyContent {
   padding: 0;
 }
+
+.caption {
+  padding-bottom: var(--gap-2);
+}

@@ -10,10 +10,6 @@
   flex-direction: column;
   color: var(--ink);
 
-  /* the corner panel and the fullscreen key share the top-right corner; the key
-     is transient, so the panel steps down out of its way while it is up */
-  --corner-panel-top: 2vh;
-
   /* Every silkscreen label on the stage steps up one ink level from the
      utility's --ink-3. On a phone --ink-3 is correct for meta; on a room TV
      these are the words read from the back of the room, and the darker step
@@ -25,10 +21,6 @@
   .queueDepthLabel {
     color: var(--ink-2);
   }
-}
-
-.fullscreenKeyShown {
-  --corner-panel-top: 10vh;
 }
 
 /* the intermission gets no wash: the thread field behind it *is* the background,

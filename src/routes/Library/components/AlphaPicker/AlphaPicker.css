@@ -10,6 +10,7 @@
   font-size: max(10px, 1.7vh);
   padding: var(--gap-2) 0;
   position: fixed;
+  top: calc(var(--alpha-top) - var(--chrome-shift, 0px));
   right: 0;
   width: 30px;
   cursor: pointer;

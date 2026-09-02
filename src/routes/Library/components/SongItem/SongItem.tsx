@@ -61,8 +61,8 @@ const SongItem = ({
 
       <button
         type='button'
-        onClick={isUpcoming ? undefined : handleClick}
-        disabled={isUpcoming}
+        onClick={isUpcoming || isPlayed ? undefined : handleClick}
+        disabled={isUpcoming || isPlayed}
         className={styles.primary}
       >
         {/* titles always show in full: they wrap, and the row grows to fit */}

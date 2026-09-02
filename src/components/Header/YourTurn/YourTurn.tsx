@@ -15,6 +15,13 @@ export interface YourTurnProps {
   rotationSize?: number
   /** How many songs they have queued. */
   songCount?: number
+  /** Title of their next song — what they are actually waiting for. */
+  nextSong?: string
+  /**
+   * 0-1: how far the room's queue has drained toward their turn. Ticks with
+   * the playhead. Falls back to their place in the rotation when unknown.
+   */
+  waitLevel?: number
   /** They have stepped out of the rotation. */
   isPaused?: boolean
   onTogglePaused?: () => void
@@ -37,20 +44,26 @@ const YourTurn = ({
   position = 0,
   rotationSize = 0,
   songCount = 0,
+  nextSong,
+  waitLevel,
   isPaused,
   onTogglePaused,
   inHeader,
   className,
 }: YourTurnProps) => {
   // the meter fills as their turn approaches and empties completely when
-  // paused. Position lives in the value, never in the segment count.
+  // paused. Position lives in the value, never in the segment count. waitLevel
+  // is the live one — the room's queue draining toward them — and the rotation
+  // index is the fallback for before the player has reported a position.
   const level = isPaused
     ? 0
     : isUpNow
       ? 1
-      : position && rotationSize
-        ? Math.max(0.06, 1 - (position - 1) / rotationSize)
-        : 0.5
+      : waitLevel !== undefined
+        ? waitLevel
+        : position && rotationSize
+          ? Math.max(0.06, 1 - (position - 1) / rotationSize)
+          : 0.5
 
   const headline = isPaused ? 'Paused' : isUpNow ? 'Now' : wait || '--'
 
@@ -58,22 +71,24 @@ const YourTurn = ({
     ? 'you are out of the rotation'
     : isUpNow
       ? 'you are on stage'
-      : position
-        ? `${position} of ${rotationSize} in the rotation`
-        : 'nothing queued'
+      : nextSong
+        ? nextSong
+        : position
+          ? `${position} of ${rotationSize} in the rotation`
+          : 'nothing queued'
+
+  // Queued but not on stage is the same state the library gives a queued song:
+  // "armed but not running", which the system says in standby teal. Amber is
+  // for the channel that is actually live, so it waits until you are up.
+  const isStandby = !isPaused && !isUpNow
+
+  const pauseLabel = isPaused ? 'Resume my songs' : 'Pause my songs'
 
   return (
-    <div className={clsx(styles.container, inHeader && styles.inHeader, isPaused && styles.paused, className)}>
-      <div className={styles.top}>
-        <div className={styles.headline}>
-          <div className={clsx('silkscreen', styles.legend)}>your turn</div>
-          <div className={styles.wait}>{headline}</div>
-        </div>
-        <div className={clsx('silkscreen', styles.songCount)}>
-          {songCount}
-          {' '}
-          {songCount === 1 ? 'song' : 'songs'}
-        </div>
+    <div className={clsx(styles.container, inHeader && styles.inHeader, isUpNow && !isPaused && styles.onStage, isStandby && styles.standby, isPaused && styles.paused, className)}>
+      <div className={styles.headline}>
+        <div className={clsx('silkscreen', styles.legend)}>your turn</div>
+        <div className={styles.wait}>{headline}</div>
       </div>
 
       <div className={styles.meter}>
@@ -83,18 +98,24 @@ const YourTurn = ({
         <div className={clsx('silkscreen', styles.label)}>{label}</div>
       </div>
 
-      <div className={styles.action}>
-        {/* possessive on purpose: pausing the *room* is a different, admin-only
-            thing that lives in Settings > Player */}
-        <Button
-          variant={isPaused ? 'primary' : 'default'}
-          icon={isPaused ? 'PLAY' : 'PAUSE'}
-          size={20}
-          onClick={onTogglePaused}
-        >
-          {isPaused ? 'Resume my songs' : 'Pause my songs'}
-        </Button>
+      <div className={clsx('silkscreen', styles.songCount)}>
+        {songCount}
+        {' '}
+        {songCount === 1 ? 'song' : 'songs'}
       </div>
+
+      {/* possessive on purpose: pausing the *room* is a different, admin-only
+          thing that lives in Settings > Player. Icon-only to keep the strip one
+          row deep, so the name is carried by aria-label and the title tooltip. */}
+      <Button
+        className={styles.pauseKey}
+        variant={isPaused ? 'primary' : 'default'}
+        icon={isPaused ? 'PLAY' : 'PAUSE'}
+        size={22}
+        onClick={onTogglePaused}
+        aria-label={pauseLabel}
+        title={pauseLabel}
+      />
     </div>
   )
 }

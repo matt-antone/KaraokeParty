@@ -1,5 +1,6 @@
-/* The player's display options. Reached from the TUNE key on the transport, so
-   it lives inside the Player panel like everything else about the player. */
+/* The player's display options. Reached from the Display key on the Player
+   panel, independent of the transport, so it lives inside the Player panel
+   like everything else about the player. */
 
 .modal {
   width: 90vw;

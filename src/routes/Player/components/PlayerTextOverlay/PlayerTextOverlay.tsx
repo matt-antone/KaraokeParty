@@ -15,8 +15,10 @@ import styles from './PlayerTextOverlay.css'
 const UP_NOW_MS = 5000
 /** Queue depth that fills the bottom meter. Beyond it the room just reads "long". */
 const QUEUE_DEPTH_FULL = 20
-/** How long the fullscreen key stays up after the host last moved the mouse. */
-const POINTER_IDLE_MS = 3000
+/** Same-browser channel Settings' transport uses to ask for fullscreen once a
+ * song is playing — the Fullscreen API can only be invoked from the document
+ * that is going fullscreen, so this only reaches a Player tab in the same
+ * browser as Settings. Must match Settings/components/Player/PlaybackCtrl. */
 
 /** Six mutually exclusive states — never two at once. */
 type OverlayState = 'upNow' | 'upNextTease' | 'intermission' | 'idle' | 'empty' | 'errored'
@@ -25,6 +27,8 @@ interface PlayerTextOverlayProps {
   queueItem?: QueueItem
   nextQueueItem?: QueueItem
   comingUpQueueItems?: QueueItem[]
+  /** Song title for each entry in comingUpQueueItems, same order. */
+  comingUpSongTitles?: (string | undefined)[]
   songTitle?: string
   songArtist?: string
   nextSongTitle?: string
@@ -41,12 +45,20 @@ interface PlayerTextOverlayProps {
 }
 
 // mounted when the intermission starts, so `now` is seeded correctly (keyed on endsAt by the parent)
-const Intermission = ({ endsAt, nextQueueItem, nextSongTitle, nextSongArtist, comingUpQueueItems = [] }: {
+const Intermission = ({
+  endsAt,
+  nextQueueItem,
+  nextSongTitle,
+  nextSongArtist,
+  comingUpQueueItems = [],
+  comingUpSongTitles = [],
+}: {
   endsAt: number
   nextQueueItem?: QueueItem
   nextSongTitle?: string
   nextSongArtist?: string
   comingUpQueueItems?: QueueItem[]
+  comingUpSongTitles?: (string | undefined)[]
 }) => {
   const [now, setNow] = useState(() => Date.now())
 
@@ -80,7 +92,10 @@ const Intermission = ({ endsAt, nextQueueItem, nextSongTitle, nextSongArtist, co
       {comingUpQueueItems.length > 0 && (
         <div className={styles.comingUp} translate='no'>
           <div className={clsx('silkscreen', styles.comingUpHeading)}>coming up</div>
-          {comingUpQueueItems.map(item => item.userDisplayName).join(', ')}
+          {comingUpQueueItems.map((item, i) => {
+            const title = comingUpSongTitles[i]
+            return title ? `${item.userDisplayName} — ${title}` : item.userDisplayName
+          }).join(', ')}
         </div>
       )}
     </>
@@ -119,6 +134,7 @@ const PlayerTextOverlay = ({
   intermissionEndsAt,
   nextQueueItem,
   comingUpQueueItems,
+  comingUpSongTitles,
   songTitle,
   songArtist,
   nextSongTitle,
@@ -131,23 +147,6 @@ const PlayerTextOverlay = ({
 }: PlayerTextOverlayProps) => {
   const dispatch = useAppDispatch()
   const handlePlay = () => dispatch(requestPlay())
-  const [lastPointerMove, setLastPointerMove] = useState(0)
-
-  // The transport moved to Settings and took its fullscreen key with it, so this
-  // is now the only way into fullscreen once a song starts. A room TV is driven
-  // with a mouse, not touched, so the key behaves like any video player's chrome:
-  // it appears on pointer activity and clears itself again, which keeps it off
-  // the video the rest of the night.
-  useEffect(() => {
-    if (!lastPointerMove) return
-
-    const timeoutID = setTimeout(() => setLastPointerMove(0), POINTER_IDLE_MS)
-    return () => clearTimeout(timeoutID)
-  }, [lastPointerMove])
-
-  // a mouse fires dozens of moves a second; returning the previous value unchanged
-  // lets React bail out of the re-render, so only one move per second costs anything
-  const handlePointerMove = () => setLastPointerMove(prev => Date.now() - prev > 1000 ? Date.now() : prev)
 
   let state: OverlayState
 
@@ -158,20 +157,14 @@ const PlayerTextOverlay = ({
   else if (isSongEnding && nextQueueItem) state = 'upNextTease'
   else state = 'upNow'
 
-  // always up on the paused stage, as the handoff specifies; elsewhere only while
-  // the host is at the machine. The corner panel shares this corner, so the
-  // container drops the panel clear of the key for as long as the key is up.
-  const isFullscreenKeyShown = screenfull.isEnabled && !screenfull.isFullscreen
-    && (state === 'idle' || lastPointerMove !== 0)
+  // the fullscreen key only floats over the paused stage — nothing else
+  // competes there. Playing states reach fullscreen via Settings' transport.
+  const isFullscreenKeyShown = screenfull.isEnabled && !screenfull.isFullscreen && state === 'idle'
 
   return (
     <div
       style={{ width, height }}
-      onPointerMove={handlePointerMove}
-      className={clsx(
-        styles.container,
-        isFullscreenKeyShown && styles.fullscreenKeyShown,
-      )}
+      className={styles.container}
     >
       {state === 'empty' && (
         <>
@@ -209,6 +202,7 @@ const PlayerTextOverlay = ({
           nextSongTitle={nextSongTitle}
           nextSongArtist={nextSongArtist}
           comingUpQueueItems={comingUpQueueItems}
+          comingUpSongTitles={comingUpSongTitles}
         />
       )}
 

@@ -13,10 +13,10 @@ import { PlaybackOptions } from 'shared/types'
  * The room transport. Its only home is the Player panel on the Settings screen:
  * player controls are admin-only and a singer does not pause the room, not even
  * during their own song. Order never changes — play/pause, skip, volume,
- * display. Play/pause is the single amber key; skip is graphite with an amber
- * glyph, because skipping someone's song deserves one more moment of thought
- * than pausing. The knob is the input and the meter beside it is the readout;
- * there is no volume number.
+ * display, fullscreen. Play/pause is the single amber key; skip is graphite
+ * with an amber glyph, because skipping someone's song deserves one more
+ * moment of thought than pausing. The knob is the input and the meter beside
+ * it is the readout; there is no volume number.
  */
 const PlaybackCtrl = () => {
   const [isDisplayCtrlVisible, setDisplayCtrlVisible] = useState(false)

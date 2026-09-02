@@ -43,12 +43,12 @@ const UserPrefs = ({ onChange, prefs = {} }: UserPrefsProps) => {
       headingComponent={(
         <div className={styles.heading}>
           <Icon icon='PERSON' />
-          <div className={styles.title}>Users</div>
+          <div>Users</div>
         </div>
       )}
     >
       <div className={styles.content}>
-        <div className={styles.field}>
+        <div>
           <InputCheckbox
             label='Allow new standard users'
             name='standard'
@@ -56,7 +56,7 @@ const UserPrefs = ({ onChange, prefs = {} }: UserPrefsProps) => {
             onChange={handleChange}
           />
         </div>
-        <div className={styles.field}>
+        <div>
           <InputCheckbox
             label='Allow new guests'
             name='guest'

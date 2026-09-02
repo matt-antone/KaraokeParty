@@ -6,6 +6,9 @@
   right: 3vh;
   opacity: 1;
   transition: opacity 0.3s ease;
+  background: var(--ink);
+  border-radius: var(--radius-key);
+  box-shadow: var(--bevel);
 
   canvas {
     border-radius: var(--radius-key);

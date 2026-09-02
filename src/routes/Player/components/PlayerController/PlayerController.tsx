@@ -30,6 +30,7 @@ const PlayerController = (props: PlayerControllerProps) => {
   const nextQueueItem = queue.entities[queue.result[nextIdx]]
   // the two singers after the next one, shown during the intermission
   const comingUpQueueItems = queue.result.slice(nextIdx + 1, nextIdx + 3).map(id => queue.entities[id])
+  const comingUpSongTitles = useAppSelector(state => comingUpQueueItems.map(item => state.songs.entities[item.songId]?.title))
   const nextSong = useAppSelector(state => nextQueueItem ? state.songs.entities[nextQueueItem.songId] : undefined)
   const nextArtist = useAppSelector(state => nextSong ? state.artists.entities[nextSong.artistId] : undefined)
   // the corner panel names the singer *and* their song, so the player needs the current one too
@@ -263,6 +264,7 @@ const PlayerController = (props: PlayerControllerProps) => {
         queueItem={queueItem as QueueItem}
         nextQueueItem={nextQueueItem as QueueItem}
         comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+        comingUpSongTitles={comingUpSongTitles}
         songTitle={song?.title}
         songArtist={artist?.name}
         nextSongTitle={nextSong?.title}

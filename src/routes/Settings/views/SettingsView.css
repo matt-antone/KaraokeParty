@@ -1,10 +1,18 @@
+/* The Settings column: plain document flow. The page scrolls, not this box —
+   a JS-measured height here capped the column at one viewport, and because it
+   was also a flex column every panel shrank to fit and Panel's overflow:hidden
+   clipped the rest, so nothing overflowed and nothing scrolled. CSS knows the
+   viewport without being told; the fixed chrome is cleared with the heights
+   CoreLayout publishes. */
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-4);
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--gap-4) var(--gutter) var(--gap-5);
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  padding:
+    calc(var(--header-h, 0px) + var(--gap-4))
+    var(--gutter)
+    calc(var(--nav-h, 0px) + var(--gap-5));
+
+  & > * + * {
+    margin-top: var(--gap-4);
+  }
 }

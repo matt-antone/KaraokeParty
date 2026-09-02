@@ -19,7 +19,6 @@ interface AccountViewProps {
 const AccountView = ({ isSignInRoute }: AccountViewProps) => {
   const isSignedIn = useAppSelector(state => state.user.userId !== null)
   const isFirstRun = useAppSelector(state => state.prefs.isFirstRun === true)
-  const ui = useAppSelector(state => state.ui)
   const dispatch = useAppDispatch()
 
   // once per mount
@@ -35,15 +34,7 @@ const AccountView = ({ isSignInRoute }: AccountViewProps) => {
   }
 
   return (
-    <div
-      className={styles.container}
-      style={{
-        paddingTop: ui.headerHeight,
-        paddingBottom: ui.footerHeight,
-        width: ui.contentWidth,
-        height: ui.innerHeight,
-      }}
-    >
+    <div className={styles.container}>
       {isFirstRun && <FirstRun />}
 
       {!isFirstRun && isSignInRoute && <SignedOutView />}

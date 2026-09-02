@@ -32,7 +32,7 @@ interface SongHistoryListProps {
 const SongHistoryList = ({ items, onStar, emptyText, className }: SongHistoryListProps) => {
   if (items.length === 0) {
     return (
-      <p className={clsx(styles.empty, className)}>
+      <p className={clsx('silkscreen', styles.empty, className)}>
         {emptyText || 'Songs you sing all the way through show up here.'}
       </p>
     )

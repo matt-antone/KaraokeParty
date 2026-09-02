@@ -21,7 +21,11 @@ const read = (props: YourTurnProps) => {
     headline: container.querySelector('.wait')?.textContent,
     label: container.querySelector('.label')?.textContent,
     level: Number(meter.getAttribute('aria-valuenow')),
-    button: screen.getByRole('button').textContent,
+    // the pause key is icon-only, so its name is the accessible one
+    button: screen.getByRole('button').getAttribute('aria-label'),
+    // every state is a tinted well; the class names which tint
+    standby: container.firstElementChild?.classList.contains('standby'),
+    onStage: container.firstElementChild?.classList.contains('onStage'),
   }
 }
 
@@ -89,5 +93,47 @@ describe('YourTurn', () => {
     expect(count(1)).toBe('1 song')
     expect(count(0)).toBe('0 songs')
     expect(count(4)).toBe('4 songs')
+  })
+
+  // "armed but not running" is the same state the library gives a queued song,
+  // and it says it in --standby. Amber is reserved for the live channel.
+  it('waits in standby teal', () => {
+    expect(read({ wait: '8 min', position: 2, rotationSize: 6 }).standby).toBe(true)
+  })
+
+  it('drops standby once on stage', () => {
+    expect(read({ isUpNow: true, position: 1, rotationSize: 6 }).standby).toBe(false)
+  })
+
+  it('drops standby when paused', () => {
+    expect(read({ isPaused: true, position: 2, rotationSize: 6 }).standby).toBe(false)
+  })
+
+  it('wears the live amber well on stage', () => {
+    expect(read({ isUpNow: true, position: 1, rotationSize: 6 }).onStage).toBe(true)
+  })
+
+  it('is not on stage while paused, even when up', () => {
+    // paused wins: a dead channel must not read as the live one
+    expect(read({ isUpNow: true, isPaused: true }).onStage).toBe(false)
+  })
+
+  it('names the next song rather than a place in the rotation', () => {
+    // a singer wants to know what they are waiting for, not their index
+    expect(read({ wait: '8 min', position: 2, rotationSize: 6, nextSong: 'Bohemian Rhapsody' }))
+      .toMatchObject({ label: 'Bohemian Rhapsody' })
+  })
+
+  it('falls back to the rotation when the title is not loaded yet', () => {
+    expect(read({ wait: '8 min', position: 2, rotationSize: 6 }))
+      .toMatchObject({ label: '2 of 6 in the rotation' })
+  })
+
+  it('still says on stage over any next song', () => {
+    expect(read({ isUpNow: true, nextSong: 'Dancing Queen' }).label).toBe('you are on stage')
+  })
+
+  it('still says paused over any next song', () => {
+    expect(read({ isPaused: true, nextSong: 'Dancing Queen' }).label).toBe('you are out of the rotation')
   })
 })

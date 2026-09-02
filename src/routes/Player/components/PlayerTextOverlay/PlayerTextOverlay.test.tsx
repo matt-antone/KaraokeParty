@@ -63,11 +63,14 @@ describe('PlayerTextOverlay intermission', () => {
     expect(text).toContain('Winnebago')
   })
 
-  it('lists the two singers after the next one under "Coming Up"', () => {
-    const text = render().replace(/<[^>]+>/g, '')
+  it('lists the two singers and their songs after the next one under "Coming Up"', () => {
+    const text = render({
+      comingUpSongTitles: ['Ludicrous Speed', 'Combing the Desert'],
+    }).replace(/<[^>]+>/g, '')
+
     expect(text).toContain('coming up')
-    expect(text).toContain('Barf')
-    expect(text).toContain('Lone Starr')
+    expect(text).toContain('Barf — Ludicrous Speed')
+    expect(text).toContain('Lone Starr — Combing the Desert')
   })
 })
 

@@ -12,7 +12,7 @@ import type { ListImperativeAPI, RowComponentProps } from 'react-window'
 // estimates only: rows are measured once rendered (see PaddedList), because a
 // song title always shows in full and a wrapped title makes the row taller
 const ROW_HEIGHT_ARTIST = 47 // --row-artist + seam rule
-const ROW_HEIGHT_SONG = 62 // --row-song + --gap-2 margin
+const ROW_HEIGHT_SONG = 59 // --row-song + 3px margin
 
 interface SearchResultsProps {
   ui: RootState['ui']
@@ -99,9 +99,10 @@ const SearchResults = ({ ui }: SearchResultsProps) => {
       rowHeight={rowHeight}
       cacheKey={filterStr}
       numRows={artistsResult.length}
-      paddingTop={ui.headerHeight}
+      paddingTop={ui.headerHeight + 14}
       paddingRight={4}
-      paddingBottom={ui.footerHeight}
+      paddingBottom={ui.footerHeight + 20}
+      paddingLeft={14}
       height={ui.innerHeight}
       onRef={handleRef}
     />

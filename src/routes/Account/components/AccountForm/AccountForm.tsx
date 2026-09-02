@@ -7,6 +7,7 @@ interface AccountFormProps {
   autoFocus?: boolean
   children?: React.ReactNode
   onDirtyChange?(isDirty: boolean): void
+  onFirstFieldRef?(el: HTMLInputElement | null): void
   onSubmit(formData: FormData): void
   showRole?: boolean
   showUsername?: boolean
@@ -18,6 +19,7 @@ const AccountForm = ({
   autoFocus,
   children,
   onDirtyChange,
+  onFirstFieldRef,
   onSubmit,
   showRole,
   showUsername = true,
@@ -106,6 +108,23 @@ const AccountForm = ({
       noValidate
       onSubmit={handleSubmit}
     >
+      <div className={styles.userDisplayContainer}>
+        <InputImage
+          user={user}
+          onSelect={handleUserImageChange}
+        />
+        <input
+          type='text'
+          defaultValue={user?.name ?? ''}
+          onChange={updateDirty}
+          placeholder='display name'
+          ref={(r) => {
+            name.current = r
+            if (!showUsername) onFirstFieldRef?.(r)
+          }}
+        />
+      </div>
+
       {showUsername && (
         <input
           type='email'
@@ -117,6 +136,7 @@ const AccountForm = ({
           ref={(r) => {
             if (r) username.current = r
             if (autoFocus) r?.setAttribute('autofocus', 'true')
+            onFirstFieldRef?.(r)
           }}
         />
       )}
@@ -131,7 +151,7 @@ const AccountForm = ({
         />
       )}
 
-      {state.isChangingPassword && (
+      {state.isChangingPassword && showPassword && (
         <input
           type='password'
           autoComplete='new-password'
@@ -139,20 +159,6 @@ const AccountForm = ({
           ref={newPasswordConfirm}
         />
       )}
-
-      <div className={styles.userDisplayContainer}>
-        <InputImage
-          user={user}
-          onSelect={handleUserImageChange}
-        />
-        <input
-          type='text'
-          defaultValue={user?.name ?? ''}
-          onChange={updateDirty}
-          placeholder='display name'
-          ref={name}
-        />
-      </div>
 
       {showRole && (
         <select

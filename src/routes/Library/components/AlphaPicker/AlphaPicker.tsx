@@ -30,7 +30,7 @@ class AlphaPicker extends React.Component<AlphaPickerProps> {
     return (
       <div
         className={styles.container}
-        style={{ height: this.props.height, top: this.props.top }}
+        style={{ 'height': this.props.height, '--alpha-top': `${this.props.top}px` } as React.CSSProperties}
         onTouchStart={this.handleTouchStart}
         onTouchMove={this.handleTouch}
         onTouchEnd={this.handleTouchEnd}
@@ -87,7 +87,6 @@ class AlphaPicker extends React.Component<AlphaPickerProps> {
 
     this.setState({
       isTouching: false,
-      char: null,
     })
   }
 }

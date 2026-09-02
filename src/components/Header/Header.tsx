@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { RootState } from 'store/store'
@@ -38,6 +38,29 @@ const getUserWait = createSelector(
   },
 )
 
+/**
+ * The singer's next song and the wait until it, in seconds.
+ *
+ * Both come from getWaits, which is recomputed from song durations and the
+ * live playhead, so the wait ticks down every second the player reports.
+ */
+const getMyNextWait = createSelector(
+  [getMyUpcoming, getWaits],
+  (upcoming, waits): { queueId?: number, wait?: number } => {
+    const queueId = upcoming[0]
+    return { queueId, wait: waits[queueId] }
+  },
+)
+
+/** Title of the singer's next song — what they are actually waiting for. */
+const getMyNextSong = createSelector(
+  [getMyUpcoming, (state: RootState) => ensureState(state.queue).entities, (state: RootState) => state.songs],
+  (upcoming, queueItems, songs) => {
+    const item = queueItems[upcoming[0]]
+    return item ? songs.entities[item.songId]?.title : undefined
+  },
+)
+
 const getIsUpNow = createSelector(
   [getRoundRobinQueue, getQueueId, getIsAtQueueEnd, getUserId],
   (queue, queueId, isAtQueueEnd, userId) => {
@@ -48,10 +71,11 @@ const getIsUpNow = createSelector(
 
 // How far the faceplate is currently slid up, in px. Written to the DOM rather
 // than to state: this changes every scroll frame, and a re-render here would
-// re-render the virtualized library list with it. Set on the faceplate itself
-// (the wordmark row's parent) so a frame invalidates only the chrome.
-const setChromeShift = (wordmark: HTMLElement | null, px: number) => {
-  wordmark?.parentElement?.style.setProperty('--chrome-shift', `${px}px`)
+// re-render the virtualized library list with it. Set on the root element (not
+// just the faceplate) so other fixed chrome — e.g. the library's AlphaPicker
+// rail — can also track it via CSS var inheritance.
+const setChromeShift = (px: number) => {
+  document.documentElement.style.setProperty('--chrome-shift', `${px}px`)
 }
 
 // component
@@ -66,6 +90,30 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   const wait = useAppSelector(getUserWait)
   const { position, rotationSize } = useAppSelector(getMyRotation)
   const songCount = useAppSelector(getMyUpcoming).length
+  const nextSong = useAppSelector(getMyNextSong)
+  const { queueId: nextQueueId, wait: nextWait } = useAppSelector(getMyNextWait)
+
+  // The meter's full scale is the singer's OWN wait when this song became their
+  // next, remembered so it survives the wait ticking down. Measuring against the
+  // room's furthest-out wait instead let other people's songs — queued BEHIND
+  // this singer, unable to affect their wait at all — decide where their meter
+  // started: someone six minutes out began two thirds full. Re-arms upward when
+  // the wait grows, which is someone being inserted ahead of them.
+  const [horizon, setHorizon] = useState<{ queueId?: number, wait: number }>({ wait: 0 })
+  const isSameSong = nextQueueId === horizon.queueId
+  const scale = nextWait === undefined
+    ? horizon.wait
+    : isSameSong ? Math.max(horizon.wait, nextWait) : nextWait
+
+  if (nextWait !== undefined && (!isSameSong || nextWait > horizon.wait)) {
+    setHorizon({ queueId: nextQueueId, wait: nextWait })
+  }
+
+  const waitLevel = nextWait === undefined || scale <= 0
+    ? undefined
+    // floored so a singer who just queued reads as lit-but-low, not switched off
+    : Math.max(0.06, 1 - nextWait / scale)
+
   const isPaused = useAppSelector(state => ensureState(state.queue).pausedUserIds.includes(userId))
   const roomName = useAppSelector(state => (
     state.user.roomId === null ? undefined : state.rooms.entities[state.user.roomId]?.name
@@ -88,7 +136,9 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   // not move the chrome.
   useEffect(() => {
     const onScroll = (e: Event) => {
-      const el = e.target
+      // A body-scrolling route (Account, Settings) reports the document as the
+      // target; an inner scroller reports itself.
+      const el = e.target === document ? document.documentElement : e.target
       if (!(el instanceof HTMLElement) || el.closest('dialog')) return
 
       const wordmark = wordmarkRef.current
@@ -105,7 +155,7 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
           : wordmark.offsetHeight
 
       // clamped below at 0 for rubber-band overscroll, which reports negative
-      setChromeShift(wordmark, Math.min(Math.max(el.scrollTop, 0), cap))
+      setChromeShift(Math.min(Math.max(el.scrollTop, 0), cap))
     }
 
     document.addEventListener('scroll', onScroll, true)
@@ -115,7 +165,7 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   // A route change swaps in a fresh scroller at the top; anything that restores
   // a scroll position (Library, Queue) does it by scrolling, which fires above.
   useEffect(() => {
-    setChromeShift(wordmarkRef.current, 0)
+    setChromeShift(0)
   }, [location.pathname])
 
   return (
@@ -140,6 +190,8 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
             position={position}
             rotationSize={rotationSize}
             songCount={songCount}
+            nextSong={nextSong}
+            waitLevel={waitLevel}
             onTogglePaused={() => dispatch(setPaused({ isPaused: !isPaused }))}
           />
         )}

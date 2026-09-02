@@ -78,6 +78,7 @@ interface PaddedListProps {
   paddingTop: number
   paddingRight?: number
   paddingBottom: number
+  paddingLeft?: number
   rowComponent: React.ComponentType<RowComponentProps>
   /**
    * Estimated height of a row, used until it has been measured.
@@ -98,6 +99,7 @@ const PaddedList = ({
   paddingTop,
   paddingRight,
   paddingBottom,
+  paddingLeft,
   rowComponent: RowComponent,
   rowHeight,
   rowProps = {},
@@ -119,7 +121,7 @@ const PaddedList = ({
       )
     }
 
-    return <RowComponent index={--index} style={{ ...style, paddingRight }} ariaAttributes={ariaAttributes} {...rest} />
+    return <RowComponent index={--index} style={{ ...style, paddingRight, paddingLeft }} ariaAttributes={ariaAttributes} {...rest} />
   }
 
   const estimateRowHeight = useCallback((index: number) => {

@@ -14,11 +14,15 @@ interface PlayerQRProps {
   queueItem: QueueItem
 }
 
+// falls back to this if the token isn't reachable yet — the value --ink resolves to
+const INK_FALLBACK = '#e6e4de'
+
 const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
   const ref = useRef<HTMLDivElement>(null)
   const maxTimerID = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastToggleTime = useRef<number>(0)
   const [show, setShow] = useState(true)
+  const [inkColor, setInkColor] = useState(INK_FALLBACK)
   const { isPlaying } = useAppSelector(state => state.player)
   const { roomId } = useAppSelector(state => state.user)
   const serverUrl = useAppSelector(state => state.prefs.serverUrl)
@@ -43,6 +47,14 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
 
   useEffect(() => {
     lastToggleTime.current = Date.now()
+  }, [])
+
+  // panel and code share one ink-colored plate — read the token off the panel
+  // itself rather than duplicating its hex here
+  useEffect(() => {
+    if (!ref.current) return
+    const value = getComputedStyle(ref.current).getPropertyValue('--ink').trim()
+    if (value) setInkColor(value)
   }, [])
 
   useEffect(() => {
@@ -119,10 +131,7 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
           size={size}
           quietZone={quietZoneSize}
           style={{ opacity: prefs.opacity ?? 1 }}
-          logoImage={`${document.baseURI}assets/app.png`}
-          logoWidth={size * 0.5}
-          logoHeight={size * 0.5}
-          logoOpacity={0.5}
+          bgColor={inkColor}
           qrStyle='dots'
         />
       </div>

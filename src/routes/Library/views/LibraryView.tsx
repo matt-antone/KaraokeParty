@@ -4,17 +4,21 @@ import { Link } from 'react-router'
 import ArtistList from '../components/ArtistList/ArtistList'
 import SearchResults from '../components/SearchResults/SearchResults'
 import SongResults from '../components/SongResults/SongResults'
+import getSearchResults from '../selectors/getSearchResults'
 import TextOverlay from 'components/TextOverlay/TextOverlay'
 import Spinner from 'components/Spinner/Spinner'
 import styles from './LibraryView.css'
 
 const LibraryView = () => {
   const { isAdmin } = useAppSelector(state => state.user)
-  const { isLoading, filterStr, filterStarred, filterTags, tab } = useAppSelector(state => state.library)
+  const { isLoading, filterStr, filterStarred, tab } = useAppSelector(state => state.library)
   const songsResult = useAppSelector(state => state.songs.result)
+  const { artistsResult, songsResult: filteredSongsResult } = useAppSelector(getSearchResults)
   const ui = useAppSelector(state => state.ui)
 
-  const isSearching = !!filterStr.trim().length || filterStarred || filterTags.some(Boolean)
+  const isSearching = !!filterStr.trim().length || filterStarred
+  const hasNoMatches = isSearching && songsResult.length > 0
+    && (tab === 'songs' ? filteredSongsResult.length === 0 : artistsResult.length === 0)
   const [initialHeaderHeight] = useState(ui.headerHeight)
   const [finalHeaderHeight, setFinalHeaderHeight] = useState(null)
 
@@ -47,6 +51,13 @@ const LibraryView = () => {
               to get started.
             </p>
           )}
+        </TextOverlay>
+      )}
+
+      {!isLoading && hasNoMatches && (
+        <TextOverlay className={styles.empty}>
+          <h1>No matches</h1>
+          <p>Try a different search, or clear the filters.</p>
         </TextOverlay>
       )}
     </>

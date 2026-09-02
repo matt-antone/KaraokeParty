@@ -1,32 +1,71 @@
 /* Your Turn — the singer's own channel strip, and the app's header.
-   Standalone it is a panel: brushed face, panel radius, raised. In the header
-   it loses its radius and gains the seam above and hairline below, because it
-   is machined into the chrome rather than sitting on it. */
+
+   Every state is the same object: a recessed, tinted well with an accent
+   headline — the treatment the library already gives a queued song row. Only
+   the tint changes, and it is the state:
+
+     on stage  --vu-well       amber, the channel that is live
+     standby   --standby-well  teal, armed but not running
+     paused    --key-well      neutral, a dead channel
+
+   No new colour enters the palette to do this; each well already exists as the
+   panel-value form of its signal. The strip is recessed rather than raised
+   because it reports status — it is not a key you press. The one key it
+   carries stays raised, because that one you do press.
+
+   One row, not a stack: this sits above every screen on a phone, so the four
+   stacked blocks it used to be spent ~130px of the viewport saying two things.
+   Wait and meter read side by side; the pause key is icon-only and names
+   itself through aria-label. */
 
 .container {
-  background: var(--brush);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: var(--gap-2) var(--gap-4);
+  background-color: var(--key-well);
   border-radius: var(--radius-panel);
-  box-shadow: var(--bevel);
+  box-shadow: var(--well);
   overflow: hidden;
 }
 
+/* machined into the chrome: no radius of its own, seamed above and ruled below */
 .inHeader {
   border-radius: 0;
-  box-shadow: var(--edge-top);
   border-top: var(--seam-rule);
   border-bottom: var(--hair-rule);
 }
 
-.top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--gap-3);
-  padding: var(--gap-3) var(--gap-4) var(--gap-2);
+/* on stage: the live channel, amber */
+.onStage {
+  background-color: var(--vu-well);
+}
+
+/* queued but not yet up: armed, not running */
+.standby {
+  background-color: var(--standby-well);
+}
+
+.standby .wait {
+  color: var(--standby);
+}
+
+/* the meter reads in the state's own colour: re-point the two tokens its
+   segments are painted from rather than teaching VuMeter about channels.
+   Peaking is already off here (peakFrom > 1), so no red enters the strip. */
+.standby .meter {
+  --vu-dim: var(--standby-dim);
+  --vu: var(--standby);
+}
+
+/* paused is a visibly dead channel: the meter empties and the wait goes cold */
+.paused .wait {
+  color: var(--ink-3);
 }
 
 .headline {
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .legend {
@@ -47,24 +86,34 @@
   text-overflow: ellipsis;
 }
 
-/* paused is a visibly dead channel: the meter empties and the wait goes cold */
-.paused .wait {
-  color: var(--ink-3);
+/* the meter takes the slack so the strip reflows instead of wrapping */
+.meter {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The label names the singer's next song. This ellipsises it, which is a
+   knowing exception to "song titles are never truncated, site-wide": the strip
+   sits above every screen, and letting a long title wrap costs a whole row of
+   viewport on the one surface that is always on screen. The untruncated title
+   is one tap away on the Queue's Me tab.
+   ponytail: exception taken deliberately for the header strip only — if this
+   spreads to a second surface, fix the rule instead of repeating the escape. */
+.label {
+  margin-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .songCount {
-  text-align: right;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.meter {
-  padding: 0 var(--gap-4);
-}
-
-.label {
-  margin-top: 5px;
-}
-
-.action {
-  padding: var(--gap-2) var(--gap-4) var(--gap-3);
+/* Button is width:100% by default, which would eat the row */
+.pauseKey {
+  flex: 0 0 auto;
+  width: var(--target);
+  min-height: var(--target);
 }

@@ -1,14 +1,12 @@
-/* The Account tab's column: the standard screen gutter, --gap-4 below the
-   header, --gap-4 between blocks, --gap-5 at the base. Block flow, not flex —
-   this scrolls, and a flex column would let a long song history shrink.
-   The inline paddingTop/paddingBottom (header/footer heights) override the
-   top and bottom of the shorthand below; only the gutter survives. */
+/* The Account column: plain document flow — the page scrolls, not this box.
+   See SettingsView.css for why nothing here is sized in JS. */
 .container {
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--gap-4) var(--gutter) var(--gap-5);
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  padding:
+    calc(var(--header-h, 0px) + var(--gap-4))
+    var(--gutter)
+    calc(var(--nav-h, 0px) + var(--gap-5));
 
   & > * + * {
     margin-top: var(--gap-4);

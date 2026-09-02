@@ -11,7 +11,6 @@ import styles from './SettingsView.css'
 
 const SettingsView = () => {
   const sliceExists = !!useAppSelector(state => state.users)
-  const ui = useAppSelector(state => state.ui)
   const dispatch = useAppDispatch()
 
   if (!sliceExists) {
@@ -25,15 +24,7 @@ const SettingsView = () => {
   }, [dispatch])
 
   return (
-    <div
-      className={styles.container}
-      style={{
-        paddingTop: ui.headerHeight,
-        paddingBottom: ui.footerHeight,
-        width: ui.contentWidth,
-        height: ui.innerHeight,
-      }}
-    >
+    <div className={styles.container}>
       <Rooms />
       <Users />
       <Player />

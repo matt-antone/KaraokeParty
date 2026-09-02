@@ -1,0 +1,41 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-4);
+}
+
+/* same ink-colored plate as the player's own QR overlay — nothing here is
+   pure white */
+.plate {
+  display: flex;
+  background: var(--ink);
+  border-radius: var(--radius-key);
+  box-shadow: var(--bevel);
+  padding: var(--gap-3);
+
+  canvas {
+    border-radius: var(--radius-key);
+  }
+}
+
+/* the URL as typeable text, for when scanning fails */
+.url {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  color: var(--ink-2);
+  user-select: all;
+}
+
+.unavailable {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-m);
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-align: center;
+}

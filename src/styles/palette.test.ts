@@ -71,10 +71,15 @@ describe('DECK palette contrast', () => {
 
   it('keeps the palette closed: no fifth signal colour', () => {
     const signals = (css.match(/^\s*--(?:vu|standby|alert)[a-z-]*:\s*#/gm) ?? []).length
-    // vu ×5, standby ×2, alert ×5 (3 signal + 2 key-face) = 12.
+    // vu ×5, standby ×3, alert ×5 (3 signal + 2 key-face) = 13.
     // If this fails you are adding a signal colour. The design system's answer
     // is that you want a different indicator, not a new hue — decide first,
     // then update this number deliberately.
-    expect(signals).toBe(12)
+    //
+    // Went 12 → 13 for --standby-dim: no new hue, it is teal's lit-but-low
+    // meter step, derived at the same lightness ratio --vu-dim has to --vu, so
+    // YourTurn's meter can read in the state's own colour. A fourth HUE would
+    // still be wrong; a missing step of an existing indicator was the gap.
+    expect(signals).toBe(13)
   })
 })

@@ -174,4 +174,19 @@ describe('DECK rules', () => {
     const fixed = search('^\\s*height:\\s*var\\(--row-(song|queue|artist)\\)', '*.css')
     expect(fixed).toEqual([])
   })
+
+  it('does not size a non-list view from the measured viewport', () => {
+    // Settings sized its column `height: ui.innerHeight` as a flex column, so
+    // every panel shrank to fit one viewport and Panel's overflow:hidden
+    // clipped the rest — nothing overflowed, so nothing scrolled, and it broke
+    // differently in every browser. CSS knows the viewport without being told.
+    // The virtualized lists are the sanctioned exception: react-window owns
+    // its scroll box and needs a real pixel height.
+    const LIST_VIEWS = /^routes\/(Library|Queue|Player)\//
+    const sized = search('(innerHeight|headerHeight|footerHeight|contentWidth)', '*.tsx')
+      .filter(row => row.includes('/views/'))
+      .filter(row => !LIST_VIEWS.test(row))
+
+    expect(sized).toEqual([])
+  })
 })

@@ -1,28 +1,20 @@
 import React, { useState, useRef } from 'react'
 import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
-import { setFilterStr, resetFilterStr, setTab, toggleFilterStarred, setFilterTag, SONG_FACETS, FILTER_FACETS } from '../../modules/library'
-import getSearchResults, { getFacetValues } from '../../selectors/getSearchResults'
+import { setFilterStr, resetFilterStr, setTab, toggleFilterStarred } from '../../modules/library'
+import getSearchResults from '../../selectors/getSearchResults'
 import Button from 'components/Button/Button'
 import Icon from 'components/Icon/Icon'
 import Tabs from 'components/Tabs/Tabs'
 import styles from './LibraryHeader.css'
 
 /**
- * The library's whole control surface, in three rows: search, facet keys, tabs.
- *
- * Facets used to be four native selects, each labelled with an emoji so they
- * fit on one row. They are latching keys now — a lit amber key shows its state
- * without being opened, which is what you want filtering one-handed in a dark
- * room, and it retires the emoji. The store still holds one value per facet
- * category, so each key carries an invisible native select for choosing among
- * a category's values; tapping a lit key's "any" option clears it.
+ * The library's whole control surface, in two rows: search, tabs.
  */
 const LibraryHeader = () => {
   const dispatch = useAppDispatch()
-  const { filterStr, filterStarred, filterTags, tab } = useAppSelector(state => state.library)
+  const { filterStr, filterStarred, tab } = useAppSelector(state => state.library)
   const { artistsResult, songsResult } = useAppSelector(getSearchResults)
-  const facetValues = useAppSelector(getFacetValues)
 
   const searchInput = useRef<HTMLInputElement>(null)
   const [value, setValue] = useState(filterStr)
@@ -72,38 +64,6 @@ const LibraryHeader = () => {
         >
           ★
         </button>
-      </div>
-
-      <div className={styles.facetRow}>
-        {FILTER_FACETS.map((facet) => {
-          const i = SONG_FACETS.indexOf(facet)
-          const values = facetValues[i]
-          const active = filterTags[i]
-          const isEmpty = values.length === 0
-
-          return (
-            <span
-              key={facet}
-              className={clsx(
-                styles.facetKey,
-                active && styles.facetKeyOn,
-                isEmpty && !active && styles.facetKeyDisabled,
-              )}
-            >
-              <span className={styles.facetLabel}>{active || facet}</span>
-              <select
-                className={styles.facetSelect}
-                aria-label={facet}
-                disabled={isEmpty}
-                value={active}
-                onChange={e => dispatch(setFilterTag({ index: i, value: e.target.value }))}
-              >
-                <option value=''>{`any ${facet}`}</option>
-                {values.map(tag => <option key={tag} value={tag}>{tag}</option>)}
-              </select>
-            </span>
-          )
-        })}
       </div>
 
       <div className={styles.tabRow}>

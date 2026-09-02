@@ -49,6 +49,7 @@
 
   /* indicator — teal. Queued, standby, "armed but not running". */
   --standby: #35c8b0;
+  --standby-dim: #1a6458;    /* lit-but-low meter segments, as --vu-dim is to --vu */
   --standby-well: #17211f;
 
   /* fault */
@@ -144,6 +145,11 @@
 
   --gutter: 14px;
 
+  /* Widest a reading column gets before it centres in the viewport. Mirrors
+     MAX_CONTENT_WIDTH in store/modules/ui.ts, which the virtualized lists
+     still need as a number. */
+  --content-max: 768px;
+
   --target: 44px;         /* absolute minimum for anything tappable */
   --target-l: 46px;       /* transport keys */
 
@@ -167,7 +173,7 @@
   /* ================================================================== */
   /* LEGACY ALIASES — old Karaoke Eternal names, re-pointed onto DECK.   */
   /* Do not add to this block. Delete entries as components adopt the    */
-  /* DECK tokens above. Three left.                                     */
+  /* DECK tokens above. One left.                                       */
   /* ================================================================== */
 
   /* Michroma. Still overriding TextOverlay's silkscreen on the library's

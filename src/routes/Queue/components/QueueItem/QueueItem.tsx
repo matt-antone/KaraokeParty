@@ -92,7 +92,7 @@ const QueueItem = ({
     ? []
     : [
         isMovable && { icon: 'MOVE_TOP', label: 'Top', tone: 'vu', onClick: () => onMoveClick(queueId) },
-        isReplayable && { icon: 'REPLAY', label: 'Replay', tone: 'vu', onClick: () => dispatch(requestReplay(queueId)) },
+        isReplayable && { icon: 'REPLAY', label: 'Replay', tone: 'alert', onClick: () => dispatch(requestReplay(queueId)) },
         isSkippable && { icon: 'PLAY_NEXT', label: 'Skip', tone: 'alert', onClick: () => dispatch(requestPlayNext()) },
         isRemovable && { icon: 'DELETE', label: 'Remove', tone: 'alert', onClick: () => dispatch(removeItem({ queueId })) },
       ].filter(Boolean) as SwipeAction[]

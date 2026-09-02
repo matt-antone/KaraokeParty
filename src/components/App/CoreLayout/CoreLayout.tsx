@@ -18,13 +18,23 @@ const CoreLayout = () => {
   const headerRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLDivElement>(null)
 
+  // Published as CSS vars as well as to the store: routes that are plain
+  // document flow (Account, Settings) clear the fixed chrome in CSS, so they
+  // never size themselves in JS and stay correct at any viewport. The store
+  // copies remain for the virtualized lists, which need real pixel heights.
   useResizeObserver({
-    onResize: ({ height }) => { dispatch(setHeaderHeight(height)) },
+    onResize: ({ height }) => {
+      dispatch(setHeaderHeight(height))
+      document.documentElement.style.setProperty('--header-h', `${height ?? 0}px`)
+    },
     ref: headerRef,
   })
 
   useResizeObserver({
-    onResize: ({ height }) => { dispatch(setFooterHeight(height)) },
+    onResize: ({ height }) => {
+      dispatch(setFooterHeight(height))
+      document.documentElement.style.setProperty('--nav-h', `${height ?? 0}px`)
+    },
     ref: navRef,
   })
 

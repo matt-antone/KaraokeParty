@@ -13,7 +13,7 @@ import type { ListImperativeAPI, RowComponentProps } from 'react-window'
 // estimates only: rows are measured once rendered (see PaddedList), because a
 // song title always shows in full and a wrapped title makes the row taller
 const ROW_HEIGHT_ARTIST = 47 // --row-artist + seam rule
-const ROW_HEIGHT_SONG = 62 // --row-song + --gap-2 margin
+const ROW_HEIGHT_SONG = 59 // --row-song + 3px margin
 
 interface ArtistListProps {
   ui: RootState['ui']
@@ -122,9 +122,10 @@ const ArtistList = ({
         numRows={artists.result.length}
         onRowsRendered={handleRowsRendered}
         onRef={handleRef}
-        paddingTop={ui.headerHeight}
+        paddingTop={ui.headerHeight + 14}
         paddingRight={30} // width of AlphaPicker
-        paddingBottom={ui.footerHeight}
+        paddingBottom={ui.footerHeight + 20}
+        paddingLeft={14}
         width={ui.innerWidth}
         height={ui.innerHeight}
       />

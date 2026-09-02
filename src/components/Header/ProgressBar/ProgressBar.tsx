@@ -46,7 +46,8 @@ export default class ProgressBar extends React.Component<ProgressBarProps> {
             className={props.isActive ? styles.cancel : styles.close}
             icon='CLEAR'
             onClick={this.handleCancelClick}
-            size={40}
+            size={22}
+            aria-label={props.isActive ? 'Stop scan' : 'Dismiss'}
           />
         </div>
         {/* peaking off: a scan at 90% is good news, so it must never flash red */}

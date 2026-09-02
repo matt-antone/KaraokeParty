@@ -1,5 +1,7 @@
-/* the gutter comes from AccountView's column */
+/* the gutter comes from AccountView's column. Width in CSS, not JS: two
+   thirds of the reading column, never narrower than a form field's 340px. */
 .container {
+  max-width: max(340px, min(66vw, calc(var(--content-max) * 0.66)));
   margin: 0 auto;
   overflow: hidden;
 }

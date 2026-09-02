@@ -7,7 +7,6 @@ const getArtists = (state: RootState) => state.artists
 const getSongs = (state: RootState) => state.songs
 const getFilterStr = (state: RootState) => state.library.filterStr.trim().toLowerCase()
 const getFilterStarred = (state: RootState) => state.library.filterStarred
-const getFilterTags = (state: RootState) => state.library.filterTags
 const getStarredArtists = (state: RootState) => ensureState(state.userStars).starredArtists
 const getStarredSongs = (state: RootState) => ensureState(state.userStars).starredSongs
 
@@ -48,33 +47,13 @@ const getSongsByKeyword = createSelector(
     }).map(match => match.item as unknown as number)
   })
 
-// #2: taxonomy filters; each selected facet must match the tag at its position
-const getSongsByTags = createSelector(
-  [getSongsByKeyword, getSongs, getFilterTags],
-  (songsWithKeyword, songs, filterTags) => {
-    if (!filterTags.some(Boolean)) return songsWithKeyword
-
-    return songsWithKeyword.filter(songId =>
-      filterTags.every((tag, i) => !tag || songs.entities[songId].tags[i] === tag))
-  })
-
-// drop artists left with no matching songs, else they'd list as empty results
-const getArtistsByTags = createSelector(
-  [getArtistsByKeyword, getSongsByTags, getSongs, getFilterTags],
-  (artistsWithKeyword, songsWithTags, songs, filterTags) => {
-    if (!filterTags.some(Boolean)) return artistsWithKeyword
-
-    const artistIds = new Set(songsWithTags.map(songId => songs.entities[songId].artistId))
-    return artistsWithKeyword.filter(artistId => artistIds.has(artistId))
-  })
-
-// #3: starred/hidden filters
+// #2: starred/hidden filters
 // nothing in the UI stars an artist, so an artist also counts as starred when
 // any of its songs is; matching starredArtists alone would filter to nothing
 const getArtistsByView = createSelector(
-  [getArtistsByTags, getArtists, getFilterStarred, getStarredArtists, getStarredSongs],
-  (artistsWithTags, artists, filterStarred, starredArtists, starredSongs) =>
-    artistsWithTags.filter((artistId) => {
+  [getArtistsByKeyword, getArtists, getFilterStarred, getStarredArtists, getStarredSongs],
+  (artistsWithKeyword, artists, filterStarred, starredArtists, starredSongs) =>
+    artistsWithKeyword.filter((artistId) => {
       if (!filterStarred) return true
 
       return starredArtists.includes(artistId)
@@ -83,23 +62,11 @@ const getArtistsByView = createSelector(
 )
 
 const getSongsByView = createSelector(
-  [getSongsByTags, getFilterStarred, getStarredSongs],
-  (songsWithTags, filterStarred, starredSongs) =>
-    songsWithTags.filter((songId) => {
+  [getSongsByKeyword, getFilterStarred, getStarredSongs],
+  (songsWithKeyword, filterStarred, starredSongs) =>
+    songsWithKeyword.filter((songId) => {
       return filterStarred ? starredSongs.includes(songId) : true
     }),
-)
-
-// options offered per facet: values present among songs matching every *other* active
-// filter, so choosing one facet narrows the rest (the selected value always survives)
-export const getFacetValues = createSelector(
-  [getSongsByKeyword, getSongs, getFilterTags, getFilterStarred, getStarredSongs],
-  (songIds, songs, filterTags, filterStarred, starredSongs) =>
-    filterTags.map((_, i) => [...new Set(songIds
-      .filter(songId => (!filterStarred || starredSongs.includes(songId))
-        && filterTags.every((tag, j) => j === i || !tag || songs.entities[songId].tags[j] === tag))
-      .map(songId => songs.entities[songId].tags[i])
-      .filter(Boolean))].sort()),
 )
 
 const getSearchResults = createSelector(
