@@ -27,3 +27,11 @@
     flex: 1;
   }
 }
+
+/* the folder being removed, quoted back in mono so it reads as a path */
+.removePath {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+}

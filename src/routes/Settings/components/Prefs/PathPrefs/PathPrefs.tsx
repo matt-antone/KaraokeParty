@@ -8,8 +8,10 @@ import PathChooser from './PathChooser/PathChooser'
 import PathInfo from './PathInfo/PathInfo'
 import PathItem from './PathItem/PathItem'
 import Button from 'components/Button/Button'
+import Modal from 'components/Modal/Modal'
 import styles from './PathPrefs.css'
 import { receivePrefs, requestScan, requestScanAll, setPathPriority, setPathPrefs } from 'store/modules/prefs'
+import { showErrorMessage } from 'store/modules/ui'
 import type { Path } from 'shared/types'
 
 const api = new HttpApi('prefs/path')
@@ -18,6 +20,7 @@ const PathPrefs = () => {
   const paths = useAppSelector(state => state.prefs.paths)
   const [isChoosing, setChoosing] = useState(false)
   const [editingPath, setEditingPath] = useState<Path | null>(null)
+  const [removingPath, setRemovingPath] = useState<Path | null>(null)
   const [priority, setPriority] = useState(paths.result)
 
   const handleCloseChooser = () => setChoosing(false)
@@ -61,21 +64,33 @@ const PathPrefs = () => {
       })
   }
 
+  // Asking happens in our own Modal, not window.confirm: a browser that has
+  // been told to suppress this page's dialogs returns false from confirm and
+  // swallows alert, so the key did nothing and said nothing about it.
   const handleRemove = (pathId: number) => {
-    if (!confirm(`Remove this folder from the library?\n\n${paths.entities[pathId].path}\n\nEvery song in it disappears from the library and from anyone's queue. The files on disk are not touched.`)) {
-      return
-    }
+    const path = paths.entities[pathId]
+    if (path) setRemovingPath(path)
+  }
+
+  const handleRemoveCancel = () => setRemovingPath(null)
+
+  const handleRemoveConfirm = () => {
+    const pathId = removingPath?.pathId
+    if (pathId === undefined) return
+
+    setRemovingPath(null)
 
     // optimistically update local state
     setPriority(priority.filter(id => id !== pathId))
     setEditingPath(null)
 
     api.delete(`/${pathId}`)
-      .then((res) => {
+      .then((res): null => {
         dispatch(receivePrefs(res))
-        return
+        return null
       }).catch((err) => {
-        alert(err)
+        // a failure has to be visible even when the folder is long gone
+        dispatch(showErrorMessage(`The folder could not be removed: ${err.message || err}`))
       })
   }
 
@@ -147,6 +162,25 @@ const PathPrefs = () => {
             onUpdate={handleUpdate}
             path={editingPath}
           />
+        )}
+
+        {!!removingPath && (
+          <Modal
+            onClose={handleRemoveCancel}
+            title='Remove Folder'
+            buttons={(
+              <>
+                <Button onClick={handleRemoveConfirm} variant='danger'>Remove Folder</Button>
+                <Button onClick={handleRemoveCancel} variant='primary'>Cancel</Button>
+              </>
+            )}
+          >
+            <p className={styles.removePath}>{removingPath.path}</p>
+            <p>
+              Every song in this folder disappears from the library and from
+              anyone&rsquo;s queue. The files on disk are not touched.
+            </p>
+          </Modal>
         )}
       </div>
     </Accordion>
