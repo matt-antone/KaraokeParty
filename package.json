@@ -18,7 +18,7 @@
   "main": "./build/server/main.js",
   "engines": {
     "node": ">=24",
-    "npm": ">=11"
+    "bun": ">=1.2"
   },
   "scripts": {
     "docs:serve": "hugo serve --source docs -b http://localhost:1313 --bind 0.0.0.0",
@@ -158,6 +158,7 @@
     "redux-throttle": "^0.1.1",
     "screenfull": "^6.0.2",
     "socket.io-client": "^4.8.3",
+    "terser-webpack-plugin": "^5.6.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
@@ -171,5 +172,5 @@
     "webpack-hot-middleware": "^2.26.1",
     "webpack-node-externals": "^3.0.0"
   },
-  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1"
+  "packageManager": "bun@1.2.4"
 }

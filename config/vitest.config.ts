@@ -32,7 +32,9 @@ export default defineConfig({
   test: {
     // build/ holds compiled copies of the server tests; running them twice just
     // reports the setup file's logger init against the wrong module instance
-    exclude: [...configDefaults.exclude, 'build/**'],
+    // .claude/worktrees holds full checkouts of this same repo; without this,
+    // a run from the repo root collects every worktree's copy of every test
+    exclude: [...configDefaults.exclude, 'build/**', '.claude/**'],
     setupFiles: [path.resolve(__dirname, '../server/lib/test-setup.ts')],
   },
 })

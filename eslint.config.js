@@ -32,7 +32,12 @@ export default defineConfig(
   {
     // the handoff deck is design reference, not production code — its .jsx are
     // prototypes to read, and its icon map is generated. Not ours to lint.
-    ignores: ['build/**', 'docs/**', 'dist/**', 'node_modules/**', 'design_handoff_karaokeparty_deck/**'],
+    // .claude/worktrees holds full checkouts of this same repo, so a run from
+    // the repo root would lint every worktree's copy of every file
+    ignores: [
+      'build/**', 'docs/**', 'dist/**', 'node_modules/**',
+      'design_handoff_karaokeparty_deck/**', '.claude/**',
+    ],
   },
   // client-only config
   {
