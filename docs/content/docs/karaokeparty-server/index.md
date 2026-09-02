@@ -187,8 +187,25 @@ KaraokeParty Server supports the following CLI options and environment variables
 | <span style="white-space: nowrap;">`--scannerLogLevel <number>`</span>| <span style="white-space: nowrap;">`KES_SCANNER_LOG_LEVEL`</span> | Media scanner log file level | 3 |
 | <span style="white-space: nowrap;">`--serverConsoleLevel <number>`</span>| <span style="white-space: nowrap;">`KES_SERVER_CONSOLE_LEVEL`</span> | Web server console output level | 4 |
 | <span style="white-space: nowrap;">`--serverLogLevel <number>`</span>| <span style="white-space: nowrap;">`KES_SERVER_LOG_LEVEL`</span> | Web server log file level | 3 |
+| <span style="white-space: nowrap;">`--serverUrl <string>`</span>| <span style="white-space: nowrap;">`KES_SERVER_URL`</span> | Absolute `http(s)` URL guests reach the server at, used for join QR codes. See [Stable addresses](#stable-addresses) | current LAN IP |
 | <span style="white-space: nowrap;">`--urlPath <string>`</span>| <span style="white-space: nowrap;">`KES_URL_PATH`</span> | Web server base URL path (must begin with a forward slash) | / |
 | <span style="white-space: nowrap;">`-v, --version`</span>| | Show version and exit | |
+
+### Stable addresses
+
+By default the join QR encodes the server's current LAN IP. That works for a one-off party, but an IP is an address rather than an identity: it changes when you take the server to a different venue, and it can change at the same venue when the DHCP lease renews.
+
+This matters if guests add the app to their home screen. An install freezes whatever URL it was added from, and a standalone window has no address bar to correct it, so a changed IP leaves a dead icon. Worse, private ranges are heavily reused, so the old address may reach some unrelated device on the new network.
+
+Set `--serverUrl` to a name that follows the server between networks and the QR, the install and the icon all agree:
+
+```
+karaokeparty-server --serverUrl http://karaokeparty.local:8080
+```
+
+A Bonjour `.local` name is the simplest option, and iOS and macOS resolve it with no setup on the guest's phone. macOS hosts already answer `<computer-name>.local`; on Linux this needs Avahi, and on Windows the Bonjour service. A tunnel or reverse proxy hostname works too, and an `https` one additionally unlocks the browser features that require a secure context.
+
+The value is used verbatim, so include the port and any base path. It is ignored (with a warning, falling back to the LAN IP) unless it parses as an `http` or `https` URL — note that `karaokeparty.local:8080` is *not* one, since it has no scheme.
 
 ## File Locations
 
