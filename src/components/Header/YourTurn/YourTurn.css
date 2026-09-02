@@ -1,0 +1,119 @@
+/* Your Turn — the singer's own channel strip, and the app's header.
+
+   Every state is the same object: a recessed, tinted well with an accent
+   headline — the treatment the library already gives a queued song row. Only
+   the tint changes, and it is the state:
+
+     on stage  --vu-well       amber, the channel that is live
+     standby   --standby-well  teal, armed but not running
+     paused    --key-well      neutral, a dead channel
+
+   No new colour enters the palette to do this; each well already exists as the
+   panel-value form of its signal. The strip is recessed rather than raised
+   because it reports status — it is not a key you press. The one key it
+   carries stays raised, because that one you do press.
+
+   One row, not a stack: this sits above every screen on a phone, so the four
+   stacked blocks it used to be spent ~130px of the viewport saying two things.
+   Wait and meter read side by side; the pause key is icon-only and names
+   itself through aria-label. */
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: var(--gap-2) var(--gap-4);
+  background-color: var(--key-well);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--well);
+  overflow: hidden;
+}
+
+/* machined into the chrome: no radius of its own, seamed above and ruled below */
+.inHeader {
+  border-radius: 0;
+  border-top: var(--seam-rule);
+  border-bottom: var(--hair-rule);
+}
+
+/* on stage: the live channel, amber */
+.onStage {
+  background-color: var(--vu-well);
+}
+
+/* queued but not yet up: armed, not running */
+.standby {
+  background-color: var(--standby-well);
+}
+
+.standby .wait {
+  color: var(--standby);
+}
+
+/* the meter reads in the state's own colour: re-point the two tokens its
+   segments are painted from rather than teaching VuMeter about channels.
+   Peaking is already off here (peakFrom > 1), so no red enters the strip. */
+.standby .meter {
+  --vu-dim: var(--standby-dim);
+  --vu: var(--standby);
+}
+
+/* paused is a visibly dead channel: the meter empties and the wait goes cold */
+.paused .wait {
+  color: var(--ink-3);
+}
+
+.headline {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.legend {
+  margin-bottom: 3px;
+}
+
+/* the one number in the app set in Michroma: it has to be readable at arm's
+   length, in a dark room, by someone holding a drink */
+.wait {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--vu);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* the meter takes the slack so the strip reflows instead of wrapping */
+.meter {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The label names the singer's next song. This ellipsises it, which is a
+   knowing exception to "song titles are never truncated, site-wide": the strip
+   sits above every screen, and letting a long title wrap costs a whole row of
+   viewport on the one surface that is always on screen. The untruncated title
+   is one tap away on the Queue's Me tab.
+   ponytail: exception taken deliberately for the header strip only — if this
+   spreads to a second surface, fix the rule instead of repeating the escape. */
+.label {
+  margin-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songCount {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Button is width:100% by default, which would eat the row */
+.pauseKey {
+  flex: 0 0 auto;
+  width: var(--target);
+  min-height: var(--target);
+}

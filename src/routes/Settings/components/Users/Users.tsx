@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { closeUserEditor, fetchUsers, filterByOnline, filterByRoom, openUserEditor, type UserWithRoomsAndRole } from '../../modules/users'
-import { formatDateTime } from 'lib/dateTime'
+import { formatShortDate } from 'lib/dateTime'
 import Panel from 'components/Panel/Panel'
 import Button from 'components/Button/Button'
 import EditUser from './EditUser/EditUser'
@@ -58,7 +58,7 @@ const Users = () => {
           </td>
         )}
         <td>{user.role}</td>
-        <td>{formatDateTime(new Date(user.dateCreated * 1000))}</td>
+        <td>{formatShortDate(new Date(user.dateCreated * 1000))}</td>
       </tr>
     )
   })
@@ -96,8 +96,7 @@ const Users = () => {
           </tbody>
         </table>
 
-        <br />
-        <Button onClick={handleOpen} variant='primary'>
+        <Button className={styles.createBtn} onClick={handleOpen} variant='default'>
           Create User
         </Button>
 

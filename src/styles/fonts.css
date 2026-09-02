@@ -1,6 +1,17 @@
-@font-face {
-  font-family: 'Beon';
-  font-style: normal;
-  font-weight: normal;
-  src: url('~fonts/beon.woff2') format('woff2');
-}
+/* DECK uses three Google faces:
+
+   Michroma       — display. Wordmark, player headlines, big numerals.
+   Figtree        — body. Everything read as a sentence or a song title.
+   JetBrains Mono — silkscreen. Labels, counts, waits, meter legends.
+
+   ponytail: loaded from the Google Fonts CDN because no licensed binaries
+   shipped with the rebrand. This is the one thing here that needs internet,
+   and KaraokeParty's whole deployment model is a server on a LAN — a party
+   in a basement with no uplink gets the system-ui fallbacks instead of the
+   brand. Upgrade path: `npm i @fontsource/michroma @fontsource/figtree
+   @fontsource-variable/jetbrains-mono` and swap this @import for their
+   imports, or drop the woff2 files in docs/assets/fonts/ (already aliased
+   to `~fonts` in config/webpack.config.js) and write real @font-face rules.
+   Nothing else in the system changes — every family is referenced through
+   --font-display / --font-body / --font-mono, each with a fallback stack. */
+@import url('https://fonts.googleapis.com/css2?family=Michroma&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');

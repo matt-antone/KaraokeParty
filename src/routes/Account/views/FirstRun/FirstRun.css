@@ -1,27 +1,20 @@
+/* the gutter comes from AccountView's column. Width in CSS, not JS: two
+   thirds of the reading column, never narrower than a form field's 340px. */
 .container {
+  max-width: max(340px, min(66vw, calc(var(--content-max) * 0.66)));
   margin: 0 auto;
   overflow: hidden;
-  padding: var(--container-padding);
-
-  h1 {
-    margin: var(--space-l) 0 var(--space-m) 0;
-    font-family: var(--font-family-custom);
-    font-size: var(--font-size-l);
-    color: hsl(var(--hue-blue), 10%, 60%);
-  }
-
-  button {
-    margin-top: var(--space-s);
-  }
 }
 
-.logo {
-  margin-bottom: var(--space-xl);
-  text-align: center;
-  font-size: 30px;
+/* a section heading printed on the panel — silkscreen, via the global class */
+.heading {
+  margin: var(--gap-5) 0 var(--gap-2);
+}
 
-  @media (min-width: 42em) {
-    margin: var(--space-xl) 0;
-    font-size: 36px;
-  }
+/* read as a sentence, so Figtree */
+.blurb {
+  margin: 0 0 var(--gap-4);
+  font-size: var(--text-m);
+  line-height: 1.5;
+  color: var(--ink-2);
 }

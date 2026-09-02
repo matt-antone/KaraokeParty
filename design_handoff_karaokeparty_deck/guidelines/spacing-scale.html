@@ -1,0 +1,27 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Layout unit" subtitle="A 2px unit: seams at 2, key gaps at 6-10, gutter at 14" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { padding: 16px; }
+  .grid { display: grid; gap: 6px; }
+  .sw { height: 46px; border-radius: var(--radius-key); display: flex; align-items: flex-end; padding: 5px; box-sizing: border-box; }
+  .sw span { font-family: var(--font-mono); font-size: 8.5px; white-space: nowrap; }
+  .lbl { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+  .note { font-family: var(--font-mono); font-size: 10.5px; line-height: 1.7; color: var(--ink-2); margin: 12px 0 0; }
+  .row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  
+</style>
+</head>
+<body>
+
+<div style="display:flex;align-items:flex-end;gap:18px">
+<div style="text-align:center"><div style="width:2px;height:14px;background:var(--vu);border-radius:1px"></div><span class="lbl" style="display:block;margin-top:6px">2</span><span class="lbl">--gap-1</span></div><div style="text-align:center"><div style="width:6px;height:14px;background:var(--vu);border-radius:1px"></div><span class="lbl" style="display:block;margin-top:6px">6</span><span class="lbl">--gap-2</span></div><div style="text-align:center"><div style="width:10px;height:20px;background:var(--vu);border-radius:1px"></div><span class="lbl" style="display:block;margin-top:6px">10</span><span class="lbl">--gap-3</span></div><div style="text-align:center"><div style="width:14px;height:28px;background:var(--vu);border-radius:1px"></div><span class="lbl" style="display:block;margin-top:6px">14</span><span class="lbl">--gap-4</span></div><div style="text-align:center"><div style="width:20px;height:40px;background:var(--vu);border-radius:1px"></div><span class="lbl" style="display:block;margin-top:6px">20</span><span class="lbl">--gap-5</span></div><div style="text-align:center"><div style="width:28px;height:56px;background:var(--vu);border-radius:1px"></div><span class="lbl" style="display:block;margin-top:6px">28</span><span class="lbl">--gap-6</span></div>
+</div>
+<p class="note">--gap-4 (14px) is the screen gutter and the standard panel padding. --gap-1 (2px) is only ever the seam between adjacent keys.</p>
+
+</body>
+</html>

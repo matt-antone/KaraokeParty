@@ -2,20 +2,22 @@
   display: flex;
   position: relative;
   overflow: hidden;
-  min-width: 96px;
-  height: 96px;
-  border-radius: var(--border-radius);
+  min-width: var(--avatar-form);
+  height: var(--avatar-form);
+  border-radius: var(--radius-key);
   align-items: center;
   cursor: pointer;
-  background-color: var(--btn-bg-color);
+  background-color: var(--key-well);
+  box-shadow: var(--well);
 
   svg {
     margin: 0 auto;
-    color: #000;
+    color: var(--ink-5);
   }
 
   &:has(:focus-visible) {
     outline: var(--focus-outline);
+    outline-offset: 2px;
   }
 }
 
@@ -23,7 +25,6 @@
   cursor: inherit;
   display: block;
   font-size: 999px;
-  filter: alpha(opacity=0);
   min-height: 100%;
   min-width: 100%;
   opacity: 0;
@@ -37,14 +38,15 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 99;
+  z-index: 2;
+  min-width: var(--target);
+  min-height: var(--target);
 
   svg {
-    color: hsl(var(--hue-pink), 100%, 70%);
-    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 1));
+    color: var(--alert);
   }
 }
 
 .placeholder {
-  color: var(--btn-bg-color);
+  color: var(--ink-5);
 }

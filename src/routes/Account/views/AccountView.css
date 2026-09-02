@@ -1,10 +1,14 @@
+/* The Account column: plain document flow — the page scrolls, not this box.
+   See SettingsView.css for why nothing here is sized in JS. */
 .container {
+  max-width: var(--content-max);
   margin: 0 auto;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  padding:
+    calc(var(--header-h, 0px) + var(--gap-4))
+    var(--gutter)
+    calc(var(--nav-h, 0px) + var(--gap-5));
 
-  & > div {
-    margin: var(--space-m) auto;
+  & > * + * {
+    margin-top: var(--gap-4);
   }
 }

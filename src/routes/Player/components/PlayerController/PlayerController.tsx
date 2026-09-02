@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import Player from '../Player/Player'
+import PlayerBackdrop from '../PlayerBackdrop/PlayerBackdrop'
 import PlayerTextOverlay from '../PlayerTextOverlay/PlayerTextOverlay'
 import PlayerQR from '../PlayerQR/PlayerQR'
 import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
@@ -29,8 +30,12 @@ const PlayerController = (props: PlayerControllerProps) => {
   const nextQueueItem = queue.entities[queue.result[nextIdx]]
   // the two singers after the next one, shown during the intermission
   const comingUpQueueItems = queue.result.slice(nextIdx + 1, nextIdx + 3).map(id => queue.entities[id])
+  const comingUpSongTitles = useAppSelector(state => comingUpQueueItems.map(item => state.songs.entities[item.songId]?.title))
   const nextSong = useAppSelector(state => nextQueueItem ? state.songs.entities[nextQueueItem.songId] : undefined)
   const nextArtist = useAppSelector(state => nextSong ? state.artists.entities[nextSong.artistId] : undefined)
+  // the corner panel names the singer *and* their song, so the player needs the current one too
+  const song = useAppSelector(state => queueItem ? state.songs.entities[queueItem.songId] : undefined)
+  const artist = useAppSelector(state => song ? state.artists.entities[song.artistId] : undefined)
 
   const dispatch = useAppDispatch()
   // set only when a song ends on its own; stays until the next one does. It's stamped with what
@@ -223,13 +228,18 @@ const PlayerController = (props: PlayerControllerProps) => {
     }
   }, [handleStatus, player.isErrored, player.isPlaying])
 
+  // the media layer covers the stage completely; the thread field behind it stops
+  // drawing whenever it does
+  const isMediaVisible = !!queueItem && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt
+
   return (
     <>
+      <PlayerBackdrop isCovered={isMediaVisible} />
       <Player
         cdgAlpha={player.cdgAlpha}
         cdgSize={player.cdgSize}
         isPlaying={player.isPlaying}
-        isVisible={!!queueItem && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt}
+        isVisible={isMediaVisible}
         isReplayGainEnabled={prefs.isReplayGainEnabled}
         isVideoKeyingEnabled={!!queueItem?.isVideoKeyingEnabled}
         isWebGLSupported={player.isWebGLSupported}
@@ -254,8 +264,12 @@ const PlayerController = (props: PlayerControllerProps) => {
         queueItem={queueItem as QueueItem}
         nextQueueItem={nextQueueItem as QueueItem}
         comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+        comingUpSongTitles={comingUpSongTitles}
+        songTitle={song?.title}
+        songArtist={artist?.name}
         nextSongTitle={nextSong?.title}
         nextSongArtist={nextArtist?.name}
+        queueDepth={Math.max(0, queue.result.length - nextIdx)}
         isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
         isAtQueueEnd={player.isAtQueueEnd}
         isQueueEmpty={!queue.result.length}

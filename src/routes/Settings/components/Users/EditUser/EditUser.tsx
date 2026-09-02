@@ -21,7 +21,7 @@ const EditUser = ({ user, onClose }: EditUserProps) => {
   }
 
   const handleRemoveClick = () => {
-    if (user && confirm(`Remove user "${user.username}"?\n\nTheir queued songs will also be removed.`)) {
+    if (user && confirm(`Remove the user "${user.username}"?\n\nTheir account and every song they have queued are deleted. This cannot be undone.`)) {
       dispatch(removeUser(user.userId))
     }
   }

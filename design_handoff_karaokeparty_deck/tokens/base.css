@@ -1,0 +1,135 @@
+/* Element defaults. Native inputs and selects are styled here as recessed wells,
+   so a plain <input> is already on-brand and the kit needs no TextInput component. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background-color: var(--chassis);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-l);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.scroll-lock {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+a {
+  color: var(--vu);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a:hover {
+  color: var(--vu-hi);
+  text-decoration: underline;
+}
+
+/* the silkscreen label: a utility because it is used on every panel */
+.silkscreen {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: 16px; /* never below 16px: iOS zooms the viewport on focus */
+  color: var(--ink);
+  background-color: var(--key-well);
+  border: none;
+  border-radius: var(--radius-key);
+  box-shadow: var(--well);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-3);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--well), var(--focus-ring);
+}
+
+button:focus-visible {
+  box-shadow: var(--bevel), var(--focus-ring);
+}
+
+select {
+  width: auto;
+  min-height: var(--target);
+  padding: 0 32px 0 12px;
+  font-family: var(--font-body);
+  font-size: var(--text-s);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  background-color: var(--key-well);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' height='1rem' viewBox='0 0 24 24'><path fill='%238b8d92' d='M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 1.25rem;
+  border: none;
+  border-radius: var(--radius-key);
+  box-shadow: var(--well);
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+mark {
+  color: var(--on-vu);
+  background-color: var(--vu);
+  border-radius: 2px;
+}
+
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 6px 0; }
+th:not(:last-child), td:not(:last-child) { padding-right: var(--gap-3); }
+th {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: left;
+}
+td { font-size: var(--text-m); }

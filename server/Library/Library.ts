@@ -100,6 +100,26 @@ class Library {
   }
 
   /**
+  * Count distinct songs per media path, keyed by pathId. Paths with no
+  * media (including newly-added ones) are simply absent from the result.
+  */
+  static getPathSongCounts (): Record<number, number> {
+    const query = sql`
+      SELECT pathId, COUNT(DISTINCT songId) AS numSongs
+      FROM media
+      GROUP BY pathId
+    `
+    const rows = db.all<{ pathId: number, numSongs: number }>(String(query), query.parameters)
+
+    const counts: Record<number, number> = {}
+    for (const row of rows) {
+      counts[row.pathId] = row.numSongs
+    }
+
+    return counts
+  }
+
+  /**
   * Get single song in format similar to get()
   */
   static getSong (songId: number): Record<number, Song> {

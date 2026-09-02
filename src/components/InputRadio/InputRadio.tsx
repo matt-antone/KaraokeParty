@@ -27,7 +27,7 @@ const InputRadio = ({
         onChange={handleChange}
         {...rest}
       />
-      {label}
+      <span className={styles.label}>{label}</span>
     </label>
   )
 }

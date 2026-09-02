@@ -1,25 +1,20 @@
 import React, { useState, useRef } from 'react'
 import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
-import { setFilterStr, resetFilterStr, setTab, toggleFilterStarred, setFilterTag, SONG_FACETS, FILTER_FACETS } from '../../modules/library'
-import getSearchResults, { getFacetValues } from '../../selectors/getSearchResults'
+import { setFilterStr, resetFilterStr, setTab, toggleFilterStarred } from '../../modules/library'
+import getSearchResults from '../../selectors/getSearchResults'
 import Button from 'components/Button/Button'
+import Icon from 'components/Icon/Icon'
+import Tabs from 'components/Tabs/Tabs'
 import styles from './LibraryHeader.css'
 
-// each facet gets an emoji so all of them fit on one row
-const FACET_EMOJI: Record<string, string> = {
-  genre: '🎵',
-  subgenre: '♪',
-  decade: '📅',
-  vibe: '✨',
-}
-
+/**
+ * The library's whole control surface, in two rows: search, tabs.
+ */
 const LibraryHeader = () => {
   const dispatch = useAppDispatch()
-  const { filterStr, filterStarred, filterTags, tab } = useAppSelector(state => state.library)
+  const { filterStr, filterStarred, tab } = useAppSelector(state => state.library)
   const { artistsResult, songsResult } = useAppSelector(getSearchResults)
-  const facetValues = useAppSelector(getFacetValues)
-  const hasFilterTags = filterTags.some(Boolean)
 
   const searchInput = useRef<HTMLInputElement>(null)
   const [value, setValue] = useState(filterStr)
@@ -34,23 +29,19 @@ const LibraryHeader = () => {
     dispatch(resetFilterStr())
   }
 
-  const handleMagnifierClick = () => {
-    if (value.trim()) clearSearch()
-    else searchInput.current?.focus()
-  }
-
   return (
     <div className={styles.container}>
       <div className={styles.searchRow}>
-        <Button
-          className={clsx(styles.btnMagnifier, filterStr && styles.active)}
+        <Icon
           icon='MAGNIFIER'
-          onClick={handleMagnifierClick}
+          size={24}
+          className={clsx(styles.magnifier, filterStr && styles.magnifierActive)}
         />
         <input
           type='search'
           className={styles.searchInput}
           placeholder='search'
+          aria-label='Search the library'
           value={value}
           onChange={handleChange}
           ref={searchInput}
@@ -58,78 +49,32 @@ const LibraryHeader = () => {
         {filterStr && (
           <Button
             icon='CLEAR'
+            size={24}
+            aria-label='Clear search'
             onClick={clearSearch}
-            className={clsx(styles.btnClear, styles.active)}
+            className={styles.btnClear}
           />
         )}
         <button
           type='button'
-          aria-label='starred only'
+          aria-label='Starred only'
+          aria-pressed={filterStarred}
           className={clsx(styles.btnStar, filterStarred && styles.starActive)}
           onClick={() => dispatch(toggleFilterStarred())}
         >
-          <span>⭐</span>
+          ★
         </button>
       </div>
 
-      <div className={styles.facetRow}>
-        {FILTER_FACETS.map((facet) => {
-          const i = SONG_FACETS.indexOf(facet)
-
-          return (
-            <select
-              key={facet}
-              aria-label={facet}
-              className={styles.facetSelect}
-              disabled={facetValues[i].length === 0}
-              value={filterTags[i]}
-              onChange={event => dispatch(setFilterTag({ index: i, value: event.target.value }))}
-            >
-              <option value=''>
-                {FACET_EMOJI[facet] ?? '🏷️'}
-                {' '}
-                All
-              </option>
-              {facetValues[i].map(tag => (
-                <option key={tag} value={tag}>
-                  {FACET_EMOJI[facet] ?? '🏷️'}
-                  {' '}
-                  {tag}
-                </option>
-              ))}
-            </select>
-          )
-        })}
-        <Button
-          icon='CLEAR'
-          aria-label='reset filters'
-          className={clsx(styles.btnReset, hasFilterTags && styles.resetActive)}
-          disabled={!hasFilterTags}
-          onClick={() => filterTags.forEach((_, i) => dispatch(setFilterTag({ index: i, value: '' })))}
+      <div className={styles.tabRow}>
+        <Tabs<'artists' | 'songs'>
+          active={tab}
+          onChange={id => dispatch(setTab(id))}
+          tabs={[
+            { id: 'artists', label: 'Artists', count: artistsResult.length },
+            { id: 'songs', label: 'Songs', count: songsResult.length },
+          ]}
         />
-      </div>
-
-      <div className={styles.tabRow} role='tablist'>
-        <button
-          type='button'
-          role='tab'
-          aria-selected={tab === 'artists'}
-          className={clsx(styles.tab, tab === 'artists' && styles.tabActive)}
-          onClick={() => dispatch(setTab('artists'))}
-        >
-          Artists
-          <span className={styles.tabCount}>{artistsResult.length}</span>
-        </button>
-        <button
-          type='button'
-          role='tab'
-          aria-selected={tab === 'songs'}
-          className={clsx(styles.tab, tab === 'songs' && styles.tabActive)}
-          onClick={() => dispatch(setTab('songs'))}
-        >
-          Songs
-          <span className={styles.tabCount}>{songsResult.length}</span>
-        </button>
       </div>
     </div>
   )

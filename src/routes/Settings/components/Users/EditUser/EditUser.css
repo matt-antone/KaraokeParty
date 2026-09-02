@@ -5,10 +5,10 @@
 .btnContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-s);
-  margin-top: var(--space-m);
+  gap: var(--gap-2);
+  margin-top: var(--gap-3);
 }
 
 .field {
-  margin-bottom: var(--input-margin);
+  margin-bottom: var(--gap-2);
 }

@@ -14,35 +14,47 @@
   }
 }
 
+/* A key is raised: light top edge, dark bottom edge, cast shadow. The face is a
+   vertical gradient from its -hi to its -lo. Pressing travels the face 1px down
+   over --dur-key; that travel is the feedback, nothing flashes or scales. */
 .default,
 .primary,
 .danger {
-  padding: var(--space-m);
+  /* a labelled key sets its glyph and label on one line, centred together.
+     .container makes svg a block for bare icon keys, which would otherwise
+     push the label onto a second line. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-2);
+  padding: var(--gap-3);
   width: 100%;
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-bold);
-  color: var(--btn-default-color);
-  box-shadow: var(--box-shadow);
-  border-radius: var(--border-radius);
+  font-size: var(--text-m);
+  font-weight: var(--weight-bold);
+  box-shadow: var(--bevel);
+  border-radius: var(--radius-key);
+  transition: transform var(--dur-key) var(--ease-key);
+
+  &:active {
+    transform: translateY(1px);
+  }
 }
 
 .default {
-  color: var(--text-color);
-  text-shadow: var(--text-shadow);
-  background-color: hsl(var(--hue-blue), 10%, 25%);
-  background-image: linear-gradient(180deg, hsl(var(--hue-blue), 10%, 30%) 0%, hsl(var(--hue-blue), 10%, 25%) 100%);
+  color: var(--ink);
+  background-color: var(--key);
+  background-image: var(--key-face);
 }
 
+/* on amber, text is near-black — ink on --vu is 1.85:1 and fails AA */
 .primary {
-  color: var(--text-color);
-  text-shadow: var(--text-shadow);
-  background-color: var(--btn-primary-bg-color);
-  background-image: linear-gradient(180deg, hsl(var(--hue-blue), 92%, 50%) 0%, hsl(var(--hue-blue), 92%, 45%) 100%);
+  color: var(--on-vu);
+  background-color: var(--vu);
+  background-image: var(--key-face-vu);
 }
 
 .danger {
-  color: var(--text-color);
-  text-shadow: var(--text-shadow);
-  background-color: var(--btn-danger-bg-color);
-  background-image: linear-gradient(180deg, hsl(var(--hue-pink), 62%, 50%) 0%, hsl(var(--hue-pink), 62%, 45%) 100%);
+  color: var(--ink);
+  background-color: var(--alert-key-hi);
+  background-image: var(--key-face-alert);
 }

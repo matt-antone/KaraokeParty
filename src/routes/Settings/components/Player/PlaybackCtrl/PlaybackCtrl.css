@@ -1,0 +1,38 @@
+/* Fixed order: play/pause, skip, volume knob + level meter, display. The keys
+   are square so the strip reads as a transport rather than a row of buttons. */
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+}
+
+.key {
+  flex-shrink: 0;
+  width: var(--target-l);
+  min-height: var(--target-l);
+  padding: 0;
+
+  svg {
+    height: var(--icon-l);
+  }
+}
+
+.transport svg {
+  height: var(--icon-xl);
+}
+
+/* graphite key, amber glyph: one more moment of thought than pausing */
+.next {
+  color: var(--vu);
+}
+
+/* the knob is the input, the meter is the readout — never a number */
+.volume {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--gap-2);
+}

@@ -2,52 +2,56 @@
   --track-height: 0.5rem;
   --handle-height: 3rem;
 
+  position: relative;
   height: var(--handle-height);
-  
+
   &:global(.rc-slider) {
-    position: relative;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   }
-  
+
   &:global(.rc-slider) * {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   }
-  
+
   & :global(.rc-slider-rail) {
     position: absolute;
     height: var(--track-height);
     top: calc(50% - (var(--track-height) / 2));
     width: 100%;
-    background-color: var(--transport-volume-track-color);
-    border-radius: var(--border-radius);
+    background-color: var(--key-well);
+    box-shadow: var(--well);
+    border-radius: 4px;
     cursor: pointer;
   }
-  
+
   & :global(.rc-slider-track) {
     position: absolute;
     height: var(--track-height);
     top: calc(50% - (var(--track-height) / 2));
     left: 0;
-    border-radius: var(--border-radius);
-    background-color: var(--transport-volume-track-active-color);
-    filter: var(--transport-volume-track-active-filter);
+    border-radius: 4px;
+    background-color: var(--vu);
     cursor: pointer;
   }
 }
 
+/* the machined cap: a raised key, not a knob — knobs and radios are the only
+   circles in the system. rc-slider sets `left` + `transform: translateX(-50%)`
+   inline, so vertical centering has to come from top/margin, not transform. */
 .handle {
-  cursor: pointer;
-  color: var(--btn-active-bg-color);
   position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 28px;
+  margin-top: -14px;
+  border-radius: 2px;
+  background: var(--key-face);
+  box-shadow: var(--bevel);
+  cursor: pointer;
   touch-action: pan-x;
   outline: none;
 
   &:focus-visible {
     outline: var(--focus-outline);
-  }
-
-  svg {
-    display: block;
-    height: var(--handle-height);
   }
 }

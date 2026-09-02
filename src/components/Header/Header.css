@@ -1,13 +1,44 @@
+/* The app's chrome: a solid brushed faceplate with a seam under it. No blur —
+   a deck's faceplate is opaque.
+
+   The handoff has the wordmark row scrolling away above a sticky YourTurn.
+   The page does not own the scroll — every route is its own full-viewport
+   scroller under this fixed chrome — so `position: sticky` is not available.
+   Instead the whole faceplate is translated up by --chrome-shift, which
+   Header.tsx tracks 1:1 against the active scroller and caps so that whatever
+   sits below the wordmark stays pinned. Content is padded by the header, so its top
+   and faceplate bottom both sit at headerHeight - scrollTop and stay flush
+   until the cap; past it, content scrolls under the pinned remainder. Being a
+   transform, this never changes the measured header height. */
+
 .container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  background-color: var(--chrome-bg-color);
-  border-bottom: 1px solid var(--chrome-border-color);
+  background: var(--brush);
+  border-bottom: var(--seam-rule);
+  box-shadow: var(--edge-top);
   z-index: 1;
+  transform: translateY(calc(var(--chrome-shift, 0px) * -1));
 
   &:empty {
     display: none;
   }
+}
+
+/* wordmark left, the room you are in silkscreened right */
+.wordmarkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: var(--gap-3) var(--gutter);
+}
+
+.room {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

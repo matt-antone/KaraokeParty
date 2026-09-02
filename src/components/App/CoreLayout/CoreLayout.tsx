@@ -9,7 +9,6 @@ import Button from 'components/Button/Button'
 import Header from 'components/Header/Header'
 import Navigation from 'components/Navigation/Navigation'
 import Modal from 'components/Modal/Modal'
-import SongInfo from 'components/SongInfo/SongInfo'
 import Routes from '../Routes/Routes'
 import { clearErrorMessage, setFooterHeight, setHeaderHeight } from 'store/modules/ui'
 
@@ -19,13 +18,23 @@ const CoreLayout = () => {
   const headerRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLDivElement>(null)
 
+  // Published as CSS vars as well as to the store: routes that are plain
+  // document flow (Account, Settings) clear the fixed chrome in CSS, so they
+  // never size themselves in JS and stay correct at any viewport. The store
+  // copies remain for the virtualized lists, which need real pixel heights.
   useResizeObserver({
-    onResize: ({ height }) => { dispatch(setHeaderHeight(height)) },
+    onResize: ({ height }) => {
+      dispatch(setHeaderHeight(height))
+      document.documentElement.style.setProperty('--header-h', `${height ?? 0}px`)
+    },
     ref: headerRef,
   })
 
   useResizeObserver({
-    onResize: ({ height }) => { dispatch(setFooterHeight(height)) },
+    onResize: ({ height }) => {
+      dispatch(setFooterHeight(height))
+      document.documentElement.style.setProperty('--nav-h', `${height ?? 0}px`)
+    },
     ref: navRef,
   })
 
@@ -40,11 +49,9 @@ const CoreLayout = () => {
 
       {!isPlayerRoute && <Navigation ref={navRef} />}
 
-      <SongInfo />
-
       {ui.isErrored && (
         <Modal
-          title='Oops...'
+          title='Fault'
           onClose={closeError}
           buttons={<Button variant='primary' onClick={closeError}>OK</Button>}
         >

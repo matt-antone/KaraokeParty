@@ -5,7 +5,7 @@ import { ensureState } from 'redux-optimistic-ui'
 import QueueItem from '../QueueItem/QueueItem'
 import QueueListAnimator from '../QueueListAnimator/QueueListAnimator'
 import { formatSeconds } from 'lib/dateTime'
-import { moveItem, removeUpcomingItems } from '../../modules/queue'
+import { moveItem } from '../../modules/queue'
 import getMyUpcoming from '../../selectors/getMyUpcoming'
 import getPlayerHistory from '../../selectors/getPlayerHistory'
 import getQueueSections from '../../selectors/getQueueSections'
@@ -43,10 +43,6 @@ const QueueList = () => {
     }
 
     dispatch(moveItem({ queueId: qId, prevQueueId: lastPlayed }))
-  }
-
-  const handleRemoveUpcoming = (userId: number) => {
-    dispatch(removeUpcomingItems(userId))
   }
 
   // "queue"/"me" are upcoming only; "history" is what's been sung, newest first
@@ -87,29 +83,28 @@ const QueueList = () => {
         isCurrent={isCurrent}
         key={qId}
         isErrored={isCurrent && isErrored}
-        isInfoable={user.isAdmin}
-        isMovable={isUpcoming && !isPaused && (isOwner || user.isAdmin)}
+        isMovable={isUpcoming && !isPaused && user.isAdmin && queueTab !== 'me'}
         isOwner={isOwner}
         isPaused={isPaused}
         isPlayed={!isUpcoming && !isCurrent}
         isPlaying={isCurrent && isPlaying}
         isRemovable={isUpcoming && (isOwner || user.isAdmin)}
-        isReplayable={(!isUpcoming || isCurrent) && user.isAdmin}
-        isSkippable={isCurrent && (isOwner || user.isAdmin)}
+        isReplayable={(!isUpcoming || isCurrent) && (user.isAdmin || isOwner)}
+        isSkippable={isCurrent && (user.isAdmin || isOwner)}
         isStarred={starredSongs.includes(item.songId)}
         isUpcoming={isUpcoming}
         pctPlayed={isCurrent ? position / duration * 100 : 0}
+        showStar={queueTab !== 'me'}
         starCount={starCounts.songs[item.songId] || 0}
         title={songs.entities[item.songId].title}
         wait={isPaused ? '' : formatSeconds(waits[qId], true)} // fuzzy
         // actions
         onMoveClick={handleMoveClick}
-        onRemoveUpcoming={handleRemoveUpcoming}
       />
     )
   }
 
-  if (queueTab === 'me' && result.length > 1) {
+  if ((queueTab === 'me' || (queueTab === 'queue' && user.isAdmin)) && result.length > 1) {
     return (
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId='myQueue'>

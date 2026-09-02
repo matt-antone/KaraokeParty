@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
-import { formatDateTime } from 'lib/dateTime'
+import { formatShortDate } from 'lib/dateTime'
 import Panel from 'components/Panel/Panel'
 import Button from 'components/Button/Button'
 import EditRoom from './EditRoom/EditRoom'
@@ -50,7 +50,7 @@ const Rooms = () => {
             </>
           )}
         </td>
-        <td>{formatDateTime(new Date(room.dateCreated * 1000))}</td>
+        <td>{formatShortDate(new Date(room.dateCreated * 1000))}</td>
       </tr>
     )
   })
@@ -79,8 +79,7 @@ const Rooms = () => {
           </tbody>
         </table>
 
-        <br />
-        <Button onClick={handleOpen} variant='primary'>
+        <Button className={styles.createBtn} onClick={handleOpen} variant='default'>
           Create Room
         </Button>
 

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KaraokeParty — player</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+
+  body { margin: 0; padding: var(--gap-5); display: flex; flex-direction: column;
+         align-items: center; gap: var(--gap-4); }
+
+  /* The player runs fullscreen on the room's machine. Here it is a 16:9 board,
+     and the overlay is sized in cqh so vh-authored values scale inside it. */
+  .board { width: 100%; max-width: 1100px; }
+  .key { display: inline-flex; align-items: center; justify-content: center; gap: var(--gap-2);
+         min-width: var(--target); min-height: var(--target); border: none; border-radius: var(--radius-key);
+         cursor: pointer; font-family: var(--font-body); font-size: var(--text-m); font-weight: var(--weight-bold);
+         background-image: var(--key-face); color: var(--ink); box-shadow: var(--bevel);
+         transition: transform var(--dur-key) var(--ease-key); }
+  .key:active { transform: translateY(1px); }
+  .key.vu { background-image: var(--key-face-vu); color: var(--on-vu); }
+  .vumeter { display: flex; gap: var(--gap-1); height: 12px; width: 100%; }
+  .vumeter i { flex: 1; border-radius: 1px; background: var(--vu-well); }
+  .vumeter i.on { background: var(--vu-dim); }
+  .vumeter i.hot { background: var(--vu); }
+
+  .stage { container-type: size; position: relative; aspect-ratio: 16 / 9; overflow: hidden;
+           background: var(--chassis-deep); border-radius: var(--radius-panel);
+           box-shadow: var(--well); }
+
+  /* every player value is authored in vh against the stage, so read cqh here */
+  .stage .sk { font-family: var(--font-mono); font-size: 1.4cqh; letter-spacing: var(--silkscreen-tracking);
+               text-transform: uppercase; color: var(--ink-2); }
+  .headline { font-family: var(--font-display); font-size: 5.5cqh; letter-spacing: .1em; line-height: 1.1;
+              text-transform: uppercase; color: var(--ink); text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  .headline.vu { color: var(--vu); }
+
+  /* the thread field: bundles of amber threads drifting across the stage, each
+     fan bending with distance. Canvas 2D, additive, capped at 30fps, and stopped
+     outright whenever video covers it. */
+  .threads { position: absolute; inset: 0; background: var(--chassis-deep); }
+  .threads canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* the fullscreen key only floats over the paused stage — nothing else competes there */
+  .key.fs { position: absolute; top: 2cqh; right: 2cqh; width: var(--target-l); min-height: var(--target-l); }
+  .key.fs svg { width: 3cqh; height: 3cqh; }
+
+  .media { position: absolute; inset: 0; }
+  .media[data-kind="cdg"] { background: linear-gradient(165deg, #131b24, #05070a); }
+  .media[data-kind="mp4"] { background: linear-gradient(150deg, #2b2419, #141a1f 55%, #05070a); }
+  .media[data-kind="visualizer"] { background:
+      radial-gradient(120% 90% at 28% 18%, #3a2a12, transparent 60%),
+      radial-gradient(110% 80% at 76% 72%, #1b2b33, transparent 60%), #04060a; }
+  .media .stamp { position: absolute; inset: 0; display: grid; place-items: center; opacity: .4; }
+  .lyrics { position: absolute; left: 0; right: 0; bottom: 11%; text-align: center;
+            font-family: var(--font-body); font-weight: 600; font-size: 3.6cqh; line-height: 1.3;
+            color: #fff; text-shadow: 0 3px 10px #000; }
+  .lyrics .past { opacity: .5; }
+
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column;
+             align-items: center; justify-content: center; }
+  /* no wash on intermission: the dot field is the background */
+  .overlay[data-wash] { background: none; }
+
+  /* overlays over playing video are solid corner panels, top-right, so the lower
+     two-thirds stays clear for lyrics */
+  .corner { position: absolute; top: 2cqh; right: 2cqh; max-width: 46cqw; padding: 1.4cqh 2cqh;
+            background: var(--brush); border: 1px solid var(--hairline);
+            border-radius: var(--radius-panel); box-shadow: var(--bevel); }
+  .corner .who { font-size: 2cqh; font-weight: var(--weight-semibold); color: var(--ink);
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .corner.onstage .who { color: var(--vu); }
+  .corner .song { margin-top: .6cqh; padding-top: .6cqh; border-top: var(--hair-rule); }
+  .corner .song b { display: block; font-size: 1.6cqh; font-weight: var(--weight-medium); line-height: 1.25;
+                    text-wrap: pretty; color: var(--ink); }
+  .corner .song span { font-size: 1.4cqh; color: var(--ink-2); white-space: nowrap; overflow: hidden;
+                       text-overflow: ellipsis; display: block; }
+  .corner .sk { font-size: 1.1cqh; margin-bottom: .5cqh; }
+
+  /* the join code parks in the lower-right, out of the lyric band */
+  .qr { position: absolute; right: 2cqh; bottom: 2cqh; display: grid; place-items: center;
+        width: 13cqh; height: 13cqh; background: var(--ink); color: var(--chassis);
+        border-radius: var(--radius-key); box-shadow: var(--bevel); }
+  .qr svg { width: 10cqh; height: 10cqh; }
+
+  .depth { position: absolute; left: 2cqh; right: 2cqh; bottom: 2cqh; display: flex;
+           align-items: center; gap: 1.5cqh; }
+  .depth[data-qr] { right: 17cqh; }
+  .depth .sk { font-size: 1.1cqh; flex-shrink: 0; }
+  .depth .vumeter { height: 5cqh; max-height: 6px; }
+
+  .bigplay { display: grid; place-items: center; width: 26cqh; height: 26cqh;
+             border-radius: var(--radius-round); background: linear-gradient(145deg, #3a3d42, #1a1c1e);
+             box-shadow: var(--bevel); border: none; color: var(--vu); cursor: pointer; }
+  .bigplay svg { width: 11cqh; height: 11cqh; }
+
+  .nextup { text-align: center; max-width: 80cqw; margin-bottom: 2cqh; }
+  .nextup b { display: block; font-family: var(--font-body); font-weight: var(--weight-semibold);
+              font-size: 3.4cqh; line-height: 1.2; text-wrap: pretty; color: var(--ink); }
+  .nextup span { font-size: 2.4cqh; color: var(--ink-2); }
+  .av { display: grid; place-items: center; width: 22cqh; height: 22cqh; margin-bottom: 2cqh;
+        border-radius: var(--radius-round); background: var(--key-well); box-shadow: var(--well);
+        color: var(--ink-4); }
+  .av svg { width: 13cqh; height: 13cqh; }
+  .count { font-size: 11cqh; margin-top: 1cqh; }
+  .coming { margin-top: 2.5cqh; text-align: center; max-width: 90cqw; }
+  .coming .sk { font-size: 1.4cqh; margin-bottom: .6cqh; }
+  .coming p { margin: 0; font-size: 2.2cqh; color: var(--ink-2); white-space: nowrap;
+              overflow: hidden; text-overflow: ellipsis; }
+  .stage .sk.fault { color: var(--alert); }
+
+  /* the harness — not part of the design, it drives the preview */
+  .rig { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2);
+         width: 100%; max-width: 1100px; }
+  .rig > span { font-family: var(--font-mono); font-size: var(--silkscreen-size);
+                letter-spacing: var(--silkscreen-tracking); text-transform: uppercase;
+                color: var(--ink-4); margin-right: var(--gap-2); }
+  .rig button { min-height: 34px; padding: 0 var(--gap-3); font-family: var(--font-body);
+                font-size: var(--text-s); font-weight: 600; border: none; border-radius: var(--radius-key);
+                cursor: pointer; color: var(--ink-3); background: var(--key-well); box-shadow: var(--well); }
+  .rig button[data-on] { color: var(--on-vu); background-image: var(--key-face-vu); box-shadow: var(--bevel); }
+  .note { width: 100%; max-width: 1100px; margin: 0; font-family: var(--font-mono); font-size: 11px;
+          line-height: 1.8; color: var(--ink-3); }
+
+  [hidden] { display: none !important; }
+
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KaraokeParty player">
+  <rect width="200" height="200" fill="#141414"/>
+  <rect x="60" y="60" width="80" height="80" rx="12" fill="#ff8a1e"/>
+  <text x="100" y="118" text-anchor="middle" font-family="ui-monospace, monospace" font-size="44" font-weight="700" fill="#20130a">PL</text>
+</svg>
+</template>
+
+
+<div class="board">
+  <div class="stage">
+    <div class="threads" id="threads"></div>
+    <div class="media" data-kind="cdg" id="media">
+      <div class="stamp sk" id="media-stamp">mp3 + cdg lyric frames</div>
+      <div class="lyrics" id="lyrics">
+        <div>and you may ask yourself</div>
+        <div class="past">well, how did I get here</div>
+      </div>
+    </div>
+
+    <div class="overlay" id="overlay">
+
+      <div class="grp" data-state="empty" hidden>
+        <div class="sk" style="font-size:1.6cqh;text-align:center">queue empty</div>
+        <div class="headline vu" style="margin-top:1.5cqh;text-align:center">Add a song</div>
+      </div>
+
+      <div class="grp" data-state="errored" hidden>
+        <div class="sk fault" style="font-size:1.6cqh;text-align:center">fault</div>
+        <div class="headline" style="margin-top:1.5cqh;text-align:center">Media failed</div>
+        <div class="sk" style="margin-top:1.5cqh;font-size:1.4cqh;text-align:center">see the queue for details</div>
+      </div>
+
+      <button class="key fs grp" data-state="idle" aria-label="Enter fullscreen" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+
+      <div class="grp" data-state="idle" hidden>
+        <button class="bigplay" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg></button>
+      </div>
+
+      <div class="grp" data-state="intermission" style="display:flex;flex-direction:column;align-items:center" hidden>
+        <div class="nextup">
+          <b>Once in a Lifetime</b>
+          <span>Talking Heads</span>
+        </div>
+        <div class="av"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5.9c1.16 0 2.1.94 2.1 2.1s-.94 2.1-2.1 2.1S9.9 9.16 9.9 8s.94-2.1 2.1-2.1m0 9c2.97 0 6.1 1.46 6.1 2.1v1.1H5.9V17c0-.64 3.13-2.1 6.1-2.1M12 4C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4m0 9c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4"/></svg></div>
+        <div class="headline vu">Dana</div>
+        <div class="headline count" id="count">9</div>
+        <div class="coming">
+          <div class="sk">coming up</div>
+          <p>Priya &mdash; Dreams</p>
+        </div>
+      </div>
+
+      <div class="corner grp onstage" data-state="upNow" hidden>
+        <div class="sk">on stage</div>
+        <div class="who">Dana</div>
+        <div class="song"><b>Dreams</b><span>Fleetwood Mac</span></div>
+      </div>
+
+      <div class="corner grp" data-state="upNextTease" hidden>
+        <div class="sk">up next</div>
+        <div class="who">Priya</div>
+        <div class="song"><b>Once in a Lifetime</b><span>Talking Heads</span></div>
+      </div>
+
+      <div class="qr" id="qr">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11h8V3H3zm2-6h4v4H5zM3 21h8v-8H3zm2-6h4v4H5zm8-12v8h8V3zm6 6h-4V5h4zm0 10h2v2h-2zm-6-6h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm2 2h2v2h-2zm2-2h2v2h-2zm0-4h2v2h-2zm2 2h2v2h-2z"/></svg>
+      </div>
+
+      <div class="depth" id="depth">
+        <span class="sk">queue 8</span>
+        <div class="vumeter" id="depth-meter"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="rig" id="rig-state">
+  <span>overlay state</span>
+  <button data-state="upNow">song starts</button>
+  <button data-state="upNextTease">song ending</button>
+  <button data-state="intermission" data-on>intermission</button>
+  <button data-state="idle">waiting for a tap</button>
+  <button data-state="empty">nothing queued</button>
+  <button data-state="errored">media failed</button>
+</div>
+
+<div class="rig" id="rig-media">
+  <span>media layer</span>
+  <button data-media="cdg" data-on>mp3+g</button>
+  <button data-media="mp4">mp4 video</button>
+  <button data-media="visualizer">visualizer</button>
+  <button id="qr-toggle" data-on>qr join code</button>
+</div>
+
+<p class="note">
+  The player is another route of the same app, run fullscreen on whatever machine drives the room&rsquo;s
+  audio. Everything is sized against the stage because the audience is across the room. Overlays that sit
+  over playing video are solid corner panels in the top-right, keeping the lower two-thirds clear for lyrics.
+  A queue-depth VU meter runs along the bottom edge, so the room can see how long the list is without asking.
+  The media layer is a stand-in: the real player decodes MP3+G lyric frames, plays MP4, or runs a visualizer.
+</p>
+
+<script>
+  const seg = (lit, total, peak = 2) => {
+    let s = '';
+    for (let i = 0; i < total; i++) {
+      const on = i < lit;
+      s += '<i class="' + (on ? (i >= lit - peak ? 'hot' : 'on') : '') + '"></i>';
+    }
+    return s;
+  };
+
+  document.getElementById('depth-meter').innerHTML = seg(12, 30);
+
+  const overlay = document.getElementById('overlay');
+  const media = document.getElementById('media');
+  const stamp = document.getElementById('media-stamp');
+  const lyrics = document.getElementById('lyrics');
+  const qr = document.getElementById('qr');
+  const depth = document.getElementById('depth');
+  let state = 'intermission';
+  let showQR = true;
+
+  function paint () {
+    // the paused stage shows the dot field, not the media layer
+    const overVideo = ['upNow', 'upNextTease'].includes(state);
+    media.hidden = !overVideo;
+
+    stamp.hidden = media.dataset.kind !== 'cdg';
+    overlay.toggleAttribute('data-wash', state === 'intermission');
+    overlay.querySelectorAll('.grp').forEach(g => { g.hidden = g.dataset.state !== state; });
+    qr.hidden = !showQR;
+    depth.hidden = state === 'intermission' || state === 'empty';
+    depth.toggleAttribute('data-qr', !qr.hidden);
+
+    // the media layer covers the field completely, and the player sits in these
+    // states most of the night — so stop drawing entirely.
+    if (window.KP_BG) { overVideo ? KP_BG.stop() : KP_BG.start(); }
+  }
+
+  document.querySelectorAll('#rig-state button').forEach(b => b.addEventListener('click', () => {
+    state = b.dataset.state;
+    document.querySelectorAll('#rig-state button').forEach(x => x.toggleAttribute('data-on', x === b));
+    paint();
+  }));
+
+  document.querySelectorAll('#rig-media button[data-media]').forEach(b => b.addEventListener('click', () => {
+    media.dataset.kind = b.dataset.media;
+    document.querySelectorAll('#rig-media button[data-media]').forEach(x => x.toggleAttribute('data-on', x === b));
+    paint();
+  }));
+
+  const qrBtn = document.getElementById('qr-toggle');
+  qrBtn.addEventListener('click', () => {
+    showQR = !showQR;
+    qrBtn.toggleAttribute('data-on', showQR);
+    paint();
+  });
+
+  const count = document.getElementById('count');
+  let n = 9;
+  setInterval(() => {
+    if (state !== 'intermission') return;
+    n = n <= 0 ? 12 : n - 1;
+    count.textContent = n;
+  }, 1000);
+
+  paint();
+
+  // ---- the thread field ----------------------------------------------------
+  // Bundles of luminous threads, each drawn as a wide dim glow pass plus a thin
+  // bright core, added together. Brand amber only: signal, its highlight, and the
+  // dim meter amber for the threads furthest back.
+  window.KP_BG = (() => {
+    const host = document.getElementById('threads');
+    const cv = document.createElement('canvas');
+    host.appendChild(cv);
+    const ctx = cv.getContext('2d', { alpha: false });
+    const DPR = Math.min(1.5, window.devicePixelRatio || 1);
+    const BG = '#0d0e0f';
+    const AMBER = ['255,138,30', '255,190,120', '122,67,16'];
+    // the middle band stays clear: that is where the singer's name and the
+    // countdown sit, and a thread through a Michroma numeral is unreadable.
+    const LANES = [0.09, 0.2, 0.31, 0.7, 0.83, 0.94];
+    const N = LANES.length;
+    let W = 1, H = 1, req = null, last = 0;
+
+    const bundles = Array.from({ length: N }, (_, i) => {
+      const depth = i / (N - 1);            // 0 near, 1 far
+      return {
+        depth,
+        y: LANES[i],
+        amp: 0.1 - 0.05 * depth,
+        k: 1.1 + 1.7 * depth,               // waves across the frame
+        speed: (0.5 + 0.9 * (1 - depth)) * (i % 2 ? 1 : -1),
+        breath: 0.00028 + 0.0004 * depth,
+        phase: i * 1.7,
+        color: AMBER[i % 3],
+        strands: 2,
+      };
+    });
+
+    function size () {
+      const r = host.getBoundingClientRect();
+      W = cv.width = Math.max(1, Math.round(r.width * DPR));
+      H = cv.height = Math.max(1, Math.round(r.height * DPR));
+      draw(last || 0);
+    }
+
+    function draw (t) {
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+      for (const b of bundles) {
+        const near = 1 - b.depth;
+        const breathe = 0.66 + 0.34 * Math.sin(t * b.breath + b.phase);
+        for (let s = 0; s < b.strands; s++) {
+          const off = (s - (b.strands - 1) / 2) * 0.022 * (1.4 - b.depth);
+          ctx.beginPath();
+          const steps = 24;
+          for (let i = 0; i <= steps; i++) {
+            const x = i / steps;
+            const wave = Math.sin(b.k * Math.PI * 2 * x + t * 0.0006 * b.speed + b.phase + s * 0.55);
+            // pinched at both edges, so each bundle reads as a fan rather than a band
+            const fan = 0.3 + 0.7 * Math.sin(Math.PI * x);
+            const y = b.y + off + b.amp * breathe * wave * fan;
+            i ? ctx.lineTo(x * W, y * H) : ctx.moveTo(x * W, y * H);
+          }
+          ctx.strokeStyle = 'rgba(' + b.color + ',' + (0.03 + 0.035 * near).toFixed(3) + ')';
+          ctx.lineWidth = (7 - 3 * b.depth) * DPR;
+          ctx.stroke();
+          ctx.strokeStyle = 'rgba(' + b.color + ',' + (0.14 + 0.2 * near).toFixed(3) + ')';
+          ctx.lineWidth = (0.9 + 0.9 * near) * DPR;
+          ctx.stroke();
+        }
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function loop (t) {
+      req = requestAnimationFrame(loop);
+      if (t - last < 33) return;            // 30fps is plenty for a background
+      last = t;
+      draw(t);
+    }
+
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    new ResizeObserver(size).observe(host);
+    size();
+
+    return {
+      start () { if (!req && !still) { last = 0; req = requestAnimationFrame(loop); } },
+      stop () { if (req) { cancelAnimationFrame(req); req = null; } },
+      get running () { return req != null; },
+    };
+  })();
+
+  KP_BG.start();
+</script>
+
+</body>
+</html>

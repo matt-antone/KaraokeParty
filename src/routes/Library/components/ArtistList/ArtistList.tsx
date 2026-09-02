@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { ensureState } from 'redux-optimistic-ui'
 import { RootState } from 'store/store'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
@@ -10,8 +10,10 @@ import AlphaPicker from '../AlphaPicker/AlphaPicker'
 import ArtistItem from '../ArtistItem/ArtistItem'
 import type { ListImperativeAPI, RowComponentProps } from 'react-window'
 
-const ROW_HEIGHT_ARTIST = 44 // 40px + 4px margin
-const ROW_HEIGHT_SONG = 52 // 44px + 8px margin
+// estimates only: rows are measured once rendered (see PaddedList), because a
+// song title always shows in full and a wrapped title makes the row taller
+const ROW_HEIGHT_ARTIST = 47 // --row-artist + seam rule
+const ROW_HEIGHT_SONG = 59 // --row-song + 3px margin
 
 interface ArtistListProps {
   ui: RootState['ui']
@@ -73,7 +75,8 @@ const ArtistList = ({
     }
   }, [dispatch])
 
-  const rowHeight = (index: number) => {
+  // stable identity: PaddedList keys its measurement cache off this function
+  const rowHeight = useCallback((index: number) => {
     const artistId = artists.result[index]
     let height = ROW_HEIGHT_ARTIST
 
@@ -82,7 +85,7 @@ const ArtistList = ({
     }
 
     return height
-  }
+  }, [artists, expandedArtists])
 
   const handleRowsRendered = ({ startIndex }: { startIndex: number }) => {
     // console.log('rendered rows: ', { startIndex })
@@ -119,9 +122,10 @@ const ArtistList = ({
         numRows={artists.result.length}
         onRowsRendered={handleRowsRendered}
         onRef={handleRef}
-        paddingTop={ui.headerHeight}
+        paddingTop={ui.headerHeight + 14}
         paddingRight={30} // width of AlphaPicker
-        paddingBottom={ui.footerHeight}
+        paddingBottom={ui.footerHeight + 20}
+        paddingLeft={14}
         width={ui.innerWidth}
         height={ui.innerHeight}
       />

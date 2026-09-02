@@ -1,58 +1,63 @@
+/* A service panel that swings out over the chassis. Solid brushed face — never a
+   blur: when you open a panel on a deck, you cannot see through it.
+
+   Padding lives on the three sections, not on the dialog, so the title and
+   button rules run edge to edge the way a real seam does. */
 .container {
   display: flex;
   flex-direction: column;
   opacity: 0;
-  color: var(--text-color);
-  background: transparent;
-  padding: var(--space-m);
-  border: 1.5px solid hsl(var(--hue-blue), 20%, 30%);
-  border-radius: 16px;
+  color: var(--ink);
+  background: var(--brush);
+  border: var(--hair-rule);
+  border-radius: var(--radius-panel);
+  /* wider than the handoff's fixed 480: this is a phone-first product and the
+     modal is the one place a long path or a room list has to breathe */
   max-width: min(800px, 90vw);
-  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0);
-  backdrop-filter: blur(30px) brightness(50%) saturate(100%);
-  -webkit-backdrop-filter: blur(30px) brightness(50%) saturate(100%);
-  
+  overflow: hidden;
+  box-shadow: var(--bevel), 0 0 0 100vmax rgba(0, 0, 0, 0);
+
   &[open] {
-    animation: fadeIn 0.15s forwards;
-    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+    animation: fadeIn var(--dur-ui) forwards;
+    box-shadow: var(--bevel), 0 0 0 100vmax rgba(0, 0, 0, 0.72);
   }
 }
 
+/* the same 44px header bar every panel gets, closed off with a hairline */
 .titleContainer {
   display: flex;
-  font-family: var(--font-family-custom);
-  margin: 0 0 var(--space-s) 0;
+  align-items: center;
+  gap: var(--gap-3);
+  min-height: var(--header-bar);
+  padding: 0 var(--gap-2) 0 var(--gap-4);
+  border-bottom: var(--hair-rule);
 
+  /* one ink level up from the .silkscreen utility's --ink-3: a title is a
+     heading, not meta. Scoped here so the shared utility keeps its value. */
   h1 {
     flex: 1;
     margin: 0;
-    font-size: var(--font-size-xl);
-    line-height: 1em;
+    color: var(--ink-2);
   }
-
 }
 
+/* flush — no key, just a glyph on the panel. Ink, not amber: amber is the one
+   primary action on a screen, and dismissing is never it. */
 .btnClose {
-  position: relative;
-  top: calc(var(--space-s) * -1);
-  right: calc(var(--space-s) * -1);
-  align-self: flex-start;
-  color: var(--btn-active-bg-color);
-  padding: var(--space-s);
+  flex-shrink: 0;
+  color: var(--ink-2);
+  padding: var(--gap-2);
   line-height: 1em;
 
-  &:focus-visible {
-    outline: none;
-  }
-
   svg {
-    height: var(--icon-size-l);
+    height: var(--icon-l);
     line-height: 1em;
   }
 }
 
 .content {
   flex: 1;
+  padding: var(--gap-4);
 
   &.scrollable {
     overflow: auto;
@@ -63,9 +68,9 @@
 .buttons {
   display: flex;
   flex-direction: column;
-  row-gap: var(--space-s);
-  column-gap: var(--space-m);
-  margin-top: var(--container-padding);
+  gap: var(--gap-2);
+  padding: var(--gap-4);
+  border-top: var(--hair-rule);
 }
 
 

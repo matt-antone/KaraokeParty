@@ -13,9 +13,9 @@ html {
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
+  background-color: var(--chassis);
+  color: var(--ink);
+  font-family: var(--font-body);
   height: 100%;
   margin: 0;
   padding: 0;
@@ -28,9 +28,30 @@ body.scroll-lock {
 }
 
 a {
-  color: var(--link-color);
+  color: var(--vu);
   font-weight: bold;
   cursor: pointer;
+}
+
+/* The silkscreen label: every label printed on the panel — section headings,
+   panel titles, durations, tags, counts, waits, meter legends. A utility
+   because it is a package, not a size. The rule it enforces: if it is
+   language, it is Figtree; if it is data, it is mono. */
+.silkscreen {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Focus is a hard 2px amber ring with a chassis-coloured gap, never blurred.
+   Set once here so every focusable thing gets the gap; the components that
+   declare `outline: var(--focus-outline)` themselves just restate the ring. */
+:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 /* Form elements */
@@ -42,25 +63,27 @@ input[type="search"] {
   width: 100%;
   padding: 6px 8px;
   font-size: 16px; /* don't go below 16px: iOS zooms the viewport on focus */
-  box-shadow: inset 1px 1px 3px 0px rgba(50, 50, 50, 0.75);
+  box-shadow: var(--well);
   border: none;
-  border-radius: var(--border-radius);
-  color: var(--input-color);
-  background-color: var(--input-bg-color);
+  border-radius: var(--radius-key);
+  color: var(--ink);
+  background-color: var(--key-well);
 }
 
 input[type="text"]::placeholder,
 input[type="email"]::placeholder,
 input[type="password"]::placeholder {
-  color: var(--input-placeholder-color);
+  color: var(--ink-3);
 }
 
 input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="password"]:focus,
 input[type="search"]:focus {
-  box-shadow: inset 0px 0px 5px 3px var(--input-outline-color);
-  outline: none;
+  /* the field stays a well; focus is a hard ring, not an inner glow */
+  box-shadow: var(--well);
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 input[type="text"],
@@ -73,15 +96,19 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 select {
-  font-size: var(--font-size-s);
+  font-size: var(--text-m);
   width: auto;
-  padding: var(--space-s);
-  padding-right: var(--space-xl);
+  padding: var(--gap-2);
+  padding-right: var(--gap-5);
   appearance: none;
-  color: var(--input-color);
+  color: var(--ink);
   border: none;
-  border-radius: var(--border-radius);
-  background-color: hsl(var(--hue-blue), 10%, 66%);
+  border-radius: var(--radius-key);
+  /* a native field is a recessed well, like the inputs above. This was
+     --input-bg-color, which was LIGHT in the old brand; swapping the alias for
+     its nearest token gave a light slab on a graphite panel. */
+  background-color: var(--key-well);
+  box-shadow: var(--well);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' height='1rem' viewBox='0 0 24 24'><path fill='currentColor' d='M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 8px center;
@@ -94,17 +121,9 @@ select {
   }
 }
 
-@supports (backdrop-filter: saturate(250%) blur(20px)) or (-webkit-backdrop-filter: saturate(250%) blur(20px)) {
-  .bg-blur {
-    background-color: transparent !important;
-    -webkit-backdrop-filter: saturate(250%) blur(20px);
-    backdrop-filter: saturate(250%) blur(20px);
-  }
-}
-
 mark {
   color: inherit;
-  background-color: var(--mark-bg-color);
+  background-color: var(--vu-well);
 }
 
 /* override modern-normalize's bad defaults */

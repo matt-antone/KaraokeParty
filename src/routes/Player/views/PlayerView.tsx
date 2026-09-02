@@ -6,6 +6,7 @@ import playerReducer, { sliceInjectNoOp } from '../modules/player'
 import playerVisualizerReducer from '../modules/playerVisualizer'
 import PlayerController from '../components/PlayerController/PlayerController'
 import { fetchCurrentRoom } from 'store/modules/rooms'
+import { fetchPrefs } from 'store/modules/prefs'
 import styles from './PlayerView.css'
 
 const PlayerView = () => {
@@ -23,6 +24,9 @@ const PlayerView = () => {
   // once per mount
   useEffect(() => {
     dispatch(fetchCurrentRoom())
+    // the join QR needs prefs.serverUrl — the LAN address a phone can reach.
+    // prefs aren't persisted, so a player opened on a restored session has none.
+    dispatch(fetchPrefs())
   }, [dispatch])
 
   // set page title

@@ -6,7 +6,6 @@ import styles from './Accordion.module.css'
 export type AccordionProps = {
   className?: string
   children: React.ReactNode
-  contentClassName?: string
   headingComponent: React.ReactElement<{ children?: React.ReactNode }>
   iconClassName?: string
   initialExpanded?: boolean
@@ -15,7 +14,6 @@ export type AccordionProps = {
 const Accordion = ({
   className,
   children,
-  contentClassName,
   headingComponent,
   iconClassName,
   initialExpanded = false,
@@ -49,7 +47,7 @@ const Accordion = ({
       <section
         id={`accordion-panel-${id}`}
         aria-labelledby={`accordion-header-${id}`}
-        className={clsx(contentClassName)}
+        className={styles.content}
         hidden={!isExpanded}
       >
         {children}

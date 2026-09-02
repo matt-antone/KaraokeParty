@@ -3,6 +3,7 @@ import sql from 'sqlate'
 import crypto from 'crypto'
 import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
+import Library from '../Library/Library.js'
 
 const log = getLogger('Prefs')
 
@@ -51,10 +52,15 @@ class Prefs {
       `
       const rows = db.all<{ pathId: number, path: string, priority: number, data: string }>(String(query), query.parameters)
 
+      // Song counts belong here, not at one call site: prefs reach the client
+      // over the REST route AND two socket pushes, and a push carrying paths
+      // without counts overwrites the good payload and blanks the meters.
+      const counts = Library.getPathSongCounts()
+
       for (const row of rows) {
         const data = JSON.parse(row.data)
         delete row.data
-        prefs.paths.entities[row.pathId] = { ...row, ...data }
+        prefs.paths.entities[row.pathId] = { ...row, ...data, numSongs: counts[row.pathId] || 0 }
         prefs.paths.result.push(row.pathId)
       }
     }

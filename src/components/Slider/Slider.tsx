@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react'
 import clsx from 'clsx'
 import { lockScrolling } from 'store/modules/ui'
 import RCSlider, { SliderProps as RCSliderProps } from 'rc-slider'
-import Icon from 'components/Icon/Icon'
 import styles from './Slider.css'
 
 interface SliderProps extends RCSliderProps {
@@ -62,9 +61,10 @@ const Slider = ({
     }
   }
 
-  // slider handle/grabber
+  // slider handle/grabber — a machined key cap, styled entirely via .handle;
+  // knobs and radios are the only circles in the system, so this isn't one.
   const defaultHandle = (node: React.ReactElement): React.ReactElement => {
-  // rc-slider passes a node (div) to which we add style and children
+  // rc-slider passes a node (div) to which we add style
     return React.cloneElement(node as React.ReactElement<HandleProps>, {
       'aria-label': ariaLabel,
       'aria-labelledby': ariaLabelledby,
@@ -73,9 +73,7 @@ const Slider = ({
         // Prevent focus outline on touch in mobile Safari
         (e.currentTarget as HTMLDivElement).blur()
       },
-    }, (
-      <Icon icon='CIRCLE' />
-    ))
+    })
   }
 
   return (

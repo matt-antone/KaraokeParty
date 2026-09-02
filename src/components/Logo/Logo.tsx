@@ -1,42 +1,39 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import clsx from 'clsx'
 import styles from './Logo.css'
 
 interface LogoProps {
+  /** Show the knob mark beside the wordmark. */
+  withMark?: boolean
+  /** Mark diameter in px. Below 28 it stops being legible. */
+  markSize?: number
   className?: string
 }
 
-const Logo = (props: LogoProps) => {
-  const [isFontLoaded, setIsFontLoaded] = useState(() => {
-    // if the font loading API is not supported, we can't wait for it
-    return typeof document !== 'undefined' && !document.fonts
-  })
-
-  useEffect(() => {
-    if (document.fonts) {
-      document.fonts.load('1em Beon')
-        .then(() => {
-          setIsFontLoaded(true)
-          return true
-        })
-        .catch(() => {
-          setIsFontLoaded(true)
-          return false
-        })
-    }
-  }, [])
-
-  return (
-    <div className={clsx(styles.container, props.className)} role='img' aria-label='KaraokeParty'>
-      <span className={styles.title} aria-hidden='true'>
-        Karaoke
-        <span className={clsx(styles.subtitle, { [styles.subtitleVisible]: isFontLoaded })}>
-          Part
-          <span className={styles.lastChar}>y</span>
-        </span>
-      </span>
-    </div>
-  )
-}
+/**
+ * Wordmark: KARAOKE in ink over PARTY in amber, stacked, Michroma, tracked
+ * .13em — two channel labels silkscreened on a faceplate. Never on a light
+ * background, never on one line, never re-tracked.
+ *
+ * Both marks are CSS geometry. There is no logo image and none should be drawn.
+ */
+const Logo = ({ withMark, markSize = 36, className }: LogoProps) => (
+  <div className={clsx(styles.container, className)} role='img' aria-label='KaraokeParty'>
+    {withMark && (
+      <div
+        className={styles.mark}
+        aria-hidden='true'
+        style={{ '--mark-size': `${markSize}px` } as React.CSSProperties}
+      >
+        <div className={styles.markCap} />
+        <div className={styles.markIndex} />
+      </div>
+    )}
+    <span className={styles.title} aria-hidden='true'>
+      Karaoke
+      <span className={styles.subtitle}>Party</span>
+    </span>
+  </div>
+)
 
 export default Logo

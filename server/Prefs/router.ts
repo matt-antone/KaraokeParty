@@ -3,6 +3,7 @@ import getLogger from '../lib/Log.js'
 import KoaRouter from '@koa/router'
 import getFolders from '../lib/getFolders.js'
 import getWindowsDrives from '../lib/getWindowsDrives.js'
+import getIPAddress from '../lib/getIPAddress.js'
 import Prefs from './Prefs.js'
 import Media from '../Media/Media.js'
 import pushQueuesAndLibrary from '../lib/pushQueuesAndLibrary.js'
@@ -16,15 +17,39 @@ interface RequestWithBody {
 }
 
 const log = getLogger('Prefs')
+
+/**
+ * http://<LAN IPv4>:<port><basePath> — the address guests scan, which is not
+ * necessarily the one the host is looking at. Undefined when the machine has
+ * no external IPv4, in which case the player falls back to its own location.
+ */
+function getServerUrl (ctx: { request: { host: string } }): string | undefined {
+  const ip = getIPAddress()
+  if (!ip) return undefined
+
+  const port = ctx.request.host.split(':')[1]
+  // read the same source cli.ts does; importing cli here would run its parsing
+  const basePath = (process.env.KES_URL_PATH || '/').replace(/\/?$/, '/')
+
+  return `http://${ip}${!port || port === '80' ? '' : ':' + port}${basePath}`
+}
 const router = new KoaRouter({ prefix: '/api/prefs' })
 
+/**
+ * All prefs, with each media path's song count merged in from the real
+ * media/path relationship (rather than tracked separately and going stale).
+ */
 // get all prefs (including media paths)
 router.get('/', (ctx) => {
   const prefs = Prefs.get() as unknown as PrefsType
 
   // must be admin or firstrun
   if (prefs.isFirstRun || ctx.user.isAdmin) {
-    ctx.body = prefs
+    // The join URL a phone can actually reach. The player builds its QR from
+    // this rather than from its own address bar: a host who opened the player
+    // at localhost would otherwise encode localhost, and every phone that
+    // scanned it would be pointed at itself.
+    ctx.body = { ...prefs, serverUrl: getServerUrl(ctx) }
     return
   }
 

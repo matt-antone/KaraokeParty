@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import clsx from 'clsx'
 import { useAppSelector } from 'store/hooks'
 import { CSSTransition } from 'react-transition-group'
 import { QRCode } from 'react-qrcode-logo'
@@ -15,14 +14,18 @@ interface PlayerQRProps {
   queueItem: QueueItem
 }
 
+// the value --ink resolves to. The code is painted to a canvas, so it needs a
+// real colour rather than the token; keep the two in step.
+const INK = '#e6e4de'
+
 const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
   const ref = useRef<HTMLDivElement>(null)
   const maxTimerID = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastToggleTime = useRef<number>(0)
   const [show, setShow] = useState(true)
-  const [alternate, setAlternate] = useState(false)
   const { isPlaying } = useAppSelector(state => state.player)
   const { roomId } = useAppSelector(state => state.user)
+  const serverUrl = useAppSelector(state => state.prefs.serverUrl)
 
   const scheduleNextToggle = useCallback(() => {
     if (maxTimerID.current) {
@@ -66,7 +69,6 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
 
   const handleTransitionEnd = () => {
     if (!show) {
-      setAlternate(prev => !prev)
       setShow(true) // trigger enter transition
       lastToggleTime.current = Date.now()
 
@@ -74,7 +76,11 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
     }
   }
 
-  const url = new URL(window.location.href)
+  // Build from the server's own LAN address, not this browser's. A host who
+  // opened the player at localhost would otherwise encode localhost, and every
+  // phone that scanned the code would be pointed at itself. Falls back to our
+  // own location when the server reports no external IPv4.
+  const url = new URL(serverUrl ?? window.location.href)
   url.pathname = url.pathname.replace(/\/player$/, '')
   url.searchParams.append('roomId', String(roomId))
 
@@ -108,7 +114,7 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
       }}
     >
       <div
-        className={clsx(styles.container, alternate && styles.alternate)}
+        className={styles.container}
         ref={ref}
       >
         <QRCode
@@ -117,10 +123,7 @@ const PlayerQR = ({ height, prefs, queueItem }: PlayerQRProps) => {
           size={size}
           quietZone={quietZoneSize}
           style={{ opacity: prefs.opacity ?? 1 }}
-          logoImage={`${document.baseURI}assets/app.png`}
-          logoWidth={size * 0.5}
-          logoHeight={size * 0.5}
-          logoOpacity={0.5}
+          bgColor={INK}
           qrStyle='dots'
         />
       </div>

@@ -30,7 +30,9 @@ export default defineConfig(
     },
   },
   {
-    ignores: ['build/**', 'docs/**', 'dist/**', 'node_modules/**'],
+    // the handoff deck is design reference, not production code — its .jsx are
+    // prototypes to read, and its icon map is generated. Not ours to lint.
+    ignores: ['build/**', 'docs/**', 'dist/**', 'node_modules/**', 'design_handoff_karaokeparty_deck/**'],
   },
   // client-only config
   {

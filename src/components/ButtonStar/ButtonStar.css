@@ -3,39 +3,24 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
+  color: var(--ink-5);
 }
 
-/* unstarred reads as a dim outline; starred is the full-color emoji */
+/* off reads as unlit, on reads as lit — no greyscale filter, no opacity */
 .star {
   display: block;
   font-size: 1.125rem;
   line-height: 1;
-  filter: grayscale(1);
-  opacity: .45;
 }
 
-.starred .star {
-  filter: none;
-  opacity: 1;
+.starred {
+  color: var(--vu);
 }
 
+/* the count is data: mono, tight against the star */
 .starCount {
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 9px;
   line-height: 1;
-  color: var(--color-gray-6);
-  text-shadow: none;
   pointer-events: none;
-}
-
-.starred .starCount {
-  color: var(--song-item-btn-active-bg-color);
-}
-
-.animateStar {
-  animation: var(--animation-btn-star);
-  will-change: transform;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
 }

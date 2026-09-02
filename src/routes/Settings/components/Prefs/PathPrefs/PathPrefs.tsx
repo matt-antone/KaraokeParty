@@ -55,7 +55,7 @@ const PathPrefs = () => {
   }
 
   const handleRemove = (pathId: number) => {
-    if (!confirm(`Remove folder from library?\n\n${paths.entities[pathId].path}`)) {
+    if (!confirm(`Remove this folder from the library?\n\n${paths.entities[pathId].path}\n\nEvery song in it disappears from the library and from anyone's queue. The files on disk are not touched.`)) {
       return
     }
 
@@ -80,11 +80,14 @@ const PathPrefs = () => {
   const handleRefresh = (pathId: number) => dispatch(requestScan(pathId))
   const handleRefreshAll = () => dispatch(requestScanAll())
 
+  // total songs across all paths, so each row's meter can show its share of the library
+  const totalSongs = paths.result.reduce((sum, pathId) => sum + (paths.entities[pathId].numSongs || 0), 0)
+
   return (
     <Accordion headingComponent={(
       <div className={styles.heading}>
         <Icon icon='FOLDER_MUSIC' />
-        <div className={styles.title}>Media Folders</div>
+        <div>Media Folders</div>
       </div>
     )}
     >
@@ -102,6 +105,7 @@ const PathPrefs = () => {
                     path={paths.entities[pathId]}
                     onInfo={handleInfo}
                     onRefresh={handleRefresh}
+                    totalSongs={totalSongs}
                   />
                 ),
                 )}
@@ -117,7 +121,7 @@ const PathPrefs = () => {
               Scan Folders
             </Button>
           )}
-          <Button onClick={handleOpenChooser} variant='primary'>
+          <Button onClick={handleOpenChooser} variant='default'>
             Add Folder
           </Button>
         </div>

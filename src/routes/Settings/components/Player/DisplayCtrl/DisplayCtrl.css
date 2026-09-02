@@ -1,0 +1,126 @@
+/* The player's display options. Reached from the Display key on the Player
+   panel, independent of the transport, so it lives inside the Player panel
+   like everything else about the player. */
+
+.modal {
+  width: 90vw;
+  max-width: 480px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-4);
+}
+
+.section {
+
+  /* Safari REALLY doesn't like fieldsets to be flex *items*, hence the .section wrapper */
+  fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-4);
+    margin: 0;
+    padding: var(--gap-4);
+    border: none;
+    border-radius: var(--radius-panel);
+
+    /* a group that contains controls, so it is a well */
+    background: var(--key-well);
+    box-shadow: var(--well);
+
+    /* Prevent fieldset from overflowing parent */
+    min-width: 0;
+  }
+
+  legend {
+    width: fit-content;
+    padding: 0;
+    color: var(--ink);
+  }
+}
+
+.visualizer legend {
+  label {
+    display: flex;
+    gap: var(--gap-2);
+    align-items: center;
+    cursor: pointer;
+  }
+}
+
+/* section heading printed on the panel */
+.groupLabel {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+}
+
+.presetContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+}
+
+.presetButtons {
+  display: flex;
+  gap: var(--gap-2);
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: var(--target);
+    color: var(--ink);
+    background-color: var(--key);
+    background-image: var(--key-face);
+    box-shadow: var(--bevel);
+    border-radius: var(--radius-key);
+    transition: transform var(--dur-key) var(--ease-key);
+
+    &:active {
+      transform: translateY(1px);
+    }
+
+    svg {
+      height: var(--icon-l);
+    }
+  }
+}
+
+/* the preset name is data read off the player, so it is mono */
+.presetName {
+  margin: 0;
+  height: 2lh;
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* a sentence, so Figtree */
+.unsupported {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-m);
+  color: var(--ink-3);
+}
+
+.slider {
+  margin: 0 var(--gap-4);
+}

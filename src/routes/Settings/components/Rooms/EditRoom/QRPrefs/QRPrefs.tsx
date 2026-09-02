@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import clsx from 'clsx'
 import Accordion from 'components/Accordion/Accordion'
 import InputCheckbox from 'components/InputCheckbox/InputCheckbox'
 import Icon from 'components/Icon/Icon'
@@ -32,12 +31,12 @@ const QRPrefs = ({ onChange, prefs = {}, roomPassword, roomPasswordDirty }: QRPr
       headingComponent={(
         <div className={styles.heading}>
           <Icon icon='QR_CODE' />
-          <div className={styles.title}>QR Code</div>
+          <div>QR Code</div>
         </div>
       )}
     >
       <div className={styles.content}>
-        <div className={styles.field}>
+        <div>
           <InputCheckbox
             label='Show QR code'
             checked={prefs?.qr?.isEnabled ?? false}
@@ -45,7 +44,7 @@ const QRPrefs = ({ onChange, prefs = {}, roomPassword, roomPasswordDirty }: QRPr
           />
         </div>
         {prefs?.qr?.isEnabled && roomPassword && (
-          <div className={styles.field}>
+          <div>
             <InputCheckbox
               label='Include room password'
               checked={isQRPasswordEnabled}
@@ -58,7 +57,7 @@ const QRPrefs = ({ onChange, prefs = {}, roomPassword, roomPasswordDirty }: QRPr
           </div>
         )}
         {(isQRPasswordEnabled && !roomPasswordDirty) && (
-          <div className={styles.field}>
+          <div>
             <input
               type='password'
               autoComplete='new-password'
@@ -69,8 +68,8 @@ const QRPrefs = ({ onChange, prefs = {}, roomPassword, roomPasswordDirty }: QRPr
             />
           </div>
         )}
-        <div className={clsx(styles.field)}>
-          <label id='label-qr-size'>Size</label>
+        <div className={styles.field}>
+          <label id='label-qr-size' className={styles.groupLabel}>Size</label>
           <Slider
             className={styles.slider}
             min={0}
@@ -81,8 +80,8 @@ const QRPrefs = ({ onChange, prefs = {}, roomPassword, roomPasswordDirty }: QRPr
             aria-labelledby='label-qr-size'
           />
         </div>
-        <div className={clsx(styles.field)}>
-          <label id='label-qr-opacity'>Opacity</label>
+        <div className={styles.field}>
+          <label id='label-qr-opacity' className={styles.groupLabel}>Opacity</label>
           <Slider
             className={styles.slider}
             min={0.25}

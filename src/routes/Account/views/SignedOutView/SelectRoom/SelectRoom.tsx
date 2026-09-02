@@ -58,7 +58,6 @@ const SelectRoom = ({
           <div key={`room-${id}`}>
             <InputRadio
               name='roomId'
-              className={clsx(styles.option, id === roomId && styles.checked)}
               label={rooms.entities[id].name}
               value={id}
               onChange={handleRoomChange}

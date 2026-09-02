@@ -1,163 +1,67 @@
-/* every control in here is a touch target; keep them at least this tall */
-.container {
-  --control-height: 44px;
+/* The library's whole control surface: search, tabs — in that order. */
 
+.container {
   display: flex;
   flex-direction: column;
-  padding: var(--space-xs) var(--space-s) var(--space-s);
+}
 
-  button {
-    min-width: var(--control-height);
-    min-height: var(--control-height);
-    cursor: pointer;
-    color: var(--btn-bg-color);
-  }
+/* Search is a bare field with no well: the header itself is the surface. */
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  padding: var(--gap-2) var(--gutter);
+}
 
-  button.active {
-    color: var(--btn-active-bg-color);
-    filter: var(--btn-active-filter);
-  }
+.magnifier {
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+
+.magnifierActive {
+  color: var(--vu);
 }
 
 .searchInput {
   flex: 1;
   min-width: 0;
-  align-self: stretch;
-  min-height: var(--control-height);
-  padding: 2px var(--space-s) 2px var(--space-xs) !important;
-  font-size: var(--font-size-m) !important;
-  color: var(--text-color) !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-}
+  min-height: var(--target);
+  padding: 0;
+  font-size: var(--text-xl);
+  color: var(--ink);
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
 
-.searchInput::placeholder {
-  color: var(--btn-bg-color) !important;
-}
-
-.btnMagnifier svg {
-  height: 1.75rem;
+  &:focus {
+    background: transparent;
+    box-shadow: none;
+  }
 }
 
 .btnClear {
-  height: 2rem;
-
-  svg {
-    height: 2rem;
-  }
+  flex-shrink: 0;
+  color: var(--vu);
 }
 
-.searchRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-s);
-}
-
-/* facets + starred toggle share one row */
-.facetRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-s);
-  margin-top: var(--space-m);
-}
-
-/* tags are stored lowercased; capitalize for display only */
-.facetSelect,
-.facetSelect option {
-  text-transform: capitalize;
-}
-
-/* filter pills; same light blue as the active tab below them.
-   one quarter of the row each, unset ones read "<emoji> All" */
-.facetSelect {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  text-overflow: ellipsis;
-  min-height: var(--control-height);
-  padding: 2px var(--space-m) 2px var(--space-s) !important;
-  font-size: var(--font-size-s) !important;
-  font-weight: var(--font-weight-bold);
-  color: #000 !important;
-  cursor: pointer;
-  background-color: var(--btn-active-bg-color) !important;
-  background-size: 1rem !important;
-  background-position: right 0 center !important;
-  border: none !important;
-  border-radius: var(--border-radius) !important;
-  box-shadow: none !important;
-}
-
-/* no values for this facet under the current filters: stays in place, greyed */
-.facetSelect:disabled {
-  cursor: default;
-  opacity: 0.45;
-}
-
-/* icon-sized; the selects share whatever space is left */
-.btnReset {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding: 0;
-  background: none;
-  border: none;
-  opacity: .35;
-
-  svg {
-    height: 1.5rem;
-  }
-}
-
-.container button.resetActive {
-  color: hsl(0, 75%, 60%);
-  opacity: 1;
-}
-
+/* the favourite control is a text star that lights amber — never an emoji */
 .btnStar {
-  margin-left: auto;
-  padding: 1px var(--space-s);
-  font-size: 1.125rem;
-  line-height: 1.2;
-  background: none;
+  flex-shrink: 0;
+  min-width: var(--target);
+  min-height: var(--target);
+  font-size: 17px;
+  line-height: 1;
+  color: var(--ink-5);
+  background: transparent;
   border: none;
+  cursor: pointer;
 }
 
-.btnStar:not(.starActive) span {
-  filter: grayscale(1);
-  opacity: .55;
+.starActive {
+  color: var(--vu);
 }
 
-/* tabs */
 .tabRow {
-  display: flex;
-  gap: var(--space-s);
-  margin-top: var(--space-m);
-}
-
-.tab {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  flex: 1;
-  padding: 6px 0;
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-gray-6) !important;
-  background-color: hsl(var(--hue-blue), 30%, 12%);
-  border: none;
-  border-radius: var(--border-radius);
-}
-
-.tabActive {
-  color: #000 !important;
-  background-color: var(--btn-active-bg-color);
-}
-
-.tabCount {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-normal);
-  opacity: .8;
+  padding: 0 var(--gutter) var(--gap-3);
 }
