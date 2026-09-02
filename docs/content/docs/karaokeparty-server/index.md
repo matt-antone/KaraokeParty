@@ -207,6 +207,8 @@ A Bonjour `.local` name is the simplest option, and iOS and macOS resolve it wit
 
 The value is used verbatim, so include the port and any base path. It is ignored (with a warning, falling back to the LAN IP) unless it parses as an `http` or `https` URL — note that `karaokeparty.local:8080` is *not* one, since it has no scheme.
 
+Until a name is set, the app doesn't suggest adding itself to the home screen at all: guests reaching it at a raw IP are left on the QR-and-browser flow, which keeps working no matter how the address moves.
+
 ## File Locations
 
 If using the Docker image, the database will be located in the folder you mapped to the container's `/config` folder. The container doesn't write log files by default; use the [Docker logs](https://docs.docker.com/reference/cli/docker/container/logs/) command instead to see the container's output.

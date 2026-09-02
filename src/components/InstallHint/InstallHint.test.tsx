@@ -15,12 +15,16 @@ const set = (key: string, value: unknown, target: object = navigator) =>
 const setStandalone = (matches: boolean) =>
   set('matchMedia', () => ({ matches, media: '', addEventListener () {}, removeEventListener () {} }), window)
 
+const setHostname = (hostname: string) =>
+  set('location', { ...window.location, hostname }, window)
+
 beforeEach(() => {
   localStorage.clear()
   set('userAgent', IPHONE_SAFARI)
   set('maxTouchPoints', 5)
   set('standalone', undefined)
   setStandalone(false)
+  setHostname('karaokeparty.local')
 })
 
 afterEach(cleanup)
@@ -65,6 +69,36 @@ describe('InstallHint', () => {
   it('shows on an iPad, which reports itself as a Macintosh', () => {
     set('userAgent', IPAD_OS)
     set('maxTouchPoints', 5)
+    render(<InstallHint />)
+
+    expect(screen.getByText('Add to Home Screen')).toBeTruthy()
+  })
+
+  // an icon added from an IP is dead once the server changes network or lease,
+  // and a standalone window has no address bar to recover through
+  it('stays hidden on a raw IPv4, which would freeze into a dead icon', () => {
+    setHostname('192.168.86.235')
+    render(<InstallHint />)
+
+    expect(screen.queryByText('Add to Home Screen')).toBeNull()
+  })
+
+  it('stays hidden on an IPv6 literal', () => {
+    setHostname('[fe80::1]')
+    render(<InstallHint />)
+
+    expect(screen.queryByText('Add to Home Screen')).toBeNull()
+  })
+
+  it('shows on a hostname, which follows the server between networks', () => {
+    setHostname('MATTHEWs-MacBook-Pro.local')
+    render(<InstallHint />)
+
+    expect(screen.getByText('Add to Home Screen')).toBeTruthy()
+  })
+
+  it('shows on localhost, which is stable for whoever is on that machine', () => {
+    setHostname('localhost')
     render(<InstallHint />)
 
     expect(screen.getByText('Add to Home Screen')).toBeTruthy()

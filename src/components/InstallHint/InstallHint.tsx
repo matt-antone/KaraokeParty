@@ -21,6 +21,28 @@ const isIosSafari = () => {
   return isIos && !/CriOS|FxiOS|EdgiOS/.test(ua)
 }
 
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
+
+/**
+ * Whether the address this page was loaded from is worth freezing.
+ *
+ * An install captures the URL it was added from and a standalone window has no
+ * address bar to correct it, so an icon added from a raw IP is dead as soon as
+ * the server moves network or its DHCP lease renews — and since private ranges
+ * are heavily reused, it may reach an unrelated device rather than fail
+ * cleanly. Better to never invite the install than to hand out an icon that
+ * expires. The host opts in by giving the server a name (see KES_SERVER_URL).
+ *
+ * location.hostname rather than prefs.serverUrl: the latter is what the join QR
+ * will hand out next, which is a different question from how this guest
+ * actually arrived, and guests are not sent it anyway.
+ */
+const isDurableOrigin = () => {
+  const { hostname } = window.location
+  // IPv6 literals arrive bracketed, e.g. [fe80::1]
+  return !IPV4.test(hostname) && !hostname.includes(':') && !hostname.startsWith('[')
+}
+
 // display-mode is the standard signal but only reached Safari in iOS 16.4;
 // navigator.standalone is all an older iPhone has.
 const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches
@@ -37,7 +59,8 @@ const wasDismissed = () => {
 }
 
 const InstallHint = () => {
-  const [isShown, setIsShown] = useState(() => isIosSafari() && !isInstalled() && !wasDismissed())
+  const [isShown, setIsShown] = useState(() =>
+    isIosSafari() && isDurableOrigin() && !isInstalled() && !wasDismissed())
 
   if (!isShown) return null
 
