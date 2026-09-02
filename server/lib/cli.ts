@@ -58,8 +58,7 @@ const HELP = `KaraokeParty Server
   Logging options use the following numeric levels:
   0=off, 1=error, 2=warn, 3=info, 4=verbose, 5=debug`
 
-// CLI options take precedence over env vars. Numeric ones are parsed as
-// strings by parseArgs, so the env var's own parseInt does the conversion.
+// CLI options take precedence over env vars
 const opts = {
   data: 'KES_PATH_DATA',
   port: 'KES_PORT',
