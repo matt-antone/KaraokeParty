@@ -37,6 +37,23 @@ function contrast (fg: string, bg: string): number {
   return (hi + 0.05) / (lo + 0.05)
 }
 
+/** Hue in degrees. Contrast ratio is blind to hue, so separating the four
+ *  answer keys from one another needs its own measure. */
+function hue (hex: string): number {
+  const h = hex.replace('#', '')
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(full.slice(i, i + 2), 16) / 255)
+  const max = Math.max(r, g, b)
+  const chroma = max - Math.min(r, g, b)
+  if (chroma === 0) return 0
+
+  const deg = max === r
+    ? ((g - b) / chroma) % 6
+    : max === g ? (b - r) / chroma + 2 : (r - g) / chroma + 4
+
+  return (deg * 60 + 360) % 360
+}
+
 describe('DECK palette contrast', () => {
   // [label, foreground token, background token, threshold]
   const pairs: Array<[string, string, string, number]> = [
@@ -59,8 +76,59 @@ describe('DECK palette contrast', () => {
     ['teal standby on a panel', 'standby', 'faceplate', AA_NORMAL],
   ]
 
+  // Every trivia answer key is filled and carries a numeral in --ink, so each
+  // gradient stop has to clear AA on its own. They are deliberately matched:
+  // an answer that reads brighter than its three peers looks like the answer.
+  const answerStops = [1, 2, 3, 4].flatMap(n => [`ans-${n}-hi`, `ans-${n}-lo`])
+
   it.each(pairs)('%s (%s on %s) clears %f:1', (_label, fg, bg, min) => {
     expect(contrast(token(fg), token(bg))).toBeGreaterThanOrEqual(min)
+  })
+
+  it.each(answerStops)('ink across the %s answer key face clears 4.5:1', (stop) => {
+    expect(contrast(token('ink'), token(stop))).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('keeps the four answer keys level with one another', () => {
+    // No answer may look louder than the others, so the lit stop of each is
+    // tuned to the same contrast against ink rather than to the same
+    // lightness — blue is much darker than green at equal HSL lightness.
+    // The band is anchored on --alert-key-hi's 4.89:1, the existing filled
+    // key this set was matched to.
+    const lit = [1, 2, 3, 4].map(n => contrast(token('ink'), token(`ans-${n}-hi`)))
+
+    expect(Math.max(...lit) - Math.min(...lit)).toBeLessThanOrEqual(0.25)
+    for (const c of lit) expect(Math.abs(c - 4.89)).toBeLessThanOrEqual(0.3)
+  })
+
+  it('keeps the answer set closed at four', () => {
+    // Same bargain as the signal count below, for the same reason: a fifth
+    // answer colour means the round has five answers, which OpenTDB's
+    // type=multiple cannot produce. Two stops each, eight in total.
+    const stops = (css.match(/^\s*--ans-\d+-(?:hi|lo):\s*#/gm) ?? []).length
+    expect(stops).toBe(8)
+  })
+
+  it('keeps the four answers separable from one another by hue', () => {
+    // The one property retuning a colour can quietly destroy. Contrast ratio
+    // cannot see it — two different hues at one lightness measure 1.0:1 — so
+    // this asks the question in the only unit that answers it. 60 degrees is
+    // the gap four evenly spaced hues would have at their tightest minus a
+    // little slack; below that two keys start reading as the same key.
+    //
+    // Nothing here compares an answer to --vu, --standby or --alert. An
+    // answer never appears on the same surface as a state indicator, and the
+    // mapping a guest actually uses is position and the numeral; colour is
+    // the third channel, not the only one.
+    const hues = [1, 2, 3, 4].map(n => hue(token(`ans-${n}-hi`)))
+
+    for (let i = 0; i < hues.length; i++) {
+      for (let j = i + 1; j < hues.length; j++) {
+        const apart = Math.abs(hues[i] - hues[j])
+        expect(Math.min(apart, 360 - apart), `--ans-${i + 1} vs --ans-${j + 1}`)
+          .toBeGreaterThanOrEqual(60)
+      }
+    }
   })
 
   it('spent ink is dim but still legible on the chassis', () => {
