@@ -12,6 +12,7 @@ import {
   ROOM_REMOVE,
   ROOM_PREFS_PUSH,
   ROOM_PREFS_PUSH_REQUEST,
+  ROOM_RESET_REQUEST,
   LOGOUT,
 } from 'shared/actionTypes'
 
@@ -103,6 +104,10 @@ export function requestPrefsPush (roomId: number, prefs: IRoomPrefs): AppThunk {
     })
   }
 }
+
+export const requestRoomReset = createAction(ROOM_RESET_REQUEST, (roomId: number) => ({
+  payload: { roomId },
+}))
 
 // ------------------------------------
 // Reducer

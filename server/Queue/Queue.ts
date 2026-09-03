@@ -245,6 +245,37 @@ class Queue {
   }
 
   /**
+   * Empty a room's queue and lift every pause in it, so the room can host a
+   * new night without being re-created. prevQueueId is self-referential, so
+   * the whole room goes in one statement with foreign keys deferred rather
+   * than row by row through remove()
+   */
+  static clear (roomId: number): void {
+    db.exec('BEGIN IMMEDIATE')
+    db.exec('PRAGMA defer_foreign_keys = ON')
+
+    try {
+      const deleteQueue = sql`
+        DELETE FROM queue
+        WHERE roomId = ${roomId}
+      `
+      db.run(String(deleteQueue), deleteQueue.parameters)
+
+      // a pause left over from last night silently keeps a singer out of the
+      // rotation, and nothing on screen says why
+      const deletePauses = sql`
+        DELETE FROM queuePauses
+        WHERE roomId = ${roomId}
+      `
+      db.run(String(deletePauses), deletePauses.parameters)
+      db.exec('COMMIT')
+    } catch (err) {
+      db.exec('ROLLBACK')
+      throw err
+    }
+  }
+
+  /**
    * Check if user owns queue item(s)
    */
   static isOwner (userId: number, queueId: number | number[]): boolean {

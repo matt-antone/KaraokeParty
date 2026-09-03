@@ -207,6 +207,14 @@ const PlayerController = (props: PlayerControllerProps) => {
     return () => clearTimeout(timerID)
   }, [handleLoadNext, player._isPlayingNext, skipEndsAt])
 
+  // history reset? empty the played list and push it, so the library's
+  // greyed-out rows come back to life for everyone in the room
+  useEffect(() => {
+    if (player._lastHistoryResetTime) {
+      handleStatus({ historyJSON: '[]' })
+    }
+  }, [handleStatus, player._lastHistoryResetTime])
+
   // replaying?
   useEffect(() => {
     if (player._isReplayingQueueId !== null) {
