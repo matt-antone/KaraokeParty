@@ -14,64 +14,7 @@ Neither file is published — Hugo serves `docs/content/`.
 ## Shipped
 
 - **Per-song key change** — queue metadata, Song Settings dialog on the Me tab, playback pitch shift, per-singer key memory. Was Tier 1 in the research report.
-
----
-
-## Music Trivia
-
-**Status:** spec · **Effort:** medium-high · **Source:** our own idea, no surveyed competitor ships it
-
-Trivia rounds that take a turn in the rotation, so the party has something to
-do between singers and quiet guests have a way to play. Questions come from the
-[Open Trivia Database](https://opentdb.com/), music category.
-
-### Intent
-
-- A room setting turns trivia **on or off**.
-- While on, a trivia round **sits in the queue like any other singer** and takes its turn in the rotation.
-- While on, **there is always exactly one trivia round in the queue** — as one plays, the next is queued behind it.
-- Guests answer on their phones through a **dialog with four coloured buttons: red, blue, green, purple**. The colours match the four answers shown on the player screen; the phone shows no text, only colour.
-- A room setting sets the **question countdown** — how long an answer is open.
-- The player screen shows a **scoreboard of everyone who has answered at least once**. Nobody who has not played appears.
-- A room setting **resets the scores**.
-
-### The API, verified
-
-`GET https://opentdb.com/api.php?amount=5&category=12&type=multiple`
-
-- Category **12** is `Entertainment: Music`. `type=multiple` returns exactly **one `correct_answer` and three `incorrect_answers`** — four total, which is where the four buttons come from. No API key.
-- **Rate limit: one request per IP per five seconds** (response code 5). Fetching per question at speed will fail; fetch in batches.
-- **Session tokens** stop repeats within a session. They expire after **six hours of inactivity**, and return code 4 once the category is exhausted, at which point the token must be reset. A long party can exhaust the music category.
-- Responses are **HTML-entity encoded by default** (`&#039;`, `&quot;`). Pass `encode=base64` or `encode=url3986` rather than writing an entity decoder.
-- Answers arrive **unshuffled** — `correct_answer` is a separate field, so the four must be shuffled before display or the answer is always in the same place.
-- Content is **CC BY-SA 4.0**. Attribution to OpenTDB is a licence obligation, not a courtesy — it needs to appear on screen or in the docs.
-
-### Open questions to settle before building
-
-These are real conflicts with how the app is built today, not speculation.
-
-1. **The palette has no blue, green or purple.** DECK is amber (`--vu`), teal (`--standby`) and red (`--alert`) on graphite. Red/blue/green/purple would be the first colours defined outside the token file, which `deck-rules.test.ts` fails the build for. Either four answer colours join the token file as a deliberate, tested addition, or the answers are distinguished some other way. Worth noting the design system's own instinct would be shape and position over colour.
-
-2. **Colour alone is not an accessible mapping.** Roughly one in twelve men cannot separate red from green. Each answer wants a second channel — a shape, a numeral, or its position — carried identically on the phone and the screen.
-
-3. **A queue row has no place for a non-singer.** `queue` is `queueId, roomId, songId, userId` with `userId` a NOT NULL foreign key to `users`, and every row joins to `media` for the player to load. A trivia round has no singer and no media. It needs either a reserved system user and a synthetic media type, or the queue needs a row type — the second is cleaner and more invasive.
-
-4. **The rotation is keyed on `userId`.** `getRoundRobinQueue` spaces singers apart from one another. A trivia round must take a turn without counting as a singer whose turn was used, or trivia will distort whose turn is next.
-
-5. **"Always one queued" needs a trigger.** Something has to re-queue after each round plays, and it has to be idempotent — two clients racing must not queue two rounds. The server is the only safe place for it.
-
-6. **Parties run on a LAN and may have no internet.** The API is a live network call with a five-second rate limit. Questions must be prefetched and cached locally well ahead of use, with defined behaviour when the cache runs dry mid-party.
-
-7. **Scores need somewhere to live.** Per room, per user, plus a reset. New table, and a decision on whether scores survive a room closing or the night ending.
-
-8. **Who may answer?** Everyone in the room, or only people in the queue? Presumably everyone — that is the point of giving quiet guests something to do — but it decides whether answering requires a queue entry.
-
-### Sketch of the work
-
-- Room prefs: `isTriviaEnabled`, `triviaCountdownSeconds`, and a reset-scores action, alongside the existing per-room prefs.
-- Server: a question cache with prefetch and a session token; queue insertion that keeps exactly one round pending; answer collection closed by the countdown; score tally per room.
-- Player: a question screen with four answers and the scoreboard.
-- Remote: the four-button answer dialog, opening when a round starts and closing when the countdown ends.
+- **Music trivia** — rounds between singers, four answer keys on the phone, scoreboard on the player, question cache with prefetch. Was our own idea; how each open question was settled is recorded below.
 
 ---
 
@@ -115,3 +58,123 @@ destroys data a guest cares about.
 2. **Who may press it?** Admin only, presumably — it changes the library for everyone in the room.
 3. **Does the played section of the Queue tab clear too,** or only the library's disabling? The Queue tab's history view reads the same array, so it will empty either way. Worth being sure that is wanted, since it is the only record on screen of what the room has sung tonight.
 4. **Confirmation?** It is undoable only by singing everything again, so a confirm step is probably right.
+
+---
+
+## Music Trivia — how it was built
+
+**Status:** shipped
+
+Rounds between singers, sourced from the [Open Trivia Database](https://opentdb.com/),
+music category. The spec is above in git history; this is what was decided
+where the spec left a question open, and why.
+
+### The eight open questions, settled
+
+1. **Four answer colours joined the token file**, as a deliberate, tested
+   addition: `--ans-1..4` with `-hi`/`-lo` stops and matching key faces. They
+   are answer *channels*, not signals — nothing is ever "in the `--ans-2`
+   state" — so they sit outside the vu/standby/alert family the palette test
+   counts and carry a closure assertion of their own. Every lit stop measures
+   4.84–4.86:1 against `--ink`, the same footing `--alert-key-hi` already had,
+   so no answer reads louder than its peers. Crimson, moss, indigo and plum:
+   dark and mid-chroma rather than the spec's literal red/blue/green/purple,
+   because amber and teal are spoken for and confectionery colours do not
+   belong on a graphite faceplate.
+
+2. **Colour is the third channel, not the only one.** Each key carries a
+   numeral and a fixed position in a 2×2 grid, identical on the phone and the
+   screen. `AnswerKey` is one shared component for exactly this reason: key 3
+   cannot come out one colour in one place and another elsewhere. A test
+   asserts the four stay at least 60° apart in hue.
+
+3. **A trivia round is a real queue row.** `queue` gained a `type` column
+   (`'song'` / `'trivia'`) with `songId` and `userId` made nullable — the row
+   type, which the spec's own note called the cleaner of the two options, in
+   preference to a reserved system user and a synthetic media type. Migration
+   012 rebuilds the table (SQLite cannot drop `NOT NULL` in place); 013 adds
+   the `datePlayed` marker that makes "the round waiting" a thing the server
+   can query rather than infer, since play history lives only in the running
+   player.
+   `Queue.get`'s three `INNER JOIN`s became `LEFT JOIN`s, with the filter they
+   were silently doing — a song whose media has gone is not playable and must
+   not appear — written out in the `WHERE` clause rather than lost. On the
+   wire a round carries `songId`/`userId` of `0` and a `userDisplayName` of
+   "Trivia", so every consumer that filters by singer or looks a song up keeps
+   working untouched, and the four places that must behave differently use the
+   `isTriviaItem` guard.
+
+4. **The rotation spaces a round exactly as it spaces a singer.** The round
+   carries `userId` 0 on the wire, and `getRoundRobinQueue` does not special-
+   case it at all — it goes through the same round-robin as everyone else, so
+   it comes up once per lap however deep the queue gets.
+   *This was got wrong first.* The round was pinned to the back of the queue,
+   which looks right with two songs waiting and is useless with fifteen: on a
+   real queue it sat an hour out and the room would never have reached it.
+   Being a participant rather than a pinned row is what "takes its turn in the
+   rotation" actually means.
+   `getMyRotation` is the one place that does skip it, because it counts
+   *singers* — a round is a turn, but it is nobody's turn, so counting it
+   would make the rotation read one longer than the number of people in it.
+
+5. **"Always exactly one" is enforced by the server, in the queue itself.**
+   `Trivia.syncQueue` compares and acts: one pending row when trivia is on,
+   none when it is off. `Queue.addTrivia` is idempotent — it returns the
+   existing pending row rather than adding a second — so two clients racing
+   cannot queue two rounds. It is called on queue add, on room update, on
+   connect, and as each round closes. `Trivia.startRound` refuses any queueId
+   that is not the pending row, so a player that reloads and replays back
+   through the queue cannot re-ask a round the room already answered.
+
+5b. **A round is five questions, not one.** The queue row is held for all
+   five: each has its own countdown, its own id (so a tap landing during a
+   reveal cannot score against the next question) and a short reveal of the
+   right answer; the scoreboard waits for the last one. The row is only
+   requeued, and the player only moves on, once the fifth is done. A thin
+   cache asks a shorter round rather than no round at all.
+   *Cost:* at the default 20-second answer time a round is a little over two
+   minutes between singers. The countdown is a room pref, so a host who wants
+   it tighter has the dial.
+
+6. **Questions are cached in SQLite and prefetched at server start**, in
+   batches of 50, honouring the one-request-per-five-seconds limit with
+   margin. `encode=base64` rather than an entity decoder. The session token
+   lives in memory only — the cache's unique index on the question text and
+   its `dateUsed` column are what actually stop repeats, so nothing is lost on
+   restart. Token expiry (code 3) and category exhaustion (code 4) both
+   re-request and retry once. **When the cache runs dry it replays the
+   question seen longest ago** rather than stopping; when it is empty
+   altogether the round is skipped silently, because a party mid-song is the
+   wrong place for an error.
+
+7. **Scores live in `triviaScores`**, per room per user, created on a player's
+   first answer — so absence from the table *is* "hasn't played", which is
+   what the scoreboard rule needed. They survive a restart and are cleared
+   only by the reset button. Removing a room clears them too, since they
+   reference it.
+
+8. **Everyone in the room may answer**, queued or not — giving the quiet
+   guests something to play is the point. One answer each, first press counts.
+
+### Where it lives
+
+- `server/Trivia/QuestionCache.ts` — the OpenTDB client and the local cache
+- `server/Trivia/Trivia.ts` — the pending-round invariant, round state, answers, scores
+- `server/lib/schemas/012`, `013` — the queue row type and its played marker
+- `src/components/AnswerKey/` — the four keys, shared by both surfaces
+- `src/components/TriviaDialog/` — the phone's answer pad
+- `src/routes/Player/components/PlayerTrivia/` — the question screen and scoreboard
+- `src/routes/Queue/components/QueueTriviaItem/` — the round's row in the queue
+- `src/lib/useTriviaStage.ts` — when a round is on screen and when it has expired
+
+### Still open
+
+- Scoring is one point per correct answer. No speed bonus, no difficulty
+  weighting — worth revisiting only if a party finds ties boring.
+- A host cannot skip a round in progress; the countdown is the only way out.
+- A round contributes nothing to the wait estimates on the queue rows. It is
+  under 30 seconds against songs of three or four minutes, and the countdown
+  length is a room pref the guests' clients are not sent.
+- Migration 012 was edited after it had already been applied to a running
+  development database, which is why 013 exists as a separate file. Migrations
+  are immutable once they have run anywhere.
