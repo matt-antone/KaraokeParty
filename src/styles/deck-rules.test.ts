@@ -49,6 +49,61 @@ function search (pattern: string, glob: string): string[] {
   }
 }
 
+/**
+ * The JSX open tag starting at `from` (the index of its "<"), or null if it is
+ * never closed. Scanned rather than regex-matched because a prop value can
+ * contain a bare ">" — `onClick={() => f()}`, `disabled={n >= MAX}` — which
+ * ends the tag early and makes a self-closing Button look like a paired one.
+ */
+function readOpenTag (text: string, from: number): { body: string, selfClosing: boolean, end: number } | null {
+  let depth = 0
+  let quote = ''
+
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]
+    if (quote) {
+      if (c === '\\') i++
+      else if (c === quote) quote = ''
+      continue
+    }
+    if (c === '"' || c === '\'' || c === '`') quote = c
+    else if (c === '{') depth++
+    else if (c === '}') depth--
+    else if (c === '>' && depth === 0) {
+      const body = text.slice(from, i)
+      return { body, selfClosing: /\/\s*$/.test(body), end: i + 1 }
+    }
+  }
+
+  return null
+}
+
+/** Labels of every <Button>…</Button> in `text` that carries no variant. */
+function bareLabelledButtons (text: string): string[] {
+  const bare: string[] = []
+
+  for (const match of text.matchAll(/<Button\b/g)) {
+    const tag = readOpenTag(text, match.index)
+    if (!tag || tag.selfClosing || tag.body.includes('variant')) continue
+
+    const close = text.indexOf('</Button>', tag.end)
+    if (close === -1) continue
+
+    // a label is text of its own: strip nested elements and {expressions}
+    // so an icon child or a bare ★ doesn't read as one. Braces nest, so
+    // the innermost pass repeats until there are none left to take
+    let label = text.slice(tag.end, close).replace(/<[^>]*>/g, '')
+    for (let prev = ''; prev !== label;) {
+      prev = label
+      label = label.replace(/\{[^{}]*\}/g, '')
+    }
+
+    if (/[A-Za-z]/.test(label)) bare.push(label.trim().slice(0, 40))
+  }
+
+  return bare
+}
+
 describe('DECK rules', () => {
   it('uses no emoji anywhere', () => {
     // "No emoji. Anywhere." The favourite control is a text star and library
@@ -201,30 +256,26 @@ describe('DECK rules', () => {
 
     for (const file of files('*.tsx')) {
       if (file.endsWith('.test.tsx')) continue
-      const text = readFileSync(join(SRC, file), 'utf8')
-
-      for (const match of text.matchAll(/<Button\b([^>]*?)(\/>|>)/gs)) {
-        if (match[2] === '/>' || match[1].includes('variant')) continue
-
-        const close = text.indexOf('</Button>', match.index + match[0].length)
-        if (close === -1) continue
-
-        // a label is text of its own: strip nested elements and {expressions}
-        // so an icon child or a bare ★ doesn't read as one. Braces nest, so
-        // the innermost pass repeats until there are none left to take
-        let label = text.slice(match.index + match[0].length, close)
-          .replace(/<[^>]*>/g, '')
-        for (let prev = ''; prev !== label;) {
-          prev = label
-          label = label.replace(/\{[^{}]*\}/g, '')
-        }
-
-        if (/[A-Za-z]/.test(label)) {
-          unlabelled.push(`${file}: ${label.trim().slice(0, 40)}`)
-        }
+      for (const label of bareLabelledButtons(readFileSync(join(SRC, file), 'utf8'))) {
+        unlabelled.push(`${file}: ${label}`)
       }
     }
 
     expect(unlabelled).toEqual([])
+  })
+
+  it('reads a self-closing Button with an inline arrow prop as self-closing', () => {
+    // The scan used to be a regex whose tag body stopped at the first ">",
+    // so `onClick={() => …}` or `disabled={n >= MAX}` cut the tag short: the
+    // self-closing Button read as a paired one, and the next </Button>
+    // anywhere in the file donated it a label it never had.
+    const fixture = `
+      <Button icon='star' onClick={() => toggle(id)} disabled={n >= MAX} />
+      <Button variant='primary' onClick={() => close()}>Done</Button>
+      <Button onClick={() => go()}>Queue another song</Button>
+    `
+
+    // only the third: bare, and it really does have words on it
+    expect(bareLabelledButtons(fixture)).toEqual(['Queue another song'])
   })
 })
