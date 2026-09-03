@@ -93,6 +93,30 @@ class Queue {
     return db.get<{ queueId: number }>(String(query), query.parameters)?.queueId ?? null
   }
 
+  /**
+   * Delete spent trivia rows, keeping the one played most recently.
+   *
+   * A round's row is nobody's turn once it is over — it is not a song anyone
+   * sang, and leaving it behind means the queue grows a dead "Trivia" entry
+   * every lap. The newest one stays because the player may still be standing
+   * on it showing the final scoreboard, and pulling the current row out from
+   * under it sends the player back to the top of the queue.
+   */
+  static removeSpentTrivia (roomId: number): number {
+    // through remove() rather than a DELETE: prevQueueId is a foreign key onto
+    // this same table, so whoever pointed at the row has to be re-pointed
+    const query = sql`
+      SELECT queueId FROM queue
+      WHERE roomId = ${roomId} AND type = 'trivia' AND datePlayed IS NOT NULL
+      ORDER BY datePlayed DESC
+    `
+    const [, ...spent] = db.all<{ queueId: number }>(String(query), query.parameters)
+
+    for (const row of spent) this.remove(row.queueId)
+
+    return spent.length
+  }
+
   /** Mark a round asked, so a player restart does not ask it again. */
   static setTriviaPlayed (queueId: number): void {
     const query = sql`

@@ -3,7 +3,7 @@ import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
 import Rooms from '../Rooms/Rooms.js'
 import Queue from '../Queue/Queue.js'
-import QuestionCache, { type CachedQuestion } from './QuestionCache.js'
+import fetchQuestions, { type TriviaQuestion } from './Questions.js'
 import {
   clampTriviaCountdown,
   TRIVIA_ANSWER_COUNT,
@@ -18,13 +18,18 @@ import { TRIVIA_ROUND, TRIVIA_RESULT, QUEUE_PUSH } from '../../shared/actionType
 const log = getLogger('Trivia')
 
 /** How long the right answer stays up, every question. Long enough to read
- *  which one it was, short enough that five of them do not become the party. */
-const REVEAL_MS = 4000
+ *  which one it was and argue about it before the standings land. */
+const REVEAL_MS = 6000
 
-/** After the last answer, the scoreboard gets the stage to itself. Sequenced
+/** After every answer, the scoreboard gets the stage to itself. Sequenced
  *  rather than shown alongside: the answer and the standings are two different
- *  things to look at, and together they compete. */
-const SCOREBOARD_MS = 6000
+ *  things to look at, and together they compete. Standings that only appear
+ *  once, at the end, give nobody anything to chase for four questions. */
+const SCOREBOARD_MS = 3000
+
+/** The last scoreboard is the round's result, not a checkpoint, so it holds
+ *  twice as long — long enough to find yourself on it and say something. */
+const FINAL_SCOREBOARD_FACTOR = 2
 
 /** One question inside a round: its own id, so an answer can never be applied
  *  to the question after it. */
@@ -42,7 +47,7 @@ interface ActiveRound {
   /** The queue row being asked. A round is a turn in the rotation, so it
    *  belongs to a row the whole room can see coming. */
   queueId: number
-  questions: CachedQuestion[]
+  questions: TriviaQuestion[]
   /** Index into questions of the one in play, or about to be. */
   index: number
   /** Null between questions, while the answer is on screen. */
@@ -53,6 +58,13 @@ interface ActiveRound {
 /** roomId to its round in progress. The server is the only place this can
  *  live: two clients racing must not be able to start two rounds. */
 const rounds = new Map<number, ActiveRound>()
+
+/** Rooms whose questions are in flight. A round now begins with a network
+ *  call, so `rounds` is empty for as long as that takes and the guard against
+ *  starting twice has to cover the gap — two players asking at once, or one
+ *  asking twice, would otherwise fetch two rounds and race to be the one the
+ *  room sees. */
+const starting = new Set<number>()
 
 let nextRoundId = 1
 
@@ -89,8 +101,19 @@ class Trivia {
    */
   static syncQueue (roomId: number): boolean {
     if (this.getPrefs(roomId).isEnabled) {
+      // A round on stage is spent the moment it starts, so without this the
+      // next caller sees nothing pending and pushes its replacement while the
+      // room is still answering the current one — two rounds in the queue from
+      // the second anyone hits play.
+      if (rounds.has(roomId) || starting.has(roomId)) return false
+
+      // every sync, not only when a new round is due: a room that reconnects
+      // carrying spent rounds has to be told they are gone, or it goes on
+      // showing them as rounds still to come
+      const removed = Queue.removeSpentTrivia(roomId) > 0
+
       const pending = Queue.getPendingTriviaId(roomId)
-      if (pending !== null) return false
+      if (pending !== null) return removed
 
       // nothing to take a turn between: a round on its own in an empty queue
       // would start the moment anyone pressed play
@@ -128,7 +151,9 @@ class Trivia {
    * the second means move on.
    */
   static isRoundInProgress (roomId: number, queueId: number): boolean {
-    return rounds.get(roomId)?.queueId === queueId
+    // a round whose questions are still on the wire counts: the player has to
+    // keep waiting rather than be told there is nothing here
+    return rounds.get(roomId)?.queueId === queueId || starting.has(roomId)
   }
 
   /** The question a room is in the middle of, for a client that just joined. */
@@ -145,21 +170,29 @@ class Trivia {
    * the pending round is refused, so a player that reloads and replays its way
    * back through the queue does not ask a round the room already answered.
    */
-  static startRound (io, roomId: number, queueId: number): TriviaRound | null {
-    if (rounds.has(roomId)) return null
+  static async startRound (io, roomId: number, queueId: number): Promise<TriviaRound | null> {
+    if (rounds.has(roomId) || starting.has(roomId)) return null
     if (Queue.getPendingTriviaId(roomId) !== queueId) return null
 
-    // Fewer than a full round is still a round — a thin cache asks what it
-    // has rather than nothing at all.
-    const questions = QuestionCache.take(TRIVIA_QUESTIONS_PER_ROUND)
+    starting.add(roomId)
 
-    // The cache is dry and the network is gone. Leave the row pending and say
-    // nothing: the player skips past it, and the next time it comes round
-    // there may be questions again. A party mid-song is the wrong place for an
-    // error message.
+    let questions: TriviaQuestion[]
+
+    try {
+      questions = await fetchQuestions(TRIVIA_QUESTIONS_PER_ROUND)
+    } finally {
+      starting.delete(roomId)
+    }
+
+    // The row may have been played, or the room closed, while the questions
+    // were on the wire — the guards above were true a network call ago.
+    if (rounds.has(roomId) || Queue.getPendingTriviaId(roomId) !== queueId) return null
+
+    // No internet, or OpenTDB said no. Leave the row pending and say nothing:
+    // the player skips past it, and the next time it comes round the network
+    // may be back. A party mid-song is the wrong place for an error message.
     if (!questions.length) {
-      log.verbose('no cached trivia questions; skipping this round')
-      void QuestionCache.topUp()
+      log.verbose('no trivia questions came back; skipping this round')
       return null
     }
 
@@ -169,8 +202,13 @@ class Trivia {
     // walking back through the queue would otherwise do
     Queue.setTriviaPlayed(queueId)
 
-    // refill while the room is busy answering, not while it is waiting
-    void QuestionCache.topUp()
+    // and the room has to be told, or every client keeps a copy of this row
+    // that still reads "music round" — a spent round showing as one still to
+    // come, next to the one that really is
+    io.to(Rooms.prefix(roomId)).emit('action', {
+      type: QUEUE_PUSH,
+      payload: Queue.get(roomId),
+    })
 
     return this.askQuestion(io, roomId)
   }
@@ -201,6 +239,7 @@ class Trivia {
       answers,
       difficulty: question.difficulty,
       endsAt: Date.now() + countdownSeconds * 1000,
+      sentAt: Date.now(),
     }
 
     active.current = {
@@ -239,11 +278,10 @@ class Trivia {
       questionCount: current.round.questionCount,
       isFinal,
       correctIdx: current.correctIdx,
-      // the scoreboard is the last question's payoff, but the scores ride
-      // along every time so a client joining late is never without them
       scores: this.getScores(roomId),
       scoresFrom: Date.now() + REVEAL_MS,
-      endsAt: Date.now() + REVEAL_MS + (isFinal ? SCOREBOARD_MS : 0),
+      endsAt: Date.now() + REVEAL_MS + SCOREBOARD_MS * (isFinal ? FINAL_SCOREBOARD_FACTOR : 1),
+      sentAt: Date.now(),
     }
 
     active.current = null
@@ -263,7 +301,7 @@ class Trivia {
       return
     }
 
-    active.timer = setTimeout(() => this.askQuestion(io, roomId), REVEAL_MS)
+    active.timer = setTimeout(() => this.askQuestion(io, roomId), REVEAL_MS + SCOREBOARD_MS)
   }
 
   /**

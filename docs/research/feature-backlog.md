@@ -14,7 +14,7 @@ Neither file is published — Hugo serves `docs/content/`.
 ## Shipped
 
 - **Per-song key change** — queue metadata, Song Settings dialog on the Me tab, playback pitch shift, per-singer key memory. Was Tier 1 in the research report.
-- **Music trivia** — rounds between singers, four answer keys on the phone, scoreboard on the player, question cache with prefetch. Was our own idea; how each open question was settled is recorded below.
+- **Music trivia** — rounds between singers, four answer keys on the phone, scoreboard on the player, five questions fetched per round. Was our own idea; how each open question was settled is recorded below.
 - **Reset a room for a new night** — Reset for New Night in the Edit Room dialog, admin-gated. Empties the room's queue, lifts its pauses, and clears the player's `historyJSON`. `songHistory` untouched. Rooms are now reusable across nights.
 
 ---
@@ -170,7 +170,7 @@ where the spec left a question open, and why.
 
 ### Where it lives
 
-- `server/Trivia/QuestionCache.ts` — the OpenTDB client and the local cache
+- `server/Trivia/Questions.ts` — the OpenTDB client; a round fetches its five questions when it starts
 - `server/Trivia/Trivia.ts` — the pending-round invariant, round state, answers, scores
 - `server/lib/schemas/012`, `013` — the queue row type and its played marker
 - `src/components/AnswerKey/` — the four keys, shared by both surfaces

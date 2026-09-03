@@ -215,6 +215,12 @@ export interface TriviaRound {
   difficulty: string
   /** Epoch ms the countdown expires. */
   endsAt: number
+  /** Epoch ms this payload was sent, by the server's clock. Every other time
+   *  here is the server's too, and the machines reading them — a TV box, a
+   *  phone — have their own. Pairing the deadlines with the moment they were
+   *  stamped lets a client subtract the difference out; without it a player
+   *  whose clock is a few seconds off silently skips whole beats. */
+  sentAt: number
 }
 
 /** The server's answer to "put this row's round on".
@@ -246,10 +252,12 @@ export interface TriviaResult {
   scores: TriviaScore[]
   /** Epoch ms the scoreboard takes over from the answer. The two are separate
    *  beats — you read what it was, then you see where that put everyone —
-   *  and showing them at once means neither lands. Equal to endsAt when there
-   *  is no scoreboard beat, which is every question but the last. */
+   *  and showing them at once means neither lands. Every question gets both;
+   *  the last one holds its scoreboard longest. */
   scoresFrom: number
   /** Epoch ms the reveal stops being shown — and, when isFinal, the earliest
    *  the next song may load. */
   endsAt: number
+  /** Epoch ms this payload was sent. See TriviaRound.sentAt. */
+  sentAt: number
 }
