@@ -240,6 +240,7 @@ const PlayerController = (props: PlayerControllerProps) => {
         cdgSize={player.cdgSize}
         isPlaying={player.isPlaying}
         isVisible={isMediaVisible}
+        keyChange={queueItem?.keyChange ?? 0}
         isReplayGainEnabled={prefs.isReplayGainEnabled}
         isVideoKeyingEnabled={!!queueItem?.isVideoKeyingEnabled}
         isWebGLSupported={player.isWebGLSupported}

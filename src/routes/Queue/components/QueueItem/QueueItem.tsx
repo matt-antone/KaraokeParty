@@ -10,7 +10,9 @@ import UserImage from 'components/UserImage/UserImage'
 import { requestPlayNext, requestReplay } from 'store/modules/status'
 import { toggleSongStarred } from 'store/modules/userStars'
 import { showErrorMessage } from 'store/modules/ui'
-import { removeItem } from '../../modules/queue'
+import { removeItem, setKeyChange } from '../../modules/queue'
+import SongSettings from '../SongSettings/SongSettings'
+import { formatKeyChange } from '../SongSettings/formatKeyChange'
 import styles from './QueueItem.css'
 
 /** A just-started song still reads as started. */
@@ -31,7 +33,11 @@ interface QueueItemProps {
   isReplayable: boolean
   isSkippable: boolean
   isStarred: boolean
+  /** Gear key: on the Me tab, for a song still yours to change. */
+  isTunable: boolean
   isUpcoming: boolean
+  /** Absent on an optimistic row until the server echoes it back. */
+  keyChange?: number
   pctPlayed: number
   queueId: number
   songId: number
@@ -70,7 +76,9 @@ const QueueItem = ({
   isReplayable,
   isSkippable,
   isStarred,
+  isTunable,
   isUpcoming,
+  keyChange = 0,
   onMoveClick,
   pctPlayed,
   queueId,
@@ -84,6 +92,7 @@ const QueueItem = ({
   wait,
 }: QueueItemProps) => {
   const [isOpen, setOpen] = useState(false)
+  const [isSettingsOpen, setSettingsOpen] = useState(false)
   const dispatch = useAppDispatch()
 
   // Which keys appear is permission-driven: amber for constructive, red for
@@ -91,6 +100,7 @@ const QueueItem = ({
   const actions: SwipeAction[] = isPlayed
     ? []
     : [
+        isTunable && { icon: 'COG', label: 'Settings', tone: 'panel', onClick: () => setSettingsOpen(true) },
         isMovable && { icon: 'MOVE_TOP', label: 'Top', tone: 'vu', onClick: () => onMoveClick(queueId) },
         isReplayable && { icon: 'REPLAY', label: 'Replay', tone: 'alert', onClick: () => dispatch(requestReplay(queueId)) },
         isSkippable && { icon: 'PLAY_NEXT', label: 'Skip', tone: 'alert', onClick: () => dispatch(requestPlayNext()) },
@@ -100,68 +110,90 @@ const QueueItem = ({
   const isSpent = isPlayed || isPaused
 
   return (
-    <SwipeRow
-      actions={actions}
-      isOpen={isOpen}
-      onOpenChange={setOpen}
-      className={clsx(
-        styles.shell,
-        isOwner && styles.isOwner,
-        isOwner && isPaused && styles.ownerPaused,
-      )}
-    >
-      <div
+    <>
+      <SwipeRow
+        actions={actions}
+        isOpen={isOpen}
+        onOpenChange={setOpen}
         className={clsx(
-          styles.container,
-          isCurrent && !isPlaying && styles.paused,
-          isSpent && styles.spent,
-          isErrored && styles.errored,
+          styles.shell,
+          isOwner && styles.isOwner,
+          isOwner && isPaused && styles.ownerPaused,
         )}
-        style={{ '--progress': `${isCurrent && pctPlayed < MIN_PCT ? MIN_PCT : pctPlayed}%` } as React.CSSProperties}
-        // no info icon: an errored row surfaces its own message when tapped
-        onClick={isErrored ? () => dispatch(showErrorMessage(errorMessage)) : undefined}
       >
-        {isCurrent && (
-          <>
-            <div className={styles.fill} />
-            <div className={styles.sweep} />
-          </>
-        )}
+        <div
+          className={clsx(
+            styles.container,
+            isCurrent && !isPlaying && styles.paused,
+            isSpent && styles.spent,
+            isErrored && styles.errored,
+          )}
+          style={{ '--progress': `${isCurrent && pctPlayed < MIN_PCT ? MIN_PCT : pctPlayed}%` } as React.CSSProperties}
+          // no info icon: an errored row surfaces its own message when tapped
+          onClick={isErrored ? () => dispatch(showErrorMessage(errorMessage)) : undefined}
+        >
+          {isCurrent && (
+            <>
+              <div className={styles.fill} />
+              <div className={styles.sweep} />
+            </>
+          )}
 
-        {dragHandleProps && (
-          <div className={styles.dragHandle} {...dragHandleProps}>
-            <Icon icon='DRAG_INDICATOR' size={24} />
-          </div>
-        )}
-
-        <div className={styles.imageContainer}>
-          <UserImage userId={userId} dateUpdated={userDateUpdated} className={styles.avatar} />
-          {/* the chip marks the playing row and the waits ahead of it. The
-              current row reads NOW — without it the amber state is
-              unreachable, since isUpcoming and isCurrent are exclusive. */}
-          {(isCurrent || (isUpcoming && (wait || isPaused))) && (
-            <div className={clsx(styles.wait, isCurrent && styles.waitIsCurrent)}>
-              {isPaused ? <Icon icon='PAUSE' size={12} /> : isCurrent ? 'NOW' : wait}
+          {dragHandleProps && (
+            <div className={styles.dragHandle} {...dragHandleProps}>
+              <Icon icon='DRAG_INDICATOR' size={24} />
             </div>
           )}
-        </div>
 
-        <div className={styles.primary} translate='no'>
-          <div className={styles.title}>{title}</div>
-          <div className={styles.artist}>{artist}</div>
-          <div className={clsx(styles.user, isOwner && styles.userIsOwner)}>{userDisplayName}</div>
-        </div>
+          <div className={styles.imageContainer}>
+            <UserImage userId={userId} dateUpdated={userDateUpdated} className={styles.avatar} />
+            {/* the chip marks the playing row and the waits ahead of it. The
+                current row reads NOW — without it the amber state is
+                unreachable, since isUpcoming and isCurrent are exclusive. */}
+            {(isCurrent || (isUpcoming && (wait || isPaused))) && (
+              <div className={clsx(styles.wait, isCurrent && styles.waitIsCurrent)}>
+                {isPaused ? <Icon icon='PAUSE' size={12} /> : isCurrent ? 'NOW' : wait}
+              </div>
+            )}
+          </div>
 
-        {showStar && (
-          <ButtonStar
-            className={styles.star}
-            isStarred={isStarred}
-            onClick={() => dispatch(toggleSongStarred(songId))}
-            count={starCount}
-          />
-        )}
-      </div>
-    </SwipeRow>
+          <div className={styles.primary} translate='no'>
+            <div className={styles.title}>{title}</div>
+            <div className={styles.artist}>{artist}</div>
+            <div className={clsx(styles.user, isOwner && styles.userIsOwner)}>{userDisplayName}</div>
+          </div>
+
+          {/* a shifted key is a fact about how this row will sound, so it reads
+              on the row face rather than only inside the dialog that set it */}
+          {keyChange !== 0 && (
+            <div className={clsx('silkscreen', styles.keyChange)}>
+              {`key ${formatKeyChange(keyChange)}`}
+            </div>
+          )}
+
+          {showStar && (
+            <ButtonStar
+              className={styles.star}
+              isStarred={isStarred}
+              onClick={() => dispatch(toggleSongStarred(songId))}
+              count={starCount}
+            />
+          )}
+        </div>
+      </SwipeRow>
+
+      {/* outside SwipeRow: its slider is transformed, and a transformed
+          ancestor becomes the containing block for a top-layer dialog */}
+      {isSettingsOpen && (
+        <SongSettings
+          artist={artist}
+          title={title}
+          keyChange={keyChange}
+          onChangeKey={next => dispatch(setKeyChange({ keyChange: next, queueId }))}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
+    </>
   )
 }
 

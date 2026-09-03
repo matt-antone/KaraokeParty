@@ -1,0 +1,134 @@
+/* Settings for one queued song, built like the Display panel: sections are
+   wells recessed into the modal's brushed face, and the controls inside them
+   are raised keys. */
+
+.modal {
+  width: 90vw;
+  max-width: 420px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-4);
+}
+
+/* what you are setting, before the thing that sets it */
+.song {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  color: var(--ink);
+
+  /* min-height, never fixed: a wrapped title must be allowed to grow */
+  min-height: 1.4em;
+}
+
+.artist {
+  font-size: var(--text-m);
+  color: var(--ink-2);
+}
+
+/* a group that contains controls, so it is a well */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-3);
+  min-width: 0;
+  padding: var(--gap-4);
+  border-radius: var(--radius-panel);
+  background: var(--key-well);
+  box-shadow: var(--well);
+}
+
+/* section heading printed on the panel */
+.groupLabel {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Channel trim: − value + as one centred group. The keys keep their size and
+   the readout its width, so the assembly stays put as the value runs 0 to −6
+   and the modal from a phone to a desktop. */
+.stepper {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--gap-2);
+
+  /* raised keys, same face as the transport: these Buttons carry no variant,
+     so the key comes from here */
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: var(--target-l);
+    min-height: var(--target-l);
+    color: var(--ink);
+    background-color: var(--key);
+    background-image: var(--key-face);
+    box-shadow: var(--bevel);
+    border-radius: var(--radius-key);
+    transition: transform var(--dur-key) var(--ease-key);
+
+    &:active {
+      transform: translateY(1px);
+    }
+
+    svg {
+      height: var(--icon-l);
+    }
+  }
+}
+
+/* The one numeric display on the remote, so it is built like the deck's own:
+   mono digits sunk into the panel, graphite at rest and amber once the song
+   has left its own key. Fixed width because +6 and −6 must not move the keys. */
+.readout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 84px;
+  font-family: var(--font-mono);
+  font-size: var(--text-3xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  background: var(--chassis-deep);
+  border-radius: var(--radius-key);
+  box-shadow: var(--well-deep);
+}
+
+/* lit by being amber, not by bleeding light */
+.readoutShifted {
+  color: var(--vu);
+}
+
+.help {
+  margin: 0;
+  font-size: var(--text-s);
+  text-align: center;
+  color: var(--ink-3);
+
+  /* room for either message: the copy changes length with the key, and the
+     reset key below must not walk up and down as it does */
+  min-height: 2lh;
+}
+
+/* A key that spends most of its life dead — every one here has such a state:
+   ± at the ends of the range, reset at 0. Unlit ink rather than an opacity
+   dim, since the ramp already has a colour for "off" and the key stays raised
+   over the well either way. */
+.stepper button:disabled,
+.reset:disabled {
+  color: var(--ink-5);
+}

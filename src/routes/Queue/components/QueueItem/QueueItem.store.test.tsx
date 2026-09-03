@@ -15,7 +15,8 @@ import rootReducer from 'store/reducers'
 import createSocketMiddleware from 'store/socketMiddleware'
 import { queuePush } from '../../modules/queue'
 import { SNAP_AT, SWIPE_ACTION_WIDTH } from 'components/SwipeRow/constants'
-import { PLAYER_REQ_NEXT, PLAYER_REQ_REPLAY, QUEUE_REMOVE, STAR_SONG, UNSTAR_SONG } from 'shared/actionTypes'
+import { PLAYER_REQ_NEXT, PLAYER_REQ_REPLAY, QUEUE_REMOVE, QUEUE_SET_KEY, STAR_SONG, UNSTAR_SONG } from 'shared/actionTypes'
+import { KEY_CHANGE_MAX } from 'shared/types'
 import QueueItem from './QueueItem'
 
 /**
@@ -93,7 +94,9 @@ const base = {
   isReplayable: true,
   isSkippable: true,
   isStarred: false,
+  isTunable: false,
   isUpcoming: false,
+  keyChange: 0,
   pctPlayed: 0,
   queueId: 1,
   songId: SONG_ID,
@@ -193,5 +196,89 @@ describe('QueueItem against the real store', () => {
 
     expect(typesOf(emitted)).toEqual([STAR_SONG])
     expect(typesOf(dispatched).filter(t => t.startsWith('server/'))).toEqual([STAR_SONG])
+  })
+})
+
+/**
+ * The gear is the Me tab's way into per-song settings, and key is the only one
+ * so far. Like Remove, setting a key is a request: the server's push is what
+ * changes state, so what these assert is the emit.
+ */
+describe('song settings', () => {
+  const open = () => {
+    const ctx = renderRow({ isTunable: true, isUpcoming: true, isPlaying: false })
+    swipeOpen(ctx.slider)
+    fireEvent.click(screen.getByLabelText('Settings'))
+    return ctx
+  }
+
+  it('has no gear on a row the singer cannot change', () => {
+    const { slider } = renderRow()
+    swipeOpen(slider)
+    expect(screen.queryByLabelText('Settings')).toBeNull()
+  })
+
+  it('opens on the gear showing the song in its own key', () => {
+    open()
+    expect(screen.getByText('Song Settings')).toBeTruthy()
+    expect(screen.getByText('0')).toBeTruthy()
+  })
+
+  it('sends one semitone per press, in the direction pressed', () => {
+    const { emitted } = open()
+
+    fireEvent.click(screen.getByLabelText('Raise the key one semitone'))
+    fireEvent.click(screen.getByLabelText('Lower the key one semitone'))
+
+    expect(emitted).toEqual([
+      expect.objectContaining({ type: QUEUE_SET_KEY, payload: { keyChange: 1, queueId: 1 } }),
+      expect.objectContaining({ type: QUEUE_SET_KEY, payload: { keyChange: 0, queueId: 1 } }),
+    ])
+  })
+
+  it('compounds presses that land before the server answers', () => {
+    const { emitted } = open()
+
+    // no push between them: each press must build on the last, not on the
+    // row's stale keyChange. Reading the prop here moved the song one semitone
+    // however many times you tapped.
+    for (let i = 0; i < 3; i++) {
+      fireEvent.click(screen.getByLabelText('Raise the key one semitone'))
+    }
+
+    expect(emitted.map(a => (a.payload as { keyChange: number }).keyChange)).toEqual([1, 2, 3])
+    expect(screen.getByText('+3')).toBeTruthy()
+  })
+
+  it('cannot step past the supported range', () => {
+    const ctx = renderRow({ isTunable: true, isUpcoming: true, isPlaying: false, keyChange: KEY_CHANGE_MAX })
+    swipeOpen(ctx.slider)
+    fireEvent.click(screen.getByLabelText('Settings'))
+
+    fireEvent.click(screen.getByLabelText('Raise the key one semitone'))
+    expect(ctx.emitted).toEqual([])
+  })
+
+  it('keeps reset in place but inert while the song is in its own key', () => {
+    const { emitted } = open()
+
+    fireEvent.click(screen.getByText('Reset to original key'))
+    expect(emitted).toEqual([])
+  })
+
+  it('sends 0 on reset once the song has left its own key', () => {
+    const ctx = renderRow({ isTunable: true, isUpcoming: true, isPlaying: false, keyChange: -4 })
+    swipeOpen(ctx.slider)
+    fireEvent.click(screen.getByLabelText('Settings'))
+    fireEvent.click(screen.getByText('Reset to original key'))
+
+    expect(ctx.emitted).toEqual([
+      expect.objectContaining({ type: QUEUE_SET_KEY, payload: { keyChange: 0, queueId: 1 } }),
+    ])
+  })
+
+  it('reads the key on the row face without opening anything', () => {
+    renderRow({ keyChange: 3 })
+    expect(screen.getByText('key +3')).toBeTruthy()
   })
 })

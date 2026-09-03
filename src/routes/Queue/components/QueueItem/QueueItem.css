@@ -177,3 +177,15 @@
   flex-shrink: 0;
   align-self: center;
 }
+
+/* Key offset chip. Amber because it is a lit state — this row will not sound
+   like the recording — and mono so +2 and −2 occupy the same width. */
+.keyChange {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 2px var(--gap-2);
+  font-family: var(--font-mono);
+  color: var(--vu);
+  background: var(--vu-well);
+  border-radius: var(--radius-key);
+}

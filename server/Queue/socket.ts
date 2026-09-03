@@ -1,6 +1,6 @@
 import Queue from './Queue.js'
 import Rooms from '../Rooms/Rooms.js'
-import { QUEUE_ADD, QUEUE_MOVE, QUEUE_PAUSE, QUEUE_REMOVE, QUEUE_PUSH } from '../../shared/actionTypes.js'
+import { QUEUE_ADD, QUEUE_MOVE, QUEUE_PAUSE, QUEUE_REMOVE, QUEUE_SET_KEY, QUEUE_PUSH } from '../../shared/actionTypes.js'
 
 // ------------------------------------
 // Action Handlers
@@ -85,6 +85,30 @@ const ACTION_HANDLERS = {
 
     // success
     acknowledge({ type: QUEUE_PAUSE + '_SUCCESS' })
+
+    // tell room
+    sock.server.to(Rooms.prefix(sock.user.roomId)).emit('action', {
+      type: QUEUE_PUSH,
+      payload: Queue.get(sock.user.roomId),
+    })
+  },
+  [QUEUE_SET_KEY]: (sock, { payload }, acknowledge) => {
+    const { keyChange, queueId } = payload
+
+    // same rule as moving: your own song, or you're the admin. Clamping lives
+    // in Queue.setKeyChange so a payload can't store a key the player would
+    // then refuse to shift to.
+    if (!sock.user.isAdmin && !(Queue.isOwner(sock.user.userId, queueId))) {
+      return acknowledge({
+        type: QUEUE_SET_KEY + '_ERROR',
+        error: 'Cannot set the key of another user\'s song',
+      })
+    }
+
+    Queue.setKeyChange({ keyChange, queueId })
+
+    // success
+    acknowledge({ type: QUEUE_SET_KEY + '_SUCCESS' })
 
     // tell room
     sock.server.to(Rooms.prefix(sock.user.roomId)).emit('action', {
