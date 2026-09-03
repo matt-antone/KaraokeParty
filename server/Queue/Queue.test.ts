@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { db, open, close } from '../lib/Database.js'
 import Queue from './Queue.js'
+import { KEY_CHANGE_MAX } from '../../shared/types.js'
 
 const ROOM_ID = 1
 const ALICE = 1
@@ -78,5 +79,78 @@ describe('move', () => {
   it('moves the first item into the middle', () => {
     Queue.move({ prevQueueId: 2, queueId: 1, roomId: ROOM_ID })
     expect(Queue.get(ROOM_ID).result).toEqual([2, 1, 3])
+  })
+})
+
+describe('key change', () => {
+  beforeEach(() => {
+    close()
+    open({ file: ':memory:', ro: false })
+
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
+    db.run(`INSERT INTO users (userId, username, password, name, roleId)
+      VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [ALICE, 'alice', 'x', 'Alice'])
+    db.run(`INSERT INTO users (userId, username, password, name, roleId)
+      VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [BOB, 'bob', 'x', 'Bob'])
+    db.run('INSERT INTO artists (artistId, name, nameNorm) VALUES (1, ?, ?)', ['Eurythmics', 'eurythmics'])
+    db.run('INSERT INTO songs (songId, artistId, title, titleNorm) VALUES (10, 1, ?, ?)', ['Sweet Dreams', 'sweet dreams'])
+    db.run('INSERT INTO songs (songId, artistId, title, titleNorm) VALUES (11, 1, ?, ?)', ['Here Comes The Rain', 'here comes the rain'])
+    db.run('INSERT INTO paths (pathId, path, priority, data) VALUES (1, ?, 1, ?)', ['/media', '{}'])
+    db.run('INSERT INTO media (mediaId, songId, pathId, relPath, duration, isPreferred) VALUES (100, 10, 1, ?, 60, 1)', ['a.mp4'])
+    db.run('INSERT INTO media (mediaId, songId, pathId, relPath, duration, isPreferred) VALUES (101, 11, 1, ?, 60, 1)', ['b.mp4'])
+  })
+
+  afterEach(close)
+
+  it('queues in the recording\'s own key by default', () => {
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    const [queueId] = Queue.get(ROOM_ID).result
+    expect(Queue.get(ROOM_ID).entities[queueId].keyChange).toBe(0)
+  })
+
+  it('sets and clears a key', () => {
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    const [queueId] = Queue.get(ROOM_ID).result
+
+    Queue.setKeyChange({ keyChange: -3, queueId })
+    expect(Queue.get(ROOM_ID).entities[queueId].keyChange).toBe(-3)
+
+    Queue.setKeyChange({ keyChange: 0, queueId })
+    expect(Queue.get(ROOM_ID).entities[queueId].keyChange).toBe(0)
+  })
+
+  it('clamps a key past the supported range instead of storing it', () => {
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    const [queueId] = Queue.get(ROOM_ID).result
+
+    Queue.setKeyChange({ keyChange: 99, queueId })
+    expect(Queue.get(ROOM_ID).entities[queueId].keyChange).toBe(KEY_CHANGE_MAX)
+
+    Queue.setKeyChange({ keyChange: -99, queueId })
+    expect(Queue.get(ROOM_ID).entities[queueId].keyChange).toBe(-KEY_CHANGE_MAX)
+  })
+
+  it('remembers a singer\'s key for that song, and only for them', () => {
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    Queue.setKeyChange({ keyChange: 2, queueId: Queue.get(ROOM_ID).result[0] })
+
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE }) // same singer, same song
+    Queue.add({ roomId: ROOM_ID, songId: 11, userId: ALICE }) // same singer, other song
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: BOB }) //  other singer, same song
+
+    const { result, entities } = Queue.get(ROOM_ID)
+    expect(result.map(qId => entities[qId].keyChange)).toEqual([2, 2, 0, 0])
+  })
+
+  it('remembers the most recent key, not the first', () => {
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    Queue.setKeyChange({ keyChange: 4, queueId: Queue.get(ROOM_ID).result[0] })
+
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    Queue.setKeyChange({ keyChange: -1, queueId: Queue.get(ROOM_ID).result[1] })
+
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    const { result, entities } = Queue.get(ROOM_ID)
+    expect(entities[result[2]].keyChange).toBe(-1)
   })
 })

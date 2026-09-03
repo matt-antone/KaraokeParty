@@ -1,7 +1,7 @@
 import path from 'path'
 import { db } from '../lib/Database.js'
 import sql from 'sqlate'
-import { QueueItem } from '../../shared/types.js'
+import { clampKeyChange, QueueItem } from '../../shared/types.js'
 
 class Queue {
   /**
@@ -12,6 +12,21 @@ class Queue {
     fields.set('roomId', roomId)
     fields.set('songId', songId)
     fields.set('userId', userId)
+    // Siglos's behaviour: a returning singer gets the key they last used for
+    // this song rather than the recording's. Nothing to remember on a first
+    // request, and the DEFAULT 0 covers that.
+    //
+    // ponytail: matched on songId, so a scanner rescan that re-mints ids
+    // forgets the key. That degrades to the original key, which is safe; if it
+    // ever matters, match on the normalized artist/title the way songStars and
+    // songHistory already do.
+    fields.set('keyChange', sql`COALESCE((
+      SELECT keyChange
+      FROM queue
+      WHERE userId = ${userId} AND songId = ${songId}
+      ORDER BY queueId DESC
+      LIMIT 1
+    ), 0)`)
     fields.set('prevQueueId', sql`(
       SELECT queueId
       FROM queue
@@ -44,7 +59,7 @@ class Queue {
     let curQueueId = null
 
     const query = sql`
-      SELECT queueId, songId, userId, prevQueueId,
+      SELECT queueId, songId, userId, prevQueueId, keyChange,
         media.mediaId, media.relPath, media.rgTrackGain, media.rgTrackPeak,
         users.name AS userDisplayName, users.dateUpdated AS userDateUpdated,
         paths.pathId, paths.data AS pathData,
@@ -62,6 +77,7 @@ class Queue {
       songId: number
       userId: number
       prevQueueId: number
+      keyChange: number
       mediaId: number
       relPath: string
       rgTrackGain: number
@@ -107,6 +123,22 @@ class Queue {
     }
 
     return { result, entities, pausedUserIds: this.getPausedUserIds(roomId) }
+  }
+
+  /**
+   * Set the key a queue item plays in, in semitones from the recording
+   */
+  static setKeyChange ({ keyChange, queueId }: { keyChange: number, queueId: number }): void {
+    const query = sql`
+      UPDATE queue
+      SET keyChange = ${clampKeyChange(keyChange)}
+      WHERE queueId = ${queueId}
+    `
+    const res = db.run(String(query), query.parameters)
+
+    if (res.changes !== 1) {
+      throw new Error(`Could not set key for queueId: ${queueId}`)
+    }
   }
 
   /**

@@ -5,6 +5,7 @@ import {
   QUEUE_PAUSE,
   QUEUE_PUSH,
   QUEUE_REMOVE,
+  QUEUE_SET_KEY,
   LOGOUT,
 } from 'shared/actionTypes'
 import type { QueueItem, OptimisticQueueItem } from 'shared/types'
@@ -16,6 +17,7 @@ const logout = createAction(LOGOUT)
 export const moveItem = createAction<{ queueId: number, prevQueueId: number }>(QUEUE_MOVE)
 export const removeItem = createAction<{ queueId: number | number[] }>(QUEUE_REMOVE)
 export const setPaused = createAction<{ isPaused: boolean, userId?: number }>(QUEUE_PAUSE)
+export const setKeyChange = createAction<{ keyChange: number, queueId: number }>(QUEUE_SET_KEY)
 export const queuePush = createAction<QueueState>(QUEUE_PUSH)
 
 export const queueSong = createAction(QUEUE_ADD, (songId: number) => ({

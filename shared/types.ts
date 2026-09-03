@@ -13,11 +13,25 @@ export interface Song {
   numMedia: number
 }
 
+/** Semitones a singer may shift a song either way. Six is a tritone: past it
+ *  the shift is better spelled as the other direction, and every extra
+ *  semitone costs phase-vocoder quality. */
+export const KEY_CHANGE_MAX = 6
+
+/** Clamp to a whole semitone inside the supported range. Both the socket
+ *  handler and the stepper route through this so a hand-crafted payload
+ *  cannot store a key the player would refuse to shift to. */
+export const clampKeyChange = (n: number): number => (
+  Number.isFinite(n) ? Math.max(-KEY_CHANGE_MAX, Math.min(KEY_CHANGE_MAX, Math.trunc(n))) : 0
+)
+
 export interface QueueItem {
   queueId: number
   songId: number
   userId: number
   prevQueueId: number
+  /** Semitones to shift playback; 0 is the recording's own key. */
+  keyChange: number
   mediaId: number
   rgTrackGain: number
   rgTrackPeak: number
