@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useAppDispatch } from 'store/hooks'
-import { createRoom, removeRoom, updateRoom, requestPrefsPush } from 'store/modules/rooms'
+import { createRoom, removeRoom, updateRoom, requestPrefsPush, requestRoomReset } from 'store/modules/rooms'
 import Button from 'components/Button/Button'
 import Modal from 'components/Modal/Modal'
 import UserPrefs from './UserPrefs/UserPrefs'
@@ -46,6 +46,15 @@ const EditRoom = ({ onClose, room }: EditRoomProps) => {
   const handleRemoveClick = () => {
     if (room && confirm(`Remove the room "${room.name}"?\n\nIts queue is deleted and everyone in it is signed out. This cannot be undone.`)) {
       dispatch(removeRoom(room.roomId))
+    }
+  }
+
+  // hands the room back the way a new one would arrive, so a room can host more
+  // than one night. Only the room's own queue goes — each singer's record of
+  // everything they have ever sung lives elsewhere and stays put
+  const handleResetClick = () => {
+    if (room && confirm(`Reset "${room.name}" for a new night?\n\nIts queue is emptied, paused singers are un-paused, and the player's played list is cleared. Nobody's personal sung history is touched. This cannot be undone.`)) {
+      dispatch(requestRoomReset(room.roomId))
     }
   }
 
@@ -115,6 +124,11 @@ const EditRoom = ({ onClose, room }: EditRoomProps) => {
           <Button type='submit' variant='primary' className={styles.btn}>
             {room ? 'Update Room' : 'Create Room'}
           </Button>
+          {room && (
+            <Button onClick={handleResetClick} className={styles.btn} variant='default' icon='REFRESH'>
+              Reset for New Night
+            </Button>
+          )}
           {room && (
             <Button onClick={handleRemoveClick} className={styles.btn} variant='danger'>
               Remove Room

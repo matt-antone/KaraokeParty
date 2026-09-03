@@ -102,6 +102,13 @@ const PlayerController = (props: PlayerControllerProps) => {
     // add current item to history (once)
     if (queueItem && history.lastIndexOf(queueItem.queueId) === -1) {
       history.push(queueItem.queueId)
+
+      // a song counts as sung once it leaves the stage, however it left. A
+      // skip is still a turn taken, and the singer who cut their own song
+      // short should not have it missing from Sung Tonight. This is the one
+      // path every song departs through, and addPlay upserts, so a replay
+      // that comes back through here just refreshes dateSung
+      dispatch({ type: SONG_PLAYED, payload: { queueId: queueItem.queueId } })
     }
 
     // queue exhausted?
@@ -128,7 +135,7 @@ const PlayerController = (props: PlayerControllerProps) => {
       nextUserId: null,
       _isPlayingNext: false,
     })
-  }, [clearIntermission, handleStatus, nextQueueItem, player.historyJSON, queueItem])
+  }, [clearIntermission, dispatch, handleStatus, nextQueueItem, player.historyJSON, queueItem])
 
   // the queue can change while we're waiting, so the timer calls the latest handleLoadNext
   const loadNextRef = useRef(handleLoadNext)
@@ -139,9 +146,6 @@ const PlayerController = (props: PlayerControllerProps) => {
   // song finished on its own: hold for the intermission before loading the next one
   const handleMediaEnd = useCallback(() => {
     clearIntermission()
-
-    // only songs that reached their end count toward the singer's history
-    dispatch({ type: SONG_PLAYED, payload: { queueId: player.queueId } })
 
     // nothing to wait for at the end of the queue
     if (!nextQueueItem) {
@@ -156,7 +160,7 @@ const PlayerController = (props: PlayerControllerProps) => {
     })
 
     intermissionTimer.current = setTimeout(() => loadNextRef.current(), INTERMISSION_MS)
-  }, [clearIntermission, dispatch, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
+  }, [clearIntermission, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
 
   // "lock in" the next user that isn't the currently up user, if possible
   useEffect(() => {
@@ -206,6 +210,14 @@ const PlayerController = (props: PlayerControllerProps) => {
     const timerID = setTimeout(() => loadNextRef.current(), Math.max(0, skipEndsAt - Date.now()))
     return () => clearTimeout(timerID)
   }, [handleLoadNext, player._isPlayingNext, skipEndsAt])
+
+  // history reset? empty the played list and push it, so the library's
+  // greyed-out rows come back to life for everyone in the room
+  useEffect(() => {
+    if (player._lastHistoryResetTime) {
+      handleStatus({ historyJSON: '[]' })
+    }
+  }, [handleStatus, player._lastHistoryResetTime])
 
   // replaying?
   useEffect(() => {

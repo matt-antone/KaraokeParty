@@ -44,6 +44,60 @@ describe('singer pause', () => {
   })
 })
 
+describe('clear', () => {
+  const ROOM_2 = 2
+
+  beforeEach(() => {
+    close()
+    open({ file: ':memory:', ro: false })
+
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_2, 'Other', 'open'])
+    db.run(`INSERT INTO users (userId, username, password, name, roleId)
+      VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [ALICE, 'alice', 'x', 'Alice'])
+    db.run(`INSERT INTO users (userId, username, password, name, roleId)
+      VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [BOB, 'bob', 'x', 'Bob'])
+    db.run('INSERT INTO artists (artistId, name, nameNorm) VALUES (1, ?, ?)', ['Eurythmics', 'eurythmics'])
+    db.run('INSERT INTO songs (songId, artistId, title, titleNorm) VALUES (10, 1, ?, ?)', ['Sweet Dreams', 'sweet dreams'])
+    db.run('INSERT INTO paths (pathId, path, priority, data) VALUES (1, ?, 1, ?)', ['/media', '{}'])
+    db.run('INSERT INTO media (mediaId, songId, pathId, relPath, duration, isPreferred) VALUES (100, 10, 1, ?, 60, 1)', ['a.mp4'])
+  })
+
+  afterEach(close)
+
+  it('empties the room and lifts its pauses', () => {
+    for (let i = 0; i < 3; i++) Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    Queue.setPaused({ isPaused: true, roomId: ROOM_ID, userId: ALICE })
+
+    Queue.clear(ROOM_ID)
+
+    expect(Queue.get(ROOM_ID).result).toEqual([])
+    expect(Queue.get(ROOM_ID).pausedUserIds).toEqual([])
+  })
+
+  it('leaves other rooms alone', () => {
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    Queue.add({ roomId: ROOM_2, songId: 10, userId: BOB })
+    Queue.setPaused({ isPaused: true, roomId: ROOM_2, userId: BOB })
+
+    Queue.clear(ROOM_ID)
+
+    expect(Queue.get(ROOM_2).result).toHaveLength(1)
+    expect(Queue.get(ROOM_2).pausedUserIds).toEqual([BOB])
+  })
+
+  // the linked list points at rows that are going away in the same statement
+  it('can be added to again afterwards', () => {
+    for (let i = 0; i < 3; i++) Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    Queue.clear(ROOM_ID)
+
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: ALICE })
+    Queue.add({ roomId: ROOM_ID, songId: 10, userId: BOB })
+
+    expect(Queue.get(ROOM_ID).result).toHaveLength(2)
+  })
+})
+
 describe('move', () => {
   beforeEach(() => {
     close()
