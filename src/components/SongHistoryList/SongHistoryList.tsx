@@ -33,7 +33,7 @@ const SongHistoryList = ({ items, onStar, emptyText, className }: SongHistoryLis
   if (items.length === 0) {
     return (
       <p className={clsx('silkscreen', styles.empty, className)}>
-        {emptyText || 'Songs you sing all the way through show up here.'}
+        {emptyText || 'Songs you take a turn on show up here.'}
       </p>
     )
   }
