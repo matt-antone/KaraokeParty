@@ -32,13 +32,27 @@ const getRoundRobinQueue = createSelector(
     }
 
     const map = new Map()
-    const upcoming = []
+    const upcoming: number[] = []
     const resultByUser = history.map(queueId => (entities[queueId] as QueueItem).userId) // should be no optimistic items
 
+    // A trivia round is spaced exactly as a singer is, under its own userId of
+    // 0 — that is what "takes its turn in the rotation" means, and it is why
+    // the round is not special-cased here at all.
+    //
+    // Parking it at the end instead looks right in a short queue and is wrong
+    // in a real one: with fifteen songs waiting, the round sat an hour out and
+    // the room would never have reached it. Spaced, it comes round once per
+    // lap however deep the queue gets, and because it is the last row added it
+    // loses the first-pass tie to every singer already waiting — so its first
+    // turn is one full lap away rather than immediately.
     result.forEach((queueId) => {
       if (history.includes(queueId) // only concerned with upcoming songs
         || entities[queueId].isOptimistic === true // ignore optimistic items
         || pausedUserIds.includes(entities[queueId].userId) // singer is sitting out
+        // A round the server has already asked is spent. Without this a player
+        // that reloads has no memory of it, offers it a turn anyway, and the
+        // room watches the intermission hand straight over to the next song.
+        || entities[queueId].isPlayed === true
       ) return
 
       const userId = entities[queueId].userId

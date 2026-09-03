@@ -3,6 +3,10 @@
    secondary indicator (teal), one fault red. Wanting a fifth colour means
    wanting a fifth indicator — reconsider instead of adding one.
 
+   The trivia answer keys are the one set that held that conversation and came
+   out the other side: four peers that are not indicators at all. They live in
+   their own block and are closed by their own test.
+
    This file is now the source of truth for these tokens. The LEGACY block
    at the bottom re-pointed the old Karaoke Eternal variable names onto DECK
    values so existing var() references repainted without touching each
@@ -65,6 +69,46 @@
   --alert-key-hi: #b62b2f;
   --alert-key-lo: #9d2529;
 
+  /* ---- answer keys ------------------------------------------------- */
+  /* The four trivia answers. This is the fifth-colour conversation the file
+     warns about, held and answered rather than dodged: a trivia round needs
+     four channels that are peers, and every existing colour already means
+     something — amber is "yours/live", teal is "queued", red is "fault". A
+     round's answers are none of those, so reusing them would say the wrong
+     thing four times.
+
+     They are answer channels, not signals: nothing in the app is ever "in the
+     --ans-2 state". That is why they sit outside the vu/standby/alert family
+     the palette test counts, and have a closure assertion of their own.
+
+     Tuned rather than picked. Every -hi stop measures 4.84-4.86:1 against
+     --ink, the same footing --alert-key-hi has (4.89), so no answer looks
+     louder than another and one ink colour carries all four. Chroma is held
+     at DECK's level — machined, not confectionery.
+
+     Position and the numeral are the real mapping; colour is the third
+     channel, because roughly one in twelve men cannot separate red from
+     green. The phone and the screen carry the same four in the same 2x2
+     order, so an answer is identifiable without seeing any colour at all.
+
+     --ans-3 is indigo at hue 226, well off the old brand's banned azure at
+     hue 209. What was banned there was a *brand* blue used for chrome; this
+     is a dark key face in a set of four. Different job, different colour.
+     (Spelled in hex, and this comment avoids the banned function form on
+     purpose — deck-rules greps the stylesheets, comments included.) */
+  --ans-1-hi: #ba2630;      /* crimson */
+  --ans-1-lo: #a12129;
+  --ans-2-hi: #1f6f42;      /* moss */
+  --ans-2-lo: #195834;
+  --ans-3-hi: #3959c4;      /* indigo */
+  --ans-3-lo: #324eac;
+  /* plum sits at hue 292 rather than a rounder 285: indigo and crimson are
+     its neighbours on both sides and the set's tightest pair has to stay
+     above 60 degrees. Amber and teal being spoken for is what squeezes the
+     four into the arc they have. */
+  --ans-4-hi: #9638a4;      /* plum */
+  --ans-4-lo: #81308e;
+
   /* the you-channel: amber is also "your row", because on a deck the lit
      channel is the one that's live. There is no separate personal colour. */
   --mine: var(--vu);
@@ -93,6 +137,10 @@
   --key-face: linear-gradient(180deg, var(--key-hi) 0%, var(--key-lo) 100%);
   --key-face-vu: linear-gradient(180deg, var(--vu-hi) 0%, var(--vu-lo) 100%);
   --key-face-alert: linear-gradient(180deg, var(--alert-key-hi) 0%, var(--alert-key-lo) 100%);
+  --key-face-ans-1: linear-gradient(180deg, var(--ans-1-hi) 0%, var(--ans-1-lo) 100%);
+  --key-face-ans-2: linear-gradient(180deg, var(--ans-2-hi) 0%, var(--ans-2-lo) 100%);
+  --key-face-ans-3: linear-gradient(180deg, var(--ans-3-hi) 0%, var(--ans-3-lo) 100%);
+  --key-face-ans-4: linear-gradient(180deg, var(--ans-4-hi) 0%, var(--ans-4-lo) 100%);
 
   /* focus: a hard amber ring. Visible, unambiguous, no blur. */
   --focus-ring: 0 0 0 2px var(--chassis), 0 0 0 4px var(--vu);

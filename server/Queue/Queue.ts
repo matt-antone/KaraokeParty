@@ -49,6 +49,76 @@ class Queue {
   }
 
   /**
+   * Append a trivia round to a room's queue, unless one is already waiting.
+   *
+   * Idempotent by design: "there is always exactly one round in the queue" is
+   * the rule, and two clients whose actions race must not both append one.
+   * The pending round is a real row, so the check is a query rather than a
+   * lock — SQLite serialises the writes and the loser sees the winner's row.
+   *
+   * Returns the queueId of the pending round, new or already there.
+   */
+  static addTrivia (roomId: number): number {
+    const pending = this.getPendingTriviaId(roomId)
+    if (pending !== null) return pending
+
+    const query = sql`
+      INSERT INTO queue (roomId, type, prevQueueId)
+      VALUES (${roomId}, 'trivia', (
+        SELECT queueId
+        FROM queue
+        WHERE roomId = ${roomId} AND queueId NOT IN (
+          SELECT prevQueueId
+          FROM queue
+          WHERE prevQueueId IS NOT NULL
+        )
+      ))
+    `
+    const res = db.run(String(query), query.parameters)
+
+    if (res.changes !== 1) throw new Error('Could not add a trivia round to the queue')
+
+    return res.lastID
+  }
+
+  /** The round waiting to be asked in this room, or null. */
+  static getPendingTriviaId (roomId: number): number | null {
+    const query = sql`
+      SELECT queueId
+      FROM queue
+      WHERE roomId = ${roomId} AND type = 'trivia' AND datePlayed IS NULL
+      ORDER BY queueId ASC
+      LIMIT 1
+    `
+    return db.get<{ queueId: number }>(String(query), query.parameters)?.queueId ?? null
+  }
+
+  /** Mark a round asked, so a player restart does not ask it again. */
+  static setTriviaPlayed (queueId: number): void {
+    const query = sql`
+      UPDATE queue
+      SET datePlayed = ${Date.now()}
+      WHERE queueId = ${queueId} AND type = 'trivia'
+    `
+    db.run(String(query), query.parameters)
+  }
+
+  /**
+   * Drop every round that has not been asked yet — trivia was switched off.
+   * Rounds already played stay: they are part of what the room did tonight.
+   */
+  static removePendingTrivia (roomId: number): void {
+    const query = sql`
+      SELECT queueId
+      FROM queue
+      WHERE roomId = ${roomId} AND type = 'trivia' AND datePlayed IS NULL
+    `
+    for (const row of db.all<{ queueId: number }>(String(query), query.parameters)) {
+      this.remove(row.queueId)
+    }
+  }
+
+  /**
    * Get queued items for a given room
    */
   static get (roomId: number): { result: number[], entities: Record<number, QueueItem>, pausedUserIds: number[] } {
@@ -58,24 +128,31 @@ class Queue {
     const pathData = new Map()
     let curQueueId = null
 
+    // LEFT joins because a trivia round has no singer, no song and no media.
+    // The INNER joins used to double as a filter — a song whose media has gone
+    // is not playable and must not appear — so that filter is now written out
+    // in the WHERE clause rather than lost.
     const query = sql`
-      SELECT queueId, songId, userId, prevQueueId, keyChange,
+      SELECT queueId, type, songId, userId, prevQueueId, keyChange, datePlayed,
         media.mediaId, media.relPath, media.rgTrackGain, media.rgTrackPeak,
         users.name AS userDisplayName, users.dateUpdated AS userDateUpdated,
         paths.pathId, paths.data AS pathData,
         MAX(isPreferred) AS isPreferred
       FROM queue
-        INNER JOIN users USING(userId)
-        INNER JOIN media USING(songId)
-        INNER JOIN paths USING(pathId)
+        LEFT JOIN users USING(userId)
+        LEFT JOIN media USING(songId)
+        LEFT JOIN paths USING(pathId)
       WHERE roomId = ${roomId}
+        AND (queue.type <> 'song' OR media.mediaId IS NOT NULL)
       GROUP BY queueId
       ORDER BY queueId, paths.priority ASC
     `
     const rows = db.all<{
       queueId: number
-      songId: number
-      userId: number
+      type: 'song' | 'trivia'
+      datePlayed: number | null
+      songId: number | null
+      userId: number | null
       prevQueueId: number
       keyChange: number
       mediaId: number
@@ -97,8 +174,24 @@ class Queue {
       const pathPrefs = pathData.get(row.pathId)?.prefs
 
       entities[row.queueId] = row
-      entities[row.queueId].mediaType = this.getType(row.relPath)
+      entities[row.queueId].mediaType = row.type === 'song' ? this.getType(row.relPath) : null
       entities[row.queueId].isVideoKeyingEnabled = !!pathPrefs?.isVideoKeyingEnabled
+
+      // a round has no singer and no song; 0 keeps every consumer that filters
+      // by userId or looks a song up by songId working without a null check
+      entities[row.queueId].songId = row.songId ?? 0
+      entities[row.queueId].userId = row.userId ?? 0
+
+      // The player names whoever is up next during the intermission, in the
+      // corner panel and in the coming-up line. A round is up next like anyone
+      // else, so it is given a name here rather than teaching each of those
+      // three places what an absent singer looks like.
+      if (row.type === 'trivia') {
+        entities[row.queueId].userDisplayName = 'Trivia'
+        entities[row.queueId].isPlayed = row.datePlayed !== null
+      }
+
+      delete entities[row.queueId].datePlayed
 
       // don't send over the wire
       delete entities[row.queueId].relPath

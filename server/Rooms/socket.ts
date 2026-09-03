@@ -1,5 +1,6 @@
 import Rooms from './Rooms.js'
 import Queue from '../Queue/Queue.js'
+import Trivia from '../Trivia/Trivia.js'
 import {
   ROOM_PREFS_PUSH_REQUEST,
   ROOM_PREFS_PUSH,
@@ -46,6 +47,12 @@ const ACTION_HANDLERS = {
     }
 
     Queue.clear(roomId)
+
+    // The queue's trivia rows go with it, so a round still in flight is now
+    // asking a question on a row that no longer exists — and would re-queue
+    // its successor into the room the admin just emptied. Stopping it also
+    // drops its timers.
+    Trivia.stopRoom(roomId)
 
     acknowledge({ type: ROOM_RESET_REQUEST + '_SUCCESS' })
 

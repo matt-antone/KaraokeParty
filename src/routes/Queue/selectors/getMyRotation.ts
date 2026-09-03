@@ -1,5 +1,6 @@
 import type { RootState } from 'store/store'
 import { createSelector } from '@reduxjs/toolkit'
+import { isTriviaItem } from 'shared/types'
 import getRoundRobinQueue from './getRoundRobinQueue'
 
 const getQueueId = (state: RootState) => state.status.queueId
@@ -27,6 +28,10 @@ const getMyRotation = createSelector(
     // indexOf returns -1 when nothing is playing, so this starts at 0 and walks
     // the whole queue — which is what we want before the first song starts
     for (const qId of result.slice(result.indexOf(queueId) + 1)) {
+      // a trivia round takes a turn but is nobody's turn: counting it would
+      // make the rotation one longer than the number of singers in it
+      if (isTriviaItem(entities[qId])) continue
+
       const singer = entities[qId]?.userId
       if (singer !== undefined && !order.includes(singer)) order.push(singer)
     }

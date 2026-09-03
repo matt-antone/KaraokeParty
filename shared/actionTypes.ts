@@ -72,6 +72,13 @@ export const ROOM_PREFS_PUSH = 'rooms/ROOM_PREFS_PUSH'
 export const ROOM_PREFS_PUSH_REQUEST = 'server/ROOM_PREFS_PUSH_REQUEST'
 export const ROOM_RESET_REQUEST = 'server/ROOM_RESET_REQUEST'
 
+// Trivia
+export const TRIVIA_ANSWER = 'server/TRIVIA_ANSWER'
+export const TRIVIA_REQ_ROUND = 'server/TRIVIA_REQ_ROUND'
+export const TRIVIA_SCORES_RESET = 'server/TRIVIA_SCORES_RESET'
+export const TRIVIA_ROUND = 'trivia/ROUND'
+export const TRIVIA_RESULT = 'trivia/RESULT'
+
 // Stars
 export const STAR_SONG = 'server/STAR_SONG'
 export const UNSTAR_SONG = 'server/UNSTAR_SONG'

@@ -1,0 +1,38 @@
+.heading {
+  button {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    padding: var(--gap-2);
+    font-size: var(--text-m);
+  }
+
+  svg {
+    height: var(--icon-m);
+  }
+}
+
+.slider {
+  margin: 0 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+}
+
+.groupLabel {
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-3);
+}

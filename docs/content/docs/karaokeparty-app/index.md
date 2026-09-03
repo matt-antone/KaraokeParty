@@ -152,6 +152,7 @@ Admins get a fourth navigation entry with everything that configures the party: 
 - [Rooms (admin only)](#rooms-admin-only)
 - [Users (admin only)](#users-admin-only)
 - [Player (admin only)](#player-admin-only)
+- [Trivia](#trivia)
 - [Preferences (admin only)](#preferences-admin-only)
 
 ### Rooms (admin only)
@@ -173,6 +174,7 @@ Rooms have a number of options, including:
   - `closed` Can no longer be signed in to or have more songs queued. When closing, current occupants are unaffected and can continue playing through the existing queue
 - **Users**: Only users with existing accounts can join a room by default. You can optionally allow users to join with new accounts and/or as guests
 - **QR Code**: Displays a QR code in the room's player that will link users to the app, automatically choosing the room and optionally including the room's password if one is set
+- **Trivia**: Plays music trivia rounds between singers. See [Trivia](#trivia)
 
 **Reset for New Night** hands a used room back in the state a new one arrives in: its queue is emptied, paused singers are un-paused, and the player's list of what has been sung is cleared, so the whole library is selectable again. Use it instead of creating a room per session. Each singer's own record of everything they have ever sung is separate and is not touched.
 
@@ -202,6 +204,24 @@ The Player panel is the only place the player is managed from. It shows whether 
 <div class="row">
   {{% img "app-displayctrl.png" "Display options" /%}}
 </div>
+
+### Trivia
+
+Trivia gives the room something to do between singers, and gives the guests who would rather not sing a way to play. Switch it on per room in the room editor.
+
+Once it's on, a **Trivia round sits in the queue like any other turn** and is spaced through the rotation the same way singers are - so it comes round about once per lap, however long the queue gets. There is always exactly one waiting: as one is asked, the next joins the rotation behind it. You can see it coming on the Queue tab.
+
+When the player reaches it, the round asks **five questions** back to back. The screen shows each question and its four answers; every phone in the room shows four coloured keys and nothing else, so the room looks up at the screen together rather than down at a dozen phones. Match your key to the answer on screen, or match the number - each key is numbered 1 to 4 in the same order on both, so the colours are never the only thing telling them apart.
+
+- **Play trivia rounds**: Turns rounds on for this room
+- **Answer time**: How long a question stays open, from 5 to 60 seconds
+- **Reset scores**: Clears this room's scoreboard and starts it empty again
+
+Anyone in the room can answer, whether or not they have a song queued. You get one answer per question - the first key you press is the one that counts - and when the time is up the screen shows the right answer before moving on to the next question. The scoreboard goes up after the fifth, then the next singer is on. Only people who have answered at least once appear on it.
+
+**Answer time** applies to each question, so a round takes roughly five times that plus the answer reveals - at the default 20 seconds that is a little over two minutes. Turn it down if that is longer than your room wants to wait between singers.
+
+Questions come from the [Open Trivia Database](https://opentdb.com/){{% icon-external %}} (music category), and are cached on the server well ahead of time so a party on a LAN with no internet still plays. The cache is topped up whenever the server can reach the API; if a very long party runs through every music question there is, rounds carry on with the ones seen longest ago. Question content is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/){{% icon-external %}}, and the attribution appears on the player screen during every round.
 
 ### Preferences (admin only)
 

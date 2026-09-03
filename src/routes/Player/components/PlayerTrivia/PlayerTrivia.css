@@ -1,0 +1,88 @@
+.container {
+  font-family: var(--font-body);
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-4);
+  padding: var(--gap-5);
+  text-align: center;
+}
+
+.label {
+  color: var(--ink-3);
+}
+
+.question {
+  max-width: 24ch;
+  font-size: var(--display-m);
+  font-weight: var(--weight-semibold);
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+/* Two by two, and the same two by two on the phone. The order the server sent
+   is the order both surfaces lay out, which is what makes "the second key on
+   the left" mean one thing in the room. */
+.answers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-3);
+  width: 100%;
+  max-width: 46rem;
+}
+
+.countdown {
+  margin: 0;
+}
+
+.scoreboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-1);
+  width: 100%;
+  max-width: 26rem;
+}
+
+.scoreboardHeading {
+  color: var(--ink-3);
+}
+
+.scoreRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-3);
+  padding: var(--gap-2) var(--gap-3);
+  border-radius: var(--radius-panel);
+  background: var(--faceplate);
+  box-shadow: var(--well);
+}
+
+.rank {
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  color: var(--ink-3);
+}
+
+.scoreName {
+  flex: 1;
+  text-align: left;
+  font-size: var(--text-xl);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--vu);
+}
+
+.attribution {
+  color: var(--ink-5);
+}

@@ -3,8 +3,10 @@ import { DragDropContext, Draggable, Droppable, DropResult, DraggableProvidedDra
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { ensureState } from 'redux-optimistic-ui'
 import QueueItem from '../QueueItem/QueueItem'
+import QueueTriviaItem from '../QueueTriviaItem/QueueTriviaItem'
 import QueueListAnimator from '../QueueListAnimator/QueueListAnimator'
 import { formatSeconds } from 'lib/dateTime'
+import { isTriviaItem } from 'shared/types'
 import { moveItem } from '../../modules/queue'
 import getMyUpcoming from '../../selectors/getMyUpcoming'
 import getPlayerHistory from '../../selectors/getPlayerHistory'
@@ -36,6 +38,7 @@ const QueueList = () => {
     let lastPlayed = queueId // default in case user has no played items
 
     for (let i = queue.result.indexOf(queueId); i >= 0; i--) {
+      if (isTriviaItem(queue.entities[queue.result[i]])) continue
       if (queue.entities[queue.result[i]].userId === userId) {
         lastPlayed = queue.result[i]
         break
@@ -68,6 +71,19 @@ const QueueList = () => {
 
   const renderItem = (qId: number, dragHandleProps?: DraggableProvidedDragHandleProps | null) => {
     const item = queue.entities[qId]
+
+    // a round has no song to read a duration or an artist from, and none of
+    // the row's actions apply to it
+    if (isTriviaItem(item)) {
+      return (
+        <QueueTriviaItem
+          key={qId}
+          isCurrent={(qId === queueId) && !isAtQueueEnd}
+          isPlayed={qId !== queueId && playerHistory.includes(qId)}
+        />
+      )
+    }
+
     const duration = songs.entities[item.songId].duration
     const isCurrent = (qId === queueId) && !isAtQueueEnd
     const isUpcoming = qId !== queueId && !playerHistory.includes(qId)
@@ -114,7 +130,16 @@ const QueueList = () => {
           {provided => (
             <div ref={provided.innerRef} {...provided.droppableProps}>
               {result.map((qId, i) => (
-                <Draggable draggableId={String(qId)} index={i} key={qId}>
+                <Draggable
+                  draggableId={String(qId)}
+                  index={i}
+                  key={qId}
+                  // A round is the server's to place, not a singer's to drag.
+                  // Disabling it here rather than leaving the row without a
+                  // handle: dnd asserts every enabled Draggable has one, and
+                  // the assert fires as a console error on every render.
+                  isDragDisabled={isTriviaItem(queue.entities[qId])}
+                >
                   {dragProvided => (
                     <div ref={dragProvided.innerRef} {...dragProvided.draggableProps}>
                       {renderItem(qId, dragProvided.dragHandleProps)}
