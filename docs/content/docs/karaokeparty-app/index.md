@@ -125,7 +125,11 @@ Signing out removes your upcoming songs from the queue.
   {{% img "app-queue-me.png" "The Me tab" /%}}
 </div>
 
-The Me tab is your own list. **Drag to reorder** your upcoming songs - the order among your songs is yours to set, while the rotation between singers stays automatic - and **swipe to remove** one. Below the list is a shortcut back to the Library and a **Sung Tonight** panel of your history, where each song can be starred.
+The Me tab is your own list. **Drag to reorder** your upcoming songs - the order among your songs is yours to set, while the rotation between singers stays automatic - and **swipe** one aside for its keys: a gear that opens **Song Settings**, and **Remove**. Below the list is a shortcut back to the Library and a **Sung Tonight** panel of your history, where each song can be starred.
+
+### Song Settings
+
+**Key** shifts a song up or down by up to six semitones so it sits in your range, without changing its tempo. The key belongs to your place in the queue rather than to the song, so two singers can hold the same track in different keys on the same night, and a shifted song shows its offset on the row. Queue the same song again later and it comes back in the key you last used it in. A song still in its own key plays completely untouched.
 
 ## My Account
 
