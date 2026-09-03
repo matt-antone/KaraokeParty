@@ -9,6 +9,7 @@ import Button from 'components/Button/Button'
 import Header from 'components/Header/Header'
 import Navigation from 'components/Navigation/Navigation'
 import Modal from 'components/Modal/Modal'
+import TriviaDialog from 'components/TriviaDialog/TriviaDialog'
 import Routes from '../Routes/Routes'
 import { clearErrorMessage, setFooterHeight, setHeaderHeight } from 'store/modules/ui'
 
@@ -48,6 +49,10 @@ const CoreLayout = () => {
       <Routes />
 
       {!isPlayerRoute && <Navigation ref={navRef} />}
+
+      {/* the answer pad follows the guest across every tab, and never opens on
+          the player itself — that screen is showing the question */}
+      {!isPlayerRoute && <TriviaDialog />}
 
       {ui.isErrored && (
         <Modal

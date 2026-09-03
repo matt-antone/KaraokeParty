@@ -4,12 +4,15 @@ import Player from '../Player/Player'
 import PlayerBackdrop from '../PlayerBackdrop/PlayerBackdrop'
 import PlayerTextOverlay from '../PlayerTextOverlay/PlayerTextOverlay'
 import PlayerQR from '../PlayerQR/PlayerQR'
+import PlayerTrivia from '../PlayerTrivia/PlayerTrivia'
 import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
 import { playerLeave, playerError, playerLoad, playerPlay, playerStatus, type PlayerState } from '../../modules/player'
 import getRoomPrefs from '../../selectors/getRoomPrefs'
+import useTriviaStage from 'lib/useTriviaStage'
+import { requestTriviaRound } from 'store/modules/trivia'
 import getSkipEndsAt, { INTERMISSION_MS } from './getSkipEndsAt'
 import { SONG_PLAYED } from 'shared/actionTypes'
-import type { QueueItem } from 'shared/types'
+import { isTriviaItem, type QueueItem } from 'shared/types'
 
 interface PlayerControllerProps {
   width: number
@@ -25,6 +28,13 @@ const PlayerController = (props: PlayerControllerProps) => {
   const playerVisualizer = useAppSelector(state => state.playerVisualizer)
   const prefs = useAppSelector(state => state.prefs)
   const roomPrefs = useAppSelector(getRoomPrefs)
+  // Two views of the same round, and they are not interchangeable. The live
+  // one expires with the countdown and drives *when* the player moves on; the
+  // stored one persists between questions and drives *what is on screen*, so
+  // the stage does not blink out during every reveal.
+  const liveTrivia = useTriviaStage()
+  const trivia = useAppSelector(state => state.trivia)
+  const resolvedQueueId = trivia.resolvedQueueId
   const queueItem = queue.entities[player.queueId]
   const nextIdx = queue.result.indexOf(player.queueId) + 1
   const nextQueueItem = queue.entities[queue.result[nextIdx]]
@@ -45,19 +55,24 @@ const PlayerController = (props: PlayerControllerProps) => {
     queueId: number
     replayTime: number
   } | null>(null)
-  const intermissionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isIntermission = !!intermission
     && intermission.queueId === player.queueId
     && intermission.replayTime === player._lastReplayTime
 
   const skipEndsAt = getSkipEndsAt(player, !!nextQueueItem, isIntermission)
+
+  // A trivia round takes its turn in the gap between two singers, so while one
+  // is running it *is* the intermission and the next song waits for it. The
+  // reveal carries its own end so the room gets to see the answer and the
+  // scoreboard before the music starts again.
   const intermissionEndsAt = skipEndsAt ?? (isIntermission ? intermission.endsAt : null)
 
-  const clearIntermission = useCallback(() => {
-    if (intermissionTimer.current) clearTimeout(intermissionTimer.current)
-    intermissionTimer.current = null
-  }, [])
+  // The current queue row is a trivia round rather than a song. It takes its
+  // turn exactly as a singer's row does: the player stops here, asks the
+  // question, and moves on when the round is done.
+  const isTriviaRow = isTriviaItem(queueItem)
+  const isTriviaOnStage = isTriviaRow && trivia.round?.queueId === player.queueId
 
   const handleStatus = useCallback((status?: Partial<PlayerState>) => dispatch(playerStatus(status)), [dispatch])
   const handleLoad = () => dispatch(playerLoad())
@@ -70,8 +85,6 @@ const PlayerController = (props: PlayerControllerProps) => {
   const handleReplay = useCallback((queueId: number) => {
     const nextItem = queue.entities[queueId]
     if (!nextItem) return
-
-    clearIntermission()
 
     const history = JSON.parse(player.historyJSON)
 
@@ -92,11 +105,9 @@ const PlayerController = (props: PlayerControllerProps) => {
       nextUserId: null,
       _isReplayingQueueId: null,
     })
-  }, [clearIntermission, handleStatus, player.historyJSON, player.queueId, queue.entities])
+  }, [handleStatus, player.historyJSON, player.queueId, queue.entities])
 
   const handleLoadNext = useCallback(() => {
-    clearIntermission()
-
     const history = JSON.parse(player.historyJSON)
 
     // add current item to history (once)
@@ -128,7 +139,7 @@ const PlayerController = (props: PlayerControllerProps) => {
       nextUserId: null,
       _isPlayingNext: false,
     })
-  }, [clearIntermission, handleStatus, nextQueueItem, player.historyJSON, queueItem])
+  }, [handleStatus, nextQueueItem, player.historyJSON, queueItem])
 
   // the queue can change while we're waiting, so the timer calls the latest handleLoadNext
   const loadNextRef = useRef(handleLoadNext)
@@ -138,9 +149,9 @@ const PlayerController = (props: PlayerControllerProps) => {
 
   // song finished on its own: hold for the intermission before loading the next one
   const handleMediaEnd = useCallback(() => {
-    clearIntermission()
-
-    // only songs that reached their end count toward the singer's history
+    // only songs that reached their end count toward the singer's history —
+    // and it is also the beat the server counts trivia rounds on, so a round
+    // may come back and claim the intermission that starts here
     dispatch({ type: SONG_PLAYED, payload: { queueId: player.queueId } })
 
     // nothing to wait for at the end of the queue
@@ -154,9 +165,29 @@ const PlayerController = (props: PlayerControllerProps) => {
       queueId: player.queueId,
       replayTime: player._lastReplayTime,
     })
+  }, [dispatch, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
 
-    intermissionTimer.current = setTimeout(() => loadNextRef.current(), INTERMISSION_MS)
-  }, [clearIntermission, dispatch, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
+  // Reached a trivia row: ask the room's question. The server decides whether
+  // there is one to ask — it owns the shuffle and the countdown, so two
+  // players in a room cannot disagree about the answer.
+  useEffect(() => {
+    if (!isTriviaRow || !player.isPlaying) return
+    if (resolvedQueueId === player.queueId) return
+
+    dispatch(requestTriviaRound(player.queueId))
+  }, [dispatch, isTriviaRow, player.isPlaying, player.queueId, resolvedQueueId])
+
+  // The round is done with this row — its last question has been answered and
+  // revealed, or there was nothing to ask. Both halves are needed: the resolve
+  // alone would cut the final scoreboard off, and the expiry alone would move
+  // on in the gap between asking and the first question arriving.
+  useEffect(() => {
+    if (!isTriviaRow) return
+    if (resolvedQueueId !== player.queueId) return
+    if (liveTrivia.round || liveTrivia.result) return // reveal still on screen
+
+    handleLoadNext()
+  }, [handleLoadNext, isTriviaRow, liveTrivia.result, liveTrivia.round, player.queueId, resolvedQueueId])
 
   // "lock in" the next user that isn't the currently up user, if possible
   useEffect(() => {
@@ -182,9 +213,18 @@ const PlayerController = (props: PlayerControllerProps) => {
     queueItem?.isVideoKeyingEnabled,
   ])
 
+  // The intermission's own timer, owned by an effect rather than a ref so it
+  // re-arms whenever the end moves — which is exactly what a trivia round
+  // claiming the gap does. Same shape as the skip timer below.
+  useEffect(() => {
+    if (skipEndsAt || !isIntermission || !intermissionEndsAt) return
+
+    const timerID = setTimeout(() => loadNextRef.current(), Math.max(0, intermissionEndsAt - Date.now()))
+    return () => clearTimeout(timerID)
+  }, [intermissionEndsAt, isIntermission, skipEndsAt])
+
   // on unmount
   useEffect(() => () => {
-    if (intermissionTimer.current) clearTimeout(intermissionTimer.current)
     dispatch(playerLeave())
   }, [dispatch])
 
@@ -230,7 +270,7 @@ const PlayerController = (props: PlayerControllerProps) => {
 
   // the media layer covers the stage completely; the thread field behind it stops
   // drawing whenever it does
-  const isMediaVisible = !!queueItem && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt
+  const isMediaVisible = !!queueItem && !isTriviaRow && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt
 
   return (
     <>
@@ -261,24 +301,38 @@ const PlayerController = (props: PlayerControllerProps) => {
         width={props.width}
         height={props.height}
       />
-      <PlayerTextOverlay
-        queueItem={queueItem as QueueItem}
-        nextQueueItem={nextQueueItem as QueueItem}
-        comingUpQueueItems={comingUpQueueItems as QueueItem[]}
-        comingUpSongTitles={comingUpSongTitles}
-        songTitle={song?.title}
-        songArtist={artist?.name}
-        nextSongTitle={nextSong?.title}
-        nextSongArtist={nextArtist?.name}
-        queueDepth={Math.max(0, queue.result.length - nextIdx)}
-        isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
-        isAtQueueEnd={player.isAtQueueEnd}
-        isQueueEmpty={!queue.result.length}
-        intermissionEndsAt={intermissionEndsAt}
-        isErrored={player.isErrored}
-        width={props.width}
-        height={props.height}
-      />
+      {/* A round owns the whole stage for its turn, so the text overlay stands
+          down rather than drawing a countdown behind it. */}
+      {isTriviaOnStage
+        ? (
+            <PlayerTrivia
+              key={trivia.round.roundId}
+              round={trivia.round}
+              result={trivia.result}
+              width={props.width}
+              height={props.height}
+            />
+          )
+        : (
+            <PlayerTextOverlay
+              queueItem={queueItem as QueueItem}
+              nextQueueItem={nextQueueItem as QueueItem}
+              comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+              comingUpSongTitles={comingUpSongTitles}
+              songTitle={song?.title}
+              songArtist={artist?.name}
+              nextSongTitle={nextSong?.title}
+              nextSongArtist={nextArtist?.name}
+              queueDepth={Math.max(0, queue.result.length - nextIdx)}
+              isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
+              isAtQueueEnd={player.isAtQueueEnd}
+              isQueueEmpty={!queue.result.length}
+              intermissionEndsAt={intermissionEndsAt}
+              isErrored={player.isErrored}
+              width={props.width}
+              height={props.height}
+            />
+          )}
       {roomPrefs?.qr?.isEnabled && (
         <PlayerQR
           height={props.height}

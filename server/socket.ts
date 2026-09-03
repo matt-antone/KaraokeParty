@@ -10,6 +10,8 @@ import Rooms from './Rooms/Rooms.js'
 import RoomsSocket from './Rooms/socket.js'
 import Queue from './Queue/Queue.js'
 import QueueSocket from './Queue/socket.js'
+import Trivia from './Trivia/Trivia.js'
+import TriviaSocket from './Trivia/socket.js'
 
 import {
   LIBRARY_PUSH,
@@ -19,6 +21,7 @@ import {
   PLAYER_STATUS,
   PLAYER_LEAVE,
   PREFS_PUSH,
+  TRIVIA_ROUND,
   SOCKET_AUTH_ERROR,
   _ERROR,
 } from '../shared/actionTypes.js'
@@ -30,6 +33,7 @@ const handlers = {
   ...PlayerSocket,
   ...PrefsSocket,
   ...RoomsSocket,
+  ...TriviaSocket,
 }
 
 const { verify: jwtVerify } = jsonWebToken
@@ -175,5 +179,19 @@ export default function (io, jwtKey) {
       type: QUEUE_PUSH,
       payload: Queue.get(sock.user.roomId),
     })
+
+    // A room whose queue predates trivia being switched on has no round waiting
+    // in it; put one there rather than making someone queue a song first.
+    Trivia.syncQueueAndPush(io, sock.user.roomId)
+
+    // a guest who picked their phone up mid-question still gets to answer it
+    const round = Trivia.getRound(sock.user.roomId)
+
+    if (round) {
+      io.to(sock.id).emit('action', {
+        type: TRIVIA_ROUND,
+        payload: round,
+      })
+    }
   })
 }

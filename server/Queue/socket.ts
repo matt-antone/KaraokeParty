@@ -1,5 +1,6 @@
 import Queue from './Queue.js'
 import Rooms from '../Rooms/Rooms.js'
+import Trivia from '../Trivia/Trivia.js'
 import { QUEUE_ADD, QUEUE_MOVE, QUEUE_PAUSE, QUEUE_REMOVE, QUEUE_SET_KEY, QUEUE_PUSH } from '../../shared/actionTypes.js'
 
 // ------------------------------------
@@ -23,6 +24,10 @@ const ACTION_HANDLERS = {
       songId,
       userId: sock.user.userId,
     })
+
+    // the first song in a room with trivia on is what puts the first round
+    // behind it; after that there is always one waiting
+    Trivia.syncQueue(sock.user.roomId)
 
     // success
     acknowledge({ type: QUEUE_ADD + '_SUCCESS' })

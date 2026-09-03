@@ -8,7 +8,8 @@ import PlayerHeadline from './PlayerHeadline/PlayerHeadline'
 import Icon from 'components/Icon/Icon'
 import UserImage from 'components/UserImage/UserImage'
 import VuMeter from 'components/VuMeter/VuMeter'
-import type { QueueItem } from 'shared/types'
+import useNow from 'lib/useNow'
+import { isTriviaItem, type QueueItem } from 'shared/types'
 import styles from './PlayerTextOverlay.css'
 
 /** How long the "on stage" panel names the singer at the top of a song. */
@@ -60,13 +61,7 @@ const Intermission = ({
   comingUpQueueItems?: QueueItem[]
   comingUpSongTitles?: (string | undefined)[]
 }) => {
-  const [now, setNow] = useState(() => Date.now())
-
-  useEffect(() => {
-    const intervalID = setInterval(() => setNow(Date.now()), 250)
-    return () => clearInterval(intervalID)
-  }, [])
-
+  const now = useNow()
   const secondsLeft = Math.max(0, Math.ceil((endsAt - now) / 1000))
 
   // one order, always: next song, face, name, countdown, coming up
@@ -78,7 +73,9 @@ const Intermission = ({
           {nextSongArtist && <div className={styles.nextSongArtist}>{nextSongArtist}</div>}
         </div>
       )}
-      {nextQueueItem && (
+      {/* a trivia round is up next like anyone else, but it has no face —
+          asking for one fetches an avatar for user 0 and gets a 404 */}
+      {nextQueueItem && !isTriviaItem(nextQueueItem) && (
         <UserImage
           userId={nextQueueItem.userId}
           dateUpdated={nextQueueItem.userDateUpdated}

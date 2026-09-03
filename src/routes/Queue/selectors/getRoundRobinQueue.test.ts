@@ -52,3 +52,121 @@ describe('getRoundRobinQueue', () => {
       .toEqual([1, 2, 3])
   })
 })
+
+/**
+ * A trivia round takes its turn in the rotation the way a singer does: it is
+ * spaced by the same round-robin, under its own userId of 0.
+ *
+ * The first version of this parked the round at the back of the queue. That
+ * reads fine with two songs waiting and is useless with fifteen — the round
+ * sat an hour out and the room never reached it.
+ */
+describe('getRoundRobinQueue with a trivia round', () => {
+  const withTrivia = (triviaPrevQueueId: number | null, order: number[], history: number[] = []) => ({
+    queue: {
+      isLoading: false,
+      result: order,
+      entities: {
+        ...ENTITIES,
+        9: { queueId: 9, type: 'trivia', songId: 0, userId: 0, prevQueueId: triviaPrevQueueId },
+      },
+      pausedUserIds: [] as number[],
+    },
+    status: { historyJSON: JSON.stringify(history), queueId: null, isAtQueueEnd: false, nextUserId: null },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) as any
+
+  it('takes a turn one lap in, not at the back of the queue', () => {
+    // alice and bob are waiting, so the round loses the first-pass tie to both
+    // and comes up on the next lap — never last, however deep the queue is
+    expect(getRoundRobinQueue(withTrivia(5, [1, 2, 3, 4, 5, 9])).result)
+      .toEqual([1, 4, 9, 2, 5, 3])
+  })
+
+  it('takes its first turn in the order it joined, as a singer would', () => {
+    // the round went in ahead of bob's songs, so it gets its first turn ahead
+    // of bob — the same first-come rule the rotation already applies to a
+    // singer who arrives mid-party
+    expect(getRoundRobinQueue(withTrivia(3, [1, 2, 3, 9, 4, 5])).result)
+      .toEqual([1, 9, 4, 2, 5, 3])
+  })
+
+  it('never drifts to the back as more songs are queued', () => {
+    // the bug this replaced: appended last, the round moved further out with
+    // every song anyone added, so a busy room never reached one at all
+    const deep = getRoundRobinQueue(withTrivia(5, [1, 2, 3, 4, 5, 9])).result
+    expect(deep.indexOf(9)).toBeLessThan(deep.length - 1)
+  })
+
+  it('does not spend a singer\'s turn on the round', () => {
+    // strip the round out and the singers still alternate exactly as they did
+    // before trivia existed
+    const withRound = getRoundRobinQueue(withTrivia(5, [1, 2, 3, 4, 5, 9])).result
+    expect(withRound.filter(id => id !== 9)).toEqual([1, 4, 2, 5, 3])
+  })
+
+  it('waits a full lap again once it has been played', () => {
+    // played, so it is the most recently seen participant and goes to the back
+    // of the spacing — the same rule that stops one singer going twice running
+    expect(getRoundRobinQueue(withTrivia(null, [9, 1, 2, 3, 4, 5], [9])).result)
+      .toEqual([9, 1, 4, 2, 5, 3])
+  })
+})
+
+/**
+ * A round the server has already asked must never be offered a turn again.
+ *
+ * The bug: play history lives in the running player and is not persisted, so
+ * after a reload the player had no memory of rounds already asked. It kept
+ * landing on spent rows, the server said "nothing here", and the room saw the
+ * intermission hand straight over to the next song — five times over.
+ */
+describe('getRoundRobinQueue with spent trivia rounds', () => {
+  const withRounds = (rounds: Array<{ queueId: number, isPlayed: boolean }>, order: number[]) => ({
+    queue: {
+      isLoading: false,
+      result: order,
+      entities: {
+        ...ENTITIES,
+        ...Object.fromEntries(rounds.map(r => [r.queueId, {
+          queueId: r.queueId,
+          type: 'trivia',
+          songId: 0,
+          userId: 0,
+          isPlayed: r.isPlayed,
+          prevQueueId: null as number | null,
+        }])),
+      },
+      pausedUserIds: [] as number[],
+    },
+    status: { historyJSON: '[]', queueId: null, isAtQueueEnd: false, nextUserId: null },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) as any
+
+  it('gives a spent round no turn at all', () => {
+    const result = getRoundRobinQueue(withRounds([{ queueId: 9, isPlayed: true }], [9, 1, 2, 3, 4, 5])).result
+
+    expect(result).not.toContain(9)
+    expect(result).toEqual([1, 4, 2, 5, 3])
+  })
+
+  it('still gives the round that has not been asked its turn', () => {
+    const rounds = [{ queueId: 9, isPlayed: true }, { queueId: 8, isPlayed: false }]
+    const result = getRoundRobinQueue(withRounds(rounds, [9, 1, 2, 3, 8, 4, 5])).result
+
+    expect(result).not.toContain(9)
+    expect(result).toContain(8)
+  })
+
+  it('drops a whole run of spent rounds rather than skipping a turn each', () => {
+    // exactly the state that produced "no quiz at all": several spent rows
+    // queued together, each burning a turn on the way past
+    const spent = [241, 242, 244, 245].map(queueId => ({ queueId, isPlayed: true }))
+    const result = getRoundRobinQueue(
+      withRounds([...spent, { queueId: 246, isPlayed: false }], [1, 2, 3, 4, 5, 241, 242, 244, 245, 246]),
+    ).result
+
+    expect(result.filter(id => [241, 242, 244, 245].includes(id))).toEqual([])
+    expect(result).toContain(246)
+  })
+})

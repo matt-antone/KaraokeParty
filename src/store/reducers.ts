@@ -9,6 +9,7 @@ import rooms from './modules/rooms'
 import songs from 'routes/Library/modules/songs'
 import starCounts from 'routes/Library/modules/starCounts'
 import status from './modules/status'
+import trivia from './modules/trivia'
 import ui from './modules/ui'
 import user from './modules/user'
 import userStars from './modules/userStars'
@@ -24,6 +25,7 @@ const combinedReducer = combineSlices({
   songs,
   starCounts,
   status,
+  trivia,
   ui,
   user,
   userStars: optimistic(userStars),

@@ -1,0 +1,23 @@
+.modal {
+  width: min(92vw, 26rem);
+}
+
+/* The same two by two the player screen lays out, so "top right on my phone"
+   and "top right on the TV" are the same answer. Square-ish keys: the pad is
+   meant to be thumbed at without looking down. */
+.keys {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(5.5rem, 1fr);
+  gap: var(--gap-3);
+}
+
+.hint {
+  margin-top: var(--gap-4);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--silkscreen-size);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}

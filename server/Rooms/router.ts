@@ -4,6 +4,7 @@ import sql from 'sqlate'
 import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
 import Rooms, { STATUSES } from '../Rooms/Rooms.js'
+import Trivia from '../Trivia/Trivia.js'
 import { ValidationError } from '../lib/Errors.js'
 
 interface RequestWithBody {
@@ -61,6 +62,10 @@ router.put('/:roomId', requireAdmin, async (ctx) => {
 
   log.verbose('%s updated a room (roomId: %s)', ctx.user.name, roomId)
 
+  // trivia may have just been switched on or off, which adds or removes the
+  // round waiting in the queue. Pushes the queue only if it actually changed.
+  Trivia.syncQueueAndPush(ctx.io, roomId)
+
   const sockets = await ctx.io.in(Rooms.prefix(roomId)).fetchSockets()
 
   for (const s of sockets) {
@@ -90,6 +95,16 @@ router.delete('/:roomId', requireAdmin, (ctx) => {
     WHERE roomId = ${roomId}
   `
   db.run(String(queueQuery), queueQuery.parameters)
+
+  // and its trivia scores, which also reference the room: leaving them would
+  // fail the foreign key on the delete below rather than orphan quietly
+  const scoresQuery = sql`
+    DELETE FROM triviaScores
+    WHERE roomId = ${roomId}
+  `
+  db.run(String(scoresQuery), scoresQuery.parameters)
+
+  Trivia.stopRoom(roomId)
 
   // remove room
   const roomQuery = sql`

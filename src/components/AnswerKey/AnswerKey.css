@@ -1,0 +1,97 @@
+/* A key like any other on the deck: raised, a vertical gradient from its -hi
+   to its -lo, travelling 1px when pressed. Only the face colour differs. */
+.key {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: var(--gap-3);
+  min-height: var(--target);
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-key);
+  box-shadow: var(--bevel);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur-key) var(--ease-key);
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: 2px;
+  }
+}
+
+/* The numeral is the channel that works without colour, so it is set in the
+   mono face at a size you can read across a room, never below the label. */
+.numeral {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+}
+
+.label {
+  flex: 1;
+  text-align: left;
+  font-size: var(--text-l);
+  font-weight: var(--weight-semibold);
+}
+
+/* an unlabelled key is the phone's: nothing but colour and a numeral, so it
+   centres and grows to fill its half of the grid */
+.key:not(.labelled) {
+  justify-content: center;
+  min-height: 0;
+  height: 100%;
+
+  .numeral {
+    font-size: var(--display-m);
+  }
+}
+
+.k0 {
+  background-color: var(--ans-1-hi);
+  background-image: var(--key-face-ans-1);
+}
+
+.k1 {
+  background-color: var(--ans-2-hi);
+  background-image: var(--key-face-ans-2);
+}
+
+.k2 {
+  background-color: var(--ans-3-hi);
+  background-image: var(--key-face-ans-3);
+}
+
+.k3 {
+  background-color: var(--ans-4-hi);
+  background-image: var(--key-face-ans-4);
+}
+
+/* Chosen: the key stays down. Pressed is a position on this deck, not a
+   flash, so the state that says "you answered" is the key still travelled. */
+.chosen {
+  transform: translateY(1px);
+  box-shadow: var(--well);
+}
+
+/* The reveal dims by colour, never by opacity: a wrong key goes back to
+   graphite and keeps its numeral, so it is still readable as the key you
+   pressed. The right one is simply the only one left lit. */
+.wrong {
+  background-color: var(--key);
+  background-image: var(--key-face);
+  color: var(--ink-4);
+}
+
+.correct {
+  box-shadow: var(--bevel), var(--focus-ring);
+}

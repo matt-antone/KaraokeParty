@@ -13,6 +13,7 @@ import koaMount from 'koa-mount'
 import koaRange from 'koa-range'
 import koaStatic from 'koa-static'
 import Media from './Media/Media.js'
+import QuestionCache from './Trivia/QuestionCache.js'
 import Prefs from './Prefs/Prefs.js'
 import mediaRouter from './Media/router.js'
 import prefsRouter from './Prefs/router.js'
@@ -76,6 +77,13 @@ async function serverWorker ({ env, startScanner, stopScanner, shutdownHandlers 
         type: SERVER_WORKER_STATUS,
         payload: { url },
       })
+
+      // Seed the trivia question cache now rather than when a round is due:
+      // the API allows one request per IP per five seconds, and a party on a
+      // LAN may have lost its internet by the time anyone presses play. Fires
+      // whether or not any room has trivia switched on — a host who turns it
+      // on mid-party should not then wait on the network.
+      void QuestionCache.topUp()
     })
 
     // when scanner exits cleanly
