@@ -25,6 +25,7 @@ const base = {
   isReplayable: true,
   isSkippable: true,
   isStarred: false,
+  isTunable: false,
   isUpcoming: false,
   pctPlayed: 0,
   queueId: 1,

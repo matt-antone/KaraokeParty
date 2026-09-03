@@ -109,7 +109,7 @@ const QueueView = () => {
       )}
 
       {!isLoading && queueTab === 'me' && mine.length > 0 && (
-        <div className={clsx('silkscreen', styles.caption)}>my songs &mdash; drag to reorder, swipe to remove</div>
+        <div className={clsx('silkscreen', styles.caption)}>my songs &mdash; drag to reorder, swipe for settings</div>
       )}
 
       {!isLoading && queueTab === 'history' && played.length > 0 && (

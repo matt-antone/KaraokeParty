@@ -92,6 +92,9 @@ const QueueList = () => {
         isReplayable={(!isUpcoming || isCurrent) && (user.isAdmin || isOwner)}
         isSkippable={isCurrent && (user.isAdmin || isOwner)}
         isStarred={starredSongs.includes(item.songId)}
+        // Me tab only: elsewhere the row already carries up to four keys, and a
+        // fifth puts the row past the travel a swipe can comfortably cover
+        isTunable={queueTab === 'me' && isUpcoming && isOwner}
         isUpcoming={isUpcoming}
         pctPlayed={isCurrent ? position / duration * 100 : 0}
         showStar={queueTab !== 'me'}
