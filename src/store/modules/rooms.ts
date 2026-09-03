@@ -12,6 +12,7 @@ import {
   ROOM_REMOVE,
   ROOM_PREFS_PUSH,
   ROOM_PREFS_PUSH_REQUEST,
+  ROOM_RESET_REQUEST,
   TRIVIA_SCORES_RESET,
   LOGOUT,
 } from 'shared/actionTypes'
@@ -105,16 +106,16 @@ export function requestPrefsPush (roomId: number, prefs: IRoomPrefs): AppThunk {
   }
 }
 
-/** Clear a room's trivia scoreboard. Carries the roomId because the admin is
- *  usually editing a room they are not signed into. */
-export function requestScoresReset (roomId: number): AppThunk {
-  return (dispatch) => {
-    dispatch({
-      type: TRIVIA_SCORES_RESET,
-      payload: { roomId },
-    })
-  }
-}
+export const requestRoomReset = createAction(ROOM_RESET_REQUEST, (roomId: number) => ({
+  payload: { roomId },
+}))
+
+/** Clear a room's trivia scoreboard. Carries the roomId for the same reason
+ *  the room reset above does: between nights the admin is not necessarily
+ *  signed in to the room being changed. */
+export const requestScoresReset = createAction(TRIVIA_SCORES_RESET, (roomId: number) => ({
+  payload: { roomId },
+}))
 
 // ------------------------------------
 // Reducer

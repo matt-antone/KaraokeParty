@@ -670,3 +670,37 @@ describe('asking twice for the same round', () => {
     expect(Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
   })
 })
+
+describe('a room reset while trivia is running', () => {
+  beforeEach(() => {
+    setupRoom()
+    for (const q of ['q2', 'q3', 'q4', 'q5', 'q6']) addQuestion(q)
+    queueSong(ALICE)
+    Trivia.syncQueue(ROOM_ID)
+  })
+
+  afterEach(teardownRoom)
+
+  it('leaves no round running on a queue that has been emptied', () => {
+    const queueId = Queue.getPendingTriviaId(ROOM_ID)!
+    Trivia.startRound(fakeIo(), ROOM_ID, queueId)
+    expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(true)
+
+    // what ROOM_RESET_REQUEST does: empty the queue, then stop the round
+    Queue.clear(ROOM_ID)
+    Trivia.stopRoom(ROOM_ID)
+
+    expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(false)
+    expect(Trivia.getRound(ROOM_ID)).toBeNull()
+  })
+
+  it('puts no round back into a room that was just emptied', () => {
+    Queue.clear(ROOM_ID)
+    Trivia.stopRoom(ROOM_ID)
+
+    // nothing to take a turn between, so a reset room stays empty until
+    // somebody queues a song
+    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
+  })
+})

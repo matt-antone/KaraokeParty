@@ -15,20 +15,22 @@ Neither file is published — Hugo serves `docs/content/`.
 
 - **Per-song key change** — queue metadata, Song Settings dialog on the Me tab, playback pitch shift, per-singer key memory. Was Tier 1 in the research report.
 - **Music trivia** — rounds between singers, four answer keys on the phone, scoreboard on the player, question cache with prefetch. Was our own idea; how each open question was settled is recorded below.
+- **Reset a room for a new night** — Reset for New Night in the Edit Room dialog, admin-gated. Empties the room's queue, lifts its pauses, and clears the player's `historyJSON`. `songHistory` untouched. Rooms are now reusable across nights.
 
 ---
 
-## Reset the room's played-song history
+## Reset a room for a new night
 
-**Status:** spec · **Effort:** low · **Source:** our own idea
+**Status:** shipped · **Effort:** low · **Source:** our own idea
 
-A button on the room that clears what has been played tonight, so those songs
-can be queued again. Long parties run out of the good ones.
+A button on the room that hands it back empty, so the same room can host more
+than one night instead of a new one being created each time.
 
 ### Intent
 
-- A **room setting** resets the played history.
-- Afterwards, songs already sung **can be selected from the library again**.
+- A **room setting** resets the room.
+- Afterwards the room behaves like a new one: empty queue, nobody paused, and
+  the whole library **selectable again**.
 
 ### How "played" works today, verified
 
@@ -52,12 +54,22 @@ destroys data a guest cares about.
 | `status.historyJSON` | queueIds played in the player's current session; drives the library disabling | **Yes** — this is the feature |
 | `songHistory` table | per user, per song, keyed on normalized artist/title; survives nights and library rescans; shown in **Sung Tonight** and on the Account view | **No** — this is a guest's personal record of everything they have ever sung |
 
-### Open questions
+### What the spec above got wrong
 
-1. **Where does the button live?** Room settings alongside the other per-room controls, or the player panel next to the transport, given it is a player command? Room settings matches how the user asked for it; the player panel matches what it actually does.
-2. **Who may press it?** Admin only, presumably — it changes the library for everyone in the room.
-3. **Does the played section of the Queue tab clear too,** or only the library's disabling? The Queue tab's history view reads the same array, so it will empty either way. Worth being sure that is wanted, since it is the only record on screen of what the room has sung tonight.
-4. **Confirmation?** It is undoable only by singing everything again, so a confirm step is probably right.
+Both corrections came out of driving the built feature against a real library.
+
+1. **Clearing the history does not re-open the library.** `SongItem` disables on `isUpcoming || isPlayed`, and a played song's queue row survives. Emptying `historyJSON` only flips the row from *played* to *upcoming* — still disabled, and now it plays again when its turn comes round. The spec traced the `isPlayed` path and missed the other half of the condition.
+
+2. **The stated use is between nights, and there the history reset is a no-op.** Closing the player already empties `historyJSON`. What actually survives the night is the queue, which is why the docs used to say to create a room per session. Reuse needs the queue cleared, so that is what the button does.
+
+### How it was settled
+
+1. **What it does:** empties the room's queue, deletes its `queuePauses` rows, and commands the player to clear `historyJSON` — a room handed back in the state a new one arrives in. A pause left over from last night would silently keep a singer out of the rotation with nothing on screen to explain it, hence the second delete.
+2. **Where the button lives:** the Edit Room dialog, next to Remove Room, labelled **Reset for New Night**. It targets a `roomId` rather than the sender's own room, so an admin can reset a room they are not signed in to — which is the between-nights case.
+3. **Who may press it:** admins. `ROOM_RESET_REQUEST` checks `sock.user.isAdmin`, the same gate `ROOM_PREFS_PUSH_REQUEST` uses.
+4. **Confirmed** with a `confirm()`, matching Remove Room and Remove User.
+
+The queue is a database write pushed with `QUEUE_PUSH`; the played list is not in the database, so it takes a command — the player stamps `_lastHistoryResetTime` and `PlayerController` empties `historyJSON` and pushes its status, the same path a skip takes.
 
 ---
 

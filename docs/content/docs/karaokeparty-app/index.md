@@ -159,7 +159,7 @@ Admins get a fourth navigation entry with everything that configures the party: 
 
 The Rooms panel allows admins to create, edit or remove rooms.
 
-KaraokeParty uses "rooms" to organize sessions by time and space (spacetime?) Users choose an open room when signing in, and each room has its own queue. **Don't re-use rooms** - create a new room before each session so that you start with an empty queue, then set the room to `closed` when finished.
+KaraokeParty uses "rooms" to organize sessions by time and space (spacetime?) Users choose an open room when signing in, and each room has its own queue. **Start each session with an empty queue** - either create a new room, or reuse one and press **Reset for New Night** first. Set the room to `closed` when finished.
 
 <div class="row">
   {{% img "app-settings-room.png" "Room editor" /%}}
@@ -175,6 +175,8 @@ Rooms have a number of options, including:
 - **Users**: Only users with existing accounts can join a room by default. You can optionally allow users to join with new accounts and/or as guests
 - **QR Code**: Displays a QR code in the room's player that will link users to the app, automatically choosing the room and optionally including the room's password if one is set
 - **Trivia**: Plays music trivia rounds between singers. See [Trivia](#trivia)
+
+**Reset for New Night** hands a used room back in the state a new one arrives in: its queue is emptied, paused singers are un-paused, and the player's list of what has been sung is cleared, so the whole library is selectable again. Use it instead of creating a room per session. Each singer's own record of everything they have ever sung is separate and is not touched.
 
 <aside class="warn">
   {{% icon-warn %}}

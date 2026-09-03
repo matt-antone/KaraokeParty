@@ -74,7 +74,7 @@ const ACTION_HANDLERS = {
       payload,
     })
   },
-  // the media reached its end on its own (skips don't count)
+  // the song left the stage, whether it ended on its own or was skipped
   [SONG_PLAYED]: (sock, { payload }) => {
     User.addPlay({ queueId: payload.queueId, roomId: sock.user.roomId })
   },

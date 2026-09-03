@@ -3,6 +3,7 @@ import type { AppThunk } from 'store/store'
 import { CANCEL } from 'redux-throttle'
 import getWebGLSupport from 'lib/getWebGLSupport'
 import {
+  PLAYER_CMD_HISTORY_RESET,
   PLAYER_CMD_NEXT,
   PLAYER_CMD_OPTIONS,
   PLAYER_CMD_PAUSE,
@@ -31,6 +32,7 @@ const playerCmdNext = createAction(PLAYER_CMD_NEXT)
 const playerCmdPause = createAction(PLAYER_CMD_PAUSE)
 const playerCmdPlay = createAction(PLAYER_CMD_PLAY)
 const playerCmdReplay = createAction<{ queueId: number }>(PLAYER_CMD_REPLAY)
+const playerCmdHistoryReset = createAction(PLAYER_CMD_HISTORY_RESET)
 const playerCmdVolume = createAction<number>(PLAYER_CMD_VOLUME)
 const playerCmdOptions = createAction<{
   cdgAlpha: number
@@ -116,6 +118,7 @@ export interface PlayerState {
   _isFetching: boolean
   _isPlayingNext: boolean
   _isReplayingQueueId: number | null
+  _lastHistoryResetTime: number
   _lastReplayTime: number
   _lastSkipTime: number
 }
@@ -143,12 +146,17 @@ const initialState: PlayerState = {
   _isFetching: false,
   _isPlayingNext: false,
   _isReplayingQueueId: null,
+  _lastHistoryResetTime: 0,
   _lastReplayTime: 0,
   _lastSkipTime: 0,
 }
 
 const playerReducer = createReducer(initialState, (builder) => {
   builder
+    .addCase(playerCmdHistoryReset, (state) => {
+      // the controller does the emptying, so the room hears about it too
+      state._lastHistoryResetTime = Date.now()
+    })
     .addCase(playerCmdNext, (state) => {
       state._isPlayingNext = true
       state._lastSkipTime = Date.now()

@@ -26,6 +26,7 @@ export const QUEUE_SET_KEY = 'server/QUEUE_SET_KEY'
 export const PLAYER_UPDATE = 'player/UPDATE'
 
 // Player room commands
+export const PLAYER_CMD_HISTORY_RESET = 'player/CMD_HISTORY_RESET'
 export const PLAYER_CMD_NEXT = 'player/CMD_NEXT'
 export const PLAYER_CMD_OPTIONS = 'player/CMD_OPTIONS'
 export const PLAYER_CMD_PAUSE = 'player/CMD_PAUSE'
@@ -69,6 +70,7 @@ export const ROOM_EDITOR_CLOSE = 'rooms/EDITOR_CLOSE'
 export const ROOM_FILTER_STATUS = 'rooms/TOGGLE_SHOW_ALL'
 export const ROOM_PREFS_PUSH = 'rooms/ROOM_PREFS_PUSH'
 export const ROOM_PREFS_PUSH_REQUEST = 'server/ROOM_PREFS_PUSH_REQUEST'
+export const ROOM_RESET_REQUEST = 'server/ROOM_RESET_REQUEST'
 
 // Trivia
 export const TRIVIA_ANSWER = 'server/TRIVIA_ANSWER'

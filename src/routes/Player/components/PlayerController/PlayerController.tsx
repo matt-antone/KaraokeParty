@@ -113,6 +113,20 @@ const PlayerController = (props: PlayerControllerProps) => {
     // add current item to history (once)
     if (queueItem && history.lastIndexOf(queueItem.queueId) === -1) {
       history.push(queueItem.queueId)
+
+      // a song counts as sung once it leaves the stage, however it left. A
+      // skip is still a turn taken, and the singer who cut their own song
+      // short should not have it missing from Sung Tonight. This is the one
+      // path every song departs through, and addPlay upserts, so a replay
+      // that comes back through here just refreshes dateSung.
+      //
+      // A trivia round departs through here too and is nobody's song. Said
+      // out loud rather than left to addPlay's INNER JOIN quietly matching
+      // nothing on a null songId, which works by accident and would stop
+      // working the day that join changed.
+      if (!isTriviaItem(queueItem)) {
+        dispatch({ type: SONG_PLAYED, payload: { queueId: queueItem.queueId } })
+      }
     }
 
     // queue exhausted?
@@ -139,7 +153,7 @@ const PlayerController = (props: PlayerControllerProps) => {
       nextUserId: null,
       _isPlayingNext: false,
     })
-  }, [handleStatus, nextQueueItem, player.historyJSON, queueItem])
+  }, [dispatch, handleStatus, nextQueueItem, player.historyJSON, queueItem])
 
   // the queue can change while we're waiting, so the timer calls the latest handleLoadNext
   const loadNextRef = useRef(handleLoadNext)
@@ -149,10 +163,10 @@ const PlayerController = (props: PlayerControllerProps) => {
 
   // song finished on its own: hold for the intermission before loading the next one
   const handleMediaEnd = useCallback(() => {
-    // only songs that reached their end count toward the singer's history —
-    // and it is also the beat the server counts trivia rounds on, so a round
-    // may come back and claim the intermission that starts here
-    dispatch({ type: SONG_PLAYED, payload: { queueId: player.queueId } })
+    // Neither the history dispatch nor a timer to clear lives here any more:
+    // a song is recorded as sung on the way out through handleLoadNext, and
+    // the intermission's timer is owned by the effect below so it can re-arm
+    // when a trivia round claims the gap.
 
     // nothing to wait for at the end of the queue
     if (!nextQueueItem) {
@@ -165,7 +179,7 @@ const PlayerController = (props: PlayerControllerProps) => {
       queueId: player.queueId,
       replayTime: player._lastReplayTime,
     })
-  }, [dispatch, handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
+  }, [handleLoadNext, nextQueueItem, player.queueId, player._lastReplayTime])
 
   // Reached a trivia row: ask the room's question. The server decides whether
   // there is one to ask — it owns the shuffle and the countdown, so two
@@ -246,6 +260,14 @@ const PlayerController = (props: PlayerControllerProps) => {
     const timerID = setTimeout(() => loadNextRef.current(), Math.max(0, skipEndsAt - Date.now()))
     return () => clearTimeout(timerID)
   }, [handleLoadNext, player._isPlayingNext, skipEndsAt])
+
+  // history reset? empty the played list and push it, so the library's
+  // greyed-out rows come back to life for everyone in the room
+  useEffect(() => {
+    if (player._lastHistoryResetTime) {
+      handleStatus({ historyJSON: '[]' })
+    }
+  }, [handleStatus, player._lastHistoryResetTime])
 
   // replaying?
   useEffect(() => {
