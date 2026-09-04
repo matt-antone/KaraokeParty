@@ -51,9 +51,12 @@ const TriviaDialog = () => {
 
   if (!round || !isOpen) return null
 
-  // The standings take the pad's place rather than sitting under it: the keys
-  // are dead during the reveal anyway, and a phone has room for one thing.
-  const isScoreboard = !!result && serverNow(result, tick) >= result.scoresFrom
+  // The beat after the answer takes the pad's place rather than sitting under
+  // it: the keys are dead during the reveal anyway, and a phone has room for
+  // one thing. The pad runs the player's beats, off the player's stamps.
+  const now = result ? serverNow(result, tick) : 0
+  const isTally = !!result && now >= result.scoresFrom
+  const isScoreboard = !!result?.boardFrom && now >= result.boardFrom
 
   const stateOf = (i: number): AnswerKeyState => {
     if (result) {
@@ -65,9 +68,8 @@ const TriviaDialog = () => {
     return i === answeredIdx ? 'chosen' : 'closed'
   }
 
-  // Between questions the pad shows the same count the TV does. The standings
-  // keep the last question, which is the one they settle.
-  if (isScoreboard && !result.isFinal) {
+  // The same count the TV shows, on every question including the last.
+  if (isTally && !isScoreboard) {
     return (
       <Modal
         className={styles.modal}

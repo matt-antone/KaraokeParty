@@ -253,11 +253,15 @@ export interface TriviaResult {
   /** How many of the room got *this* question. The scoreboard says where the
    *  night stands; this is what the room reacts to out loud. */
   numCorrect: number
-  /** Epoch ms the scoreboard takes over from the answer. The two are separate
-   *  beats — you read what it was, then you see where that put everyone —
-   *  and showing them at once means neither lands. Every question gets both;
-   *  the last one holds its scoreboard longest. */
+  /** Epoch ms the count takes over from the answer. Separate beats — you read
+   *  what it was, then you see how the room did — because showing them at once
+   *  means neither lands. Every question gets both. */
   scoresFrom: number
+  /** Epoch ms the standings take over from the count, or null when there are
+   *  no standings this question. Only the last one has them: it is the round's
+   *  result rather than a checkpoint, so it earns a third beat and holds it
+   *  twice as long. */
+  boardFrom: number | null
   /** Epoch ms the reveal stops being shown — and, when isFinal, the earliest
    *  the next song may load. */
   endsAt: number

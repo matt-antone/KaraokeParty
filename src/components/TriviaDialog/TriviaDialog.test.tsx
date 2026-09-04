@@ -51,11 +51,22 @@ describe('TriviaDialog', () => {
     expect(markup).toContain('got it')
   })
 
-  it('keeps the standings for the last question', () => {
-    const markup = render({ round: triviaRound(), result: triviaResult({ isFinal: true }) })
+  it('keeps the standings for the last question, after its count', () => {
+    const counting = render({
+      round: triviaRound(),
+      result: triviaResult({ isFinal: true, boardFrom: Date.now() + 2000 }),
+    })
 
-    expect(markup).toContain('Scores')
-    expect(markup).toContain('Dot Matrix')
+    expect(counting).toContain('Who got it')
+    expect(counting).not.toContain('Dot Matrix')
+
+    const board = render({
+      round: triviaRound(),
+      result: triviaResult({ isFinal: true, boardFrom: Date.now() - 500 }),
+    })
+
+    expect(board).toContain('Scores')
+    expect(board).toContain('Dot Matrix')
   })
 
   /** The question is on the pad; the four answers never are, or the room is

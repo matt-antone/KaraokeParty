@@ -32,13 +32,18 @@ describe('PlayerTrivia', () => {
     expect(markup).not.toContain('🎉')
   })
 
-  /** The last question's board is the round's result, so it keeps the
-   *  standings — that is the one everybody is waiting on. */
-  it('shows the standings on the final question', () => {
-    const markup = render({ result: triviaResult({ isFinal: true }) })
+  /** The last question earns a third beat: the count first, like every other
+   *  question, and the standings only once boardFrom has passed. */
+  it('counts the last question before it stands anyone up', () => {
+    const counting = render({ result: triviaResult({ isFinal: true, boardFrom: Date.now() + 2000 }) })
 
-    expect(markup).toContain('scores')
-    expect(markup).toContain('Dot Matrix')
+    expect(counting).toContain('got it')
+    expect(counting).not.toContain('scores')
+
+    const board = render({ result: triviaResult({ isFinal: true, boardFrom: Date.now() - 500 }) })
+
+    expect(board).toContain('scores')
+    expect(board).toContain('Dot Matrix')
   })
 
   /**

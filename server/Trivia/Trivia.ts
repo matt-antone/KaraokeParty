@@ -21,10 +21,9 @@ const log = getLogger('Trivia')
  *  which one it was and argue about it before the standings land. */
 const REVEAL_MS = 6000
 
-/** After every answer, the scoreboard gets the stage to itself. Sequenced
- *  rather than shown alongside: the answer and the standings are two different
- *  things to look at, and together they compete. Standings that only appear
- *  once, at the end, give nobody anything to chase for four questions. */
+/** After every answer, how many got it gets the stage to itself. Sequenced
+ *  rather than shown alongside: the answer and the count are two different
+ *  things to look at, and together they compete. */
 const SCOREBOARD_MS = 3000
 
 /** The last scoreboard is the round's result, not a checkpoint, so it holds
@@ -309,6 +308,12 @@ class Trivia {
     const isFinal = active.index >= active.questions.length - 1
     const numCorrect = [...current.answered.values()].filter(i => i === current.correctIdx).length
 
+    // Three beats on the last question, two on every other: the answer, then
+    // how many got it, then — only at the end, where they mean something —
+    // the standings.
+    const scoresFrom = Date.now() + REVEAL_MS
+    const boardFrom = isFinal ? scoresFrom + SCOREBOARD_MS : null
+
     const payload: TriviaResult = {
       roundId: current.roundId,
       queueId: active.queueId,
@@ -318,8 +323,9 @@ class Trivia {
       correctIdx: current.correctIdx,
       scores: this.getScores(roomId),
       numCorrect,
-      scoresFrom: Date.now() + REVEAL_MS,
-      endsAt: Date.now() + REVEAL_MS + SCOREBOARD_MS * (isFinal ? FINAL_SCOREBOARD_FACTOR : 1),
+      scoresFrom,
+      boardFrom,
+      endsAt: (boardFrom ?? scoresFrom) + SCOREBOARD_MS * (isFinal ? FINAL_SCOREBOARD_FACTOR : 1),
       sentAt: Date.now(),
     }
 
