@@ -1,0 +1,20 @@
+/* The mark's mount, and nothing else — everything visible is drawn on the
+   canvas by lib/triviaSting, which reads its palette out of variables.css. */
+
+/* A full takeover, like PlayerTrivia's own container: it covers the stage for
+   the gap before a round arrives. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Sized by whatever it sits in — the icon well, a title bar. Below about 20px
+   the four registers stop separating, so do not go under it. */
+.glyph {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

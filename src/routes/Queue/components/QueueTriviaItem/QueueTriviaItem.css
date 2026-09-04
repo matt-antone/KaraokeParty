@@ -33,6 +33,13 @@
   color: var(--standby);
 }
 
+/* the mark draws itself; a canvas does not inherit color, so .spent dims it
+   through the isDim prop instead */
+.mark {
+  width: 34px;
+  height: 34px;
+}
+
 .primary {
   flex: 1;
   min-width: 0;

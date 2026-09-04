@@ -1,6 +1,6 @@
 import React from 'react'
 import clsx from 'clsx'
-import Icon from 'components/Icon/Icon'
+import TriviaMark from 'components/TriviaMark/TriviaMark'
 import styles from './QueueTriviaItem.css'
 
 interface QueueTriviaItemProps {
@@ -24,7 +24,7 @@ const QueueTriviaItem = ({ isCurrent, isPlayed }: QueueTriviaItemProps) => (
   <div className={clsx(styles.shell, isCurrent && styles.current)}>
     <div className={clsx(styles.container, isPlayed && styles.spent)}>
       <div className={styles.iconWell}>
-        <Icon icon='DICE' size={26} />
+        <TriviaMark variant='glyph' isDim={isPlayed} className={styles.mark} />
       </div>
 
       <div className={styles.primary}>
