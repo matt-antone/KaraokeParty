@@ -122,8 +122,11 @@ class Trivia {
       if (pending !== null) return removed
 
       // nothing to take a turn between: a round on its own in an empty queue
-      // would start the moment anyone pressed play
-      const query = sql`SELECT COUNT(*) AS count FROM queue WHERE roomId = ${roomId} AND type = 'song'`
+      // would start the moment anyone pressed play. Anything that is not a
+      // round counts, not only songs — a battle is a turn somebody sings, and
+      // a queue made entirely of battles read as zero songs, so trivia never
+      // got queued in a room that was doing nothing but battling.
+      const query = sql`SELECT COUNT(*) AS count FROM queue WHERE roomId = ${roomId} AND type <> 'trivia'`
       if ((db.get<{ count: number }>(String(query), query.parameters)?.count ?? 0) === 0) return removed
 
       // and nothing on stage: a round added to an idle room is the first thing

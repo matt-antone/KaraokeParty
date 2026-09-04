@@ -16,6 +16,7 @@ Neither file is published — Hugo serves `docs/content/`.
 - **Per-song key change** — queue metadata, Song Settings dialog on the Me tab, playback pitch shift, per-singer key memory. Was Tier 1 in the research report.
 - **Music trivia** — rounds between singers, four answer keys on the phone, scoreboard on the player, five questions fetched per round. Was our own idea; how each open question was settled is recorded below.
 - **Reset a room for a new night** — Reset for New Night in the Edit Room dialog, admin-gated. Empties the room's queue, lifts its pauses, and clears the player's `historyJSON`. `songHistory` untouched. Rooms are now reusable across nights.
+- **Song battles** — one queue row with two singers in it, each of whom picks the other's song. Challenge and accept from the phone, a nine-beat sequence on the player, and the room's cheering read through the player's microphone to pick a winner. Was our own idea; how each open question was settled is recorded below.
 
 ---
 
@@ -190,3 +191,107 @@ where the spec left a question open, and why.
 - Migration 012 was edited after it had already been applied to a running
   development database, which is why 013 exists as a separate file. Migrations
   are immutable once they have run anywhere.
+
+---
+
+## Song Battles — how it was built
+
+**Status:** shipped
+
+Two singers share one turn and each picks the other's song. Negotiated on the
+phones, run by the server, judged by the room.
+
+### How it was settled
+
+1. **A battle is one queue row, not two.** Migration 016 adds nullable
+   `opponentUserId` and `opponentSongId` to `queue` and `type` gains
+   `'battle'`, so the row already carries the challenger in the columns every
+   existing consumer reads. A client that has not been taught about battles
+   sees a normal song row for the challenger rather than nothing, which is the
+   same graceful-degradation trade trivia's `userId 0` made. No foreign keys
+   on the two new columns, deliberately: `User.remove` deletes rows where
+   somebody is *either* fighter, and a constraint would have made that a
+   different, larger conversation about cascade order.
+
+2. **The challenger's next turn becomes the battle, in place.** One `UPDATE`
+   converts the row, so it keeps its exact slot in the `prevQueueId` chain and
+   the battle costs the challenger the turn they already had rather than
+   adding one to the queue. Everybody behind them keeps their place. Only when
+   the offered row is gone, already played, or not theirs does a new row go on
+   the tail, reusing `Queue.add`'s existing subselect.
+
+3. **Each side chooses the other's song, and neither sees the choice early.**
+   The challenger picks for the opponent as part of throwing the challenge;
+   the opponent picks for the challenger only after accepting. That ordering
+   is what makes declining meaningful — you find out what you would have to
+   sing before you agree to sing it.
+
+4. **One negotiation per room at a time.** A second pair trying to set up a
+   battle in the same moment is refused with a message rather than queued.
+   One negotiation, one stage, no race for the same row. It is a real UX
+   ceiling; on a floor big enough to notice, an invite would need to be keyed
+   per pair rather than per room.
+
+5. **The server owns every beat boundary.** Nine of them — `versus`, `intro1`,
+   `sing1`, `intro2`, `sing2`, `judge`, `meter1`, `meter2`, `winner` — each
+   emitted as one `BattleTurn` carrying its own `endsAt`, so a phone joining
+   mid-battle lands on the right beat and every screen agrees on the clock. A
+   singing beat ends at its deadline *or* when the player reports the song
+   ran out, whichever is first.
+
+6. **Two minutes per song, about five minutes per battle.** `BATTLE_SING_MS`
+   caps each side at 120s and the eight surrounding beats add 65s. That is two
+   songs of queue time spent on one turn, which the wait estimates on the
+   queue rows now count.
+
+7. **Names, avatars and song titles are read from the database, never from the
+   JWT.** A token can be a month old, so a renamed singer or a changed avatar
+   would be stale on the very screen the other fighter is looking at.
+
+8. **The private half of the negotiation never reaches the player.** Invite
+   emits skip any socket carrying `_lastPlayerStatus` even when its user id
+   matches, because the player display is usually signed in as the host, who
+   also sings — a challenge appearing on the television in front of the room
+   is a bug, not a feature.
+
+9. **No new colour tokens.** The challenger takes `--ans-1` (crimson) and the
+   opponent `--ans-2` (moss), the two answer channels trivia already measured
+   for contrast and hue separation. The palette stays closed.
+
+10. **The room decides, by volume, and only where the browser allows it.**
+    Scoring reads the player's microphone, which browsers only grant on a
+    secure origin — in practice a player opened at `http://localhost` on the
+    machine running the server. The player says up front whether it can hear
+    the room; when it cannot, the two metering beats are skipped entirely and
+    the battle ends level. Documented in the room editor and in the app docs,
+    because a silent draw looks exactly like a broken feature.
+
+### Where it lives
+
+- `server/Battle/Battle.ts` — invite negotiation, the singer list, and the beat machine
+- `server/Battle/socket.ts` — one handler per `server/BATTLE_*` action
+- `server/lib/schemas/016-queue-battle.sql` — the two nullable opponent columns
+- `server/Queue/Queue.ts` — per-fighter media resolution, `setBattle`/`addBattle`, `isOwner` widened to the opponent
+- `src/store/modules/battle.ts` — the eager slice and the `getBattlePick` selector the library asks
+- `src/lib/useBattleStage.ts` — which beat is on screen and how much of it is left
+
+### Still open
+
+- **Nothing marks a battle row played.** Trivia stamps `datePlayed` so a
+  player reload cannot re-ask a round; a battle has no equivalent, so a player
+  that reloads and walks back over the row will run all nine beats again.
+  `Queue.setTriviaPlayed` is the pattern if it turns up in practice.
+- **A paused opponent is still pulled on stage.** `getRoundRobinQueue` drops a
+  row when the *challenger* is paused and not when the opponent is, and
+  `getMyUpcoming`'s paused branch loses sight of the battle altogether. Whether
+  pausing should cancel a pending battle is undecided.
+- **Anyone in the room can post a score for either side**, and the last one in
+  wins. The only "is this the player" tell in the codebase is
+  `_lastPlayerStatus`, and gating on it would make a battle unwinnable on a
+  player that had not yet sent a status.
+- **Half a battle cannot be transposed.** Migration 016 added no second
+  `keyChange` column, so `opponentKeyChange` is hard-coded 0.
+- **`Queue.get`'s chain walk still crashes** when a filtered-out row is not the
+  tail — a pre-existing bug that battles make more likely, since a battle needs
+  *both* songs to survive a rescan. Worth its own fix: skip rows whose
+  `prevQueueId` is missing and re-point.

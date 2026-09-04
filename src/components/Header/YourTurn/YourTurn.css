@@ -112,8 +112,17 @@
 }
 
 /* Button is width:100% by default, which would eat the row */
-.pauseKey {
+.pauseKey,
+.battleKey {
   flex: 0 0 auto;
   width: var(--target);
   min-height: var(--target);
+}
+
+/* Switched off at the room level. Button has no disabled treatment of its own
+   — it is bare by default and its variants are all live keys — so the dim is
+   here, at the one sanctioned opacity, and the cursor stops promising a press. */
+.battleKey:disabled {
+  opacity: .45;
+  cursor: default;
 }

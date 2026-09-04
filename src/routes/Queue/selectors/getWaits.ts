@@ -1,5 +1,15 @@
 import type { RootState } from 'store/store'
 import { createSelector } from '@reduxjs/toolkit'
+import {
+  BATTLE_INTRO_MS,
+  BATTLE_JUDGE_MS,
+  BATTLE_METER_MS,
+  BATTLE_SING_MS,
+  BATTLE_VERSUS_MS,
+  BATTLE_WINNER_MS,
+  isBattleItem,
+} from 'shared/types'
+import type { QueueItem } from 'shared/types'
 import getPlayerHistory from './getPlayerHistory'
 import getRoundRobinQueue from './getRoundRobinQueue'
 
@@ -7,6 +17,47 @@ const getPosition = (state: RootState) => state.status.position
 const getQueue = (state: RootState) => getRoundRobinQueue(state)
 const getQueueId = (state: RootState) => state.status.queueId
 const getSongs = (state: RootState) => state.songs
+
+/** Everything in a battle that is not singing: the versus splash, both fighter
+ *  intros, the "who wins" ask, both metering beats and the verdict. Seconds,
+ *  because every duration in this file is. Counted in full even when the
+ *  player cannot hear the room and skips the two metering beats — this
+ *  selector has no idea which player will run the row, and a wait estimate
+ *  that is thirty seconds long is a better lie than one that is thirty seconds
+ *  short. */
+const BATTLE_OVERHEAD_SECS = (
+  BATTLE_VERSUS_MS + (BATTLE_INTRO_MS * 2) + BATTLE_JUDGE_MS + (BATTLE_METER_MS * 2) + BATTLE_WINNER_MS
+) / 1000
+
+const BATTLE_SING_SECS = BATTLE_SING_MS / 1000
+
+/**
+ * How long a queue row holds the stage, or null when we cannot say.
+ *
+ * A battle is one row and two performances. Read as an ordinary row — which is
+ * exactly what QueueItem is designed to allow — it looks like one song of
+ * three minutes, when it is closer to five and a half. Every wait in the room
+ * is a running total of these, so one uncounted battle makes every estimate
+ * behind it short, and the singer who was told "ten minutes" is still sitting
+ * down when their name comes up.
+ */
+const getItemSecs = (item: QueueItem, songs: RootState['songs']): number | null => {
+  const song = songs.entities[item.songId]
+
+  // a trivia round has songId 0 and lands here too: no song, no duration, and
+  // the caller skips the row entirely rather than guessing at one
+  if (!song) return null
+  if (!isBattleItem(item)) return song.duration
+
+  const opponentSong = songs.entities[item.opponentSongId]
+
+  return Math.min(song.duration, BATTLE_SING_SECS)
+    // The library may not hold the opponent's song on this device — the phone
+    // fetches songs by artist and a battle can reach outside what it has. The
+    // cap is the honest guess there: it is what the beat is allowed to take.
+    + Math.min(opponentSong ? opponentSong.duration : BATTLE_SING_SECS, BATTLE_SING_SECS)
+    + BATTLE_OVERHEAD_SECS
+}
 
 const getWaits = createSelector(
   [getQueue, getQueueId, getPlayerHistory, getPosition, getSongs],
@@ -17,18 +68,23 @@ const getWaits = createSelector(
     let nextWait = 0
 
     queue.result.forEach((queueId, i) => {
-      const songId = queue.entities[queueId].songId
-      if (!songs.entities[songId]) return
+      const secs = getItemSecs(queue.entities[queueId], songs)
+      if (secs === null) return
 
       if (i === curIdx) {
         // if history includes the current item it's already been played
         if (history.lastIndexOf(queueId) === -1) {
-          nextWait = Math.round(songs.entities[songId].duration - position)
+          // `position` is how far into the *current media* the player is, so
+          // on a battle this over-counts by however much of the first song is
+          // already behind us. Left as is: it decays to correct as the row
+          // finishes, and the alternative is teaching this selector which of
+          // the nine beats is on screen, which is the player's business.
+          nextWait = Math.round(secs - position)
         }
       } else if (i > curIdx) {
         // upcoming
         curWait += nextWait
-        nextWait = songs.entities[songId].duration
+        nextWait = secs
       }
 
       waits[queueId] = curWait

@@ -221,11 +221,16 @@ class User {
       throw new Error('userId must be a number')
     }
 
-    // remove user's queue items
+    // Remove the user's queue items — including the battles where they are the
+    // second fighter rather than the one who queued the row. opponentUserId
+    // deliberately carries no foreign key (see 016-queue-battle.sql), so
+    // nothing in the database would have stopped a battle surviving here with
+    // a dangling opponent: a turn the room still shows as two people, one of
+    // whom no longer exists, and which the player reaches and cannot run.
     const queueQuery = sql`
       SELECT queueId
       FROM queue
-      WHERE userId = ${userId}
+      WHERE userId = ${userId} OR opponentUserId = ${userId}
     `
     const queueRows = db.all<{ queueId: number }>(String(queueQuery), queueQuery.parameters)
 

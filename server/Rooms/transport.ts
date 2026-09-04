@@ -1,4 +1,5 @@
 import Rooms from './Rooms.js'
+import Battle from '../Battle/Battle.js'
 import Queue from '../Queue/Queue.js'
 import Trivia from '../Trivia/Trivia.js'
 import {
@@ -40,6 +41,13 @@ export default function setRoomTransport (io, roomId: number, status: string): v
   // exists, and would re-queue its successor into the room just emptied.
   // Stopping it also drops its timers.
   Trivia.stopRoom(roomId)
+
+  // and a battle mid-fight has nine timers' worth of beats still to emit onto
+  // a queue row that went with Queue.clear above. Same bug, same fix — this is
+  // the place a timer outliving its room actually gets caught. It also drops
+  // any challenge being negotiated, which would otherwise resolve into a queue
+  // row in a room that has closed for the night.
+  Battle.stopRoom(roomId)
 
   io.to(Rooms.prefix(roomId)).emit('action', {
     type: QUEUE_PUSH,

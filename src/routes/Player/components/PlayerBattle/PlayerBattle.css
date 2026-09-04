@@ -1,0 +1,294 @@
+/* The one screen in the app that speaks 8-bit fighting game, drawn entirely
+   inside DECK's rules rather than around them.
+
+   Everything an arcade pastiche normally reaches for is banned here — glow,
+   neon, outlined type, frosted panels — so the read comes from the four things
+   the deck already allows and which turn out to be the whole effect: scale
+   (--display-xl is 11vh, and a versus screen is two faces and one enormous
+   word), motion in steps rather than eases, Michroma tracked wide, and
+   image-rendering: pixelated on the portraits.
+
+   Colour is the two answer keys, unchanged: crimson is always the challenger
+   and moss is always the opponent, on every beat, so the room learns which
+   side is which in the first five seconds and never has to be told again. */
+
+.container {
+  font-family: var(--font-body);
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3vh;
+  color: var(--ink);
+  /* Opaque: this covers the whole stage and the thread field behind it stops
+     drawing while it does. A wash would leave the field burning CPU for a
+     five-minute battle. */
+  background: var(--chassis-deep);
+  text-align: center;
+}
+
+/* the two fighter colours, as one name each beat can reach for */
+.sideOne {
+  --fighter: var(--ans-1-hi);
+  --fighter-lo: var(--ans-1-lo);
+}
+
+.sideTwo {
+  --fighter: var(--ans-2-hi);
+  --fighter-lo: var(--ans-2-lo);
+}
+
+/* --- type ----------------------------------------------------------- */
+
+/* The one place Michroma is allowed at this size, and the reason this file
+   lives under routes/Player rather than in components/. */
+.headline {
+  font-family: var(--font-display);
+  font-size: var(--display-xl);
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.subhead {
+  font-family: var(--font-display);
+  font-size: var(--display-l);
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.silk {
+  font-size: var(--text-xs);
+  letter-spacing: var(--silkscreen-tracking);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.song {
+  font-size: 2.6vh;
+  line-height: 1.25;
+  max-width: 30ch;
+  text-wrap: pretty;
+}
+
+.songArtist {
+  color: var(--ink-2);
+}
+
+/* --- versus ---------------------------------------------------------- */
+
+/* the wedges and the word, drawn by versusSting. Everything readable sits on
+   top of it as real text. */
+.sting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fighters {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4vw;
+  width: 100%;
+  padding: 0 5vw;
+}
+
+.fighter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5vh;
+  min-width: 0;
+  flex: 1;
+}
+
+/* --- portraits -------------------------------------------------------- */
+
+/* One line, and the whole 8-bit read: an avatar shot on a phone, scaled up to
+   a quarter of the screen with nearest-neighbour sampling, is a sprite. The
+   frame is the fighter's own colour so a portrait is identifiable with the
+   sound off and the names unread. */
+.portrait {
+  width: 24vh;
+  border: 0.6vh solid var(--fighter);
+
+  img {
+    image-rendering: pixelated;
+  }
+}
+
+.portraitSolo {
+  width: 38vh;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 3.2vh;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- intro ------------------------------------------------------------ */
+
+/* One fighter, alone, at the size the far sofa reads. The band is their colour
+   at full width so the beat is a colour change as much as a name change. */
+.solo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+  padding: 3vh 6vw;
+  border-radius: var(--radius-panel);
+  background: linear-gradient(180deg, var(--fighter) 0%, var(--fighter-lo) 100%);
+  box-shadow: var(--bevel);
+  animation: slam 160ms steps(4, end);
+}
+
+/* Slam, hold, cut — steps(n, end) is the arcade tell, and TriviaDialog already
+   uses the same easing for the same reason. Declared here rather than reused
+   from variables.css: css-loader scopes animation names per module, so a
+   global keyframe name silently resolves to nothing. */
+@keyframes slam {
+  from { transform: scale(1.5); }
+  to { transform: scale(1); }
+}
+
+/* The --dur-* tokens go to 0ms under reduced motion but a hard-coded duration
+   does not, so the animation needs switching off by name as well. */
+@media (prefers-reduced-motion: reduce) {
+  .solo,
+  .verdict {
+    animation: none;
+  }
+}
+
+/* --- singing ---------------------------------------------------------- */
+
+/* The overlay gets out of the way: during a singing beat the media is the
+   screen and this is a corner card, the same size and place the rest of the
+   player's furniture uses. Lower left, because the QR panel owns lower right. */
+.corner {
+  position: absolute;
+  left: 2vh;
+  bottom: 2vh;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-4);
+  padding: var(--gap-3) var(--gap-4);
+  border-radius: var(--radius-panel);
+  background: var(--faceplate);
+  box-shadow: var(--bevel);
+  font-family: var(--font-body);
+  color: var(--ink);
+  text-align: left;
+  max-width: 46vw;
+}
+
+/* a fat bar of the fighter's colour: which side is up, readable at a glance
+   from across the room and from the corner of an eye mid-song */
+.cornerBar {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 0.9vh;
+  border-radius: var(--radius-key);
+  background: var(--fighter);
+}
+
+.cornerText {
+  min-width: 0;
+}
+
+.cornerName {
+  font-family: var(--font-display);
+  font-size: 2.4vh;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cornerSong {
+  font-size: 1.8vh;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the two-minute cut, counted down in the one place the room can find it */
+.cornerClock {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 3.4vh;
+  font-variant-numeric: tabular-nums;
+  color: var(--vu);
+}
+
+/* --- judging ---------------------------------------------------------- */
+
+.meter {
+  width: 70vw;
+}
+
+/* --- verdict ---------------------------------------------------------- */
+
+.verdict {
+  animation: slam 160ms steps(4, end);
+}
+
+.grades {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--gap-4);
+  width: 100%;
+  padding: 0 5vw;
+}
+
+.grade {
+  flex: 1;
+  max-width: 34vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5vh;
+  padding: 2vh var(--gap-4);
+  border-radius: var(--radius-panel);
+  background: var(--faceplate);
+  box-shadow: var(--well);
+  border-bottom: 0.6vh solid var(--fighter);
+}
+
+.gradeScore {
+  font-family: var(--font-mono);
+  font-size: 8vh;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--vu);
+}
+
+.gradeName {
+  font-family: var(--font-display);
+  font-size: 2.2vh;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

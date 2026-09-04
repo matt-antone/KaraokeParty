@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import clsx from 'clsx'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { setFilterStr, resetFilterStr, setTab, toggleFilterStarred } from '../../modules/library'
+import { exitBattlePick, getBattlePick } from 'store/modules/battle'
 import getSearchResults from '../../selectors/getSearchResults'
 import Button from 'components/Button/Button'
 import Icon from 'components/Icon/Icon'
@@ -9,12 +10,24 @@ import Tabs from 'components/Tabs/Tabs'
 import styles from './LibraryHeader.css'
 
 /**
- * The library's whole control surface, in two rows: search, tabs.
+ * The library's whole control surface, in two rows: search, tabs — plus, while
+ * a battle is being arranged, a strip above them naming who this browse is for.
+ *
+ * The strip is deliberately the loudest thing on the screen. Every tap in the
+ * list below it means something different from what it usually means, and the
+ * one way that goes wrong is somebody forgetting which mode they are in and
+ * handing their opponent a song they meant to queue for themselves. It carries
+ * its own way out for the same reason.
  */
 const LibraryHeader = () => {
   const dispatch = useAppDispatch()
   const { filterStr, filterStarred, tab } = useAppSelector(state => state.library)
   const { artistsResult, songsResult } = useAppSelector(getSearchResults)
+
+  // Selected down to a string rather than taking the object getBattlePick
+  // returns: that object is rebuilt on every call, and a component subscribed
+  // to it re-renders on every action in the app.
+  const battleForName = useAppSelector(state => getBattlePick(state)?.forName ?? '')
 
   const searchInput = useRef<HTMLInputElement>(null)
   const [value, setValue] = useState(filterStr)
@@ -31,6 +44,22 @@ const LibraryHeader = () => {
 
   return (
     <div className={styles.container}>
+      {battleForName && (
+        <div className={styles.battleStrip}>
+          <div className={styles.battleFor}>
+            <span className={clsx('silkscreen', styles.battleLegend)}>picking a song for</span>
+            <span className={styles.battleName} translate='no'>{battleForName}</span>
+          </div>
+          <Button
+            variant='default'
+            className={styles.battleCancel}
+            onClick={() => dispatch(exitBattlePick())}
+          >
+            Never mind
+          </Button>
+        </div>
+      )}
+
       <div className={styles.searchRow}>
         <Icon
           icon='MAGNIFIER'

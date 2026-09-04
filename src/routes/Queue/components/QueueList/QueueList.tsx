@@ -2,11 +2,12 @@ import React from 'react'
 import { DragDropContext, Draggable, Droppable, DropResult, DraggableProvidedDragHandleProps } from '@hello-pangea/dnd'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { ensureState } from 'redux-optimistic-ui'
+import QueueBattleItem from '../QueueBattleItem/QueueBattleItem'
 import QueueItem from '../QueueItem/QueueItem'
 import QueueTriviaItem from '../QueueTriviaItem/QueueTriviaItem'
 import QueueListAnimator from '../QueueListAnimator/QueueListAnimator'
 import { formatSeconds } from 'lib/dateTime'
-import { isTriviaItem } from 'shared/types'
+import { isBattleItem, isTriviaItem } from 'shared/types'
 import { moveItem } from '../../modules/queue'
 import getMyUpcoming from '../../selectors/getMyUpcoming'
 import getPlayerHistory from '../../selectors/getPlayerHistory'
@@ -84,6 +85,43 @@ const QueueList = () => {
       )
     }
 
+    // Two singers and two songs, so nothing below this line applies: the very
+    // next statement reads a single duration off a single songId, which for a
+    // battle would silently describe half the row. Its own component, for the
+    // same reason a round has one.
+    if (isBattleItem(item)) {
+      const nameOf = (songId: number) => {
+        const song = songs.entities[songId]
+        // A battle can reach a song this device has never loaded — the library
+        // arrives by artist — so an absent title is an ordinary state here, not
+        // a bug to crash on.
+        return {
+          title: song?.title ?? 'Their song',
+          artist: song ? artists.entities[song.artistId]?.name ?? '' : '',
+        }
+      }
+
+      return (
+        <QueueBattleItem
+          key={qId}
+          isCurrent={(qId === queueId) && !isAtQueueEnd}
+          isPlayed={qId !== queueId && playerHistory.includes(qId)}
+          challenger={{
+            userId: item.userId,
+            name: item.userDisplayName,
+            dateUpdated: item.userDateUpdated,
+            ...nameOf(item.songId),
+          }}
+          opponent={{
+            userId: item.opponentUserId,
+            name: item.opponentDisplayName,
+            dateUpdated: item.opponentDateUpdated,
+            ...nameOf(item.opponentSongId),
+          }}
+        />
+      )
+    }
+
     const duration = songs.entities[item.songId].duration
     const isCurrent = (qId === queueId) && !isAtQueueEnd
     const isUpcoming = qId !== queueId && !playerHistory.includes(qId)
@@ -134,11 +172,13 @@ const QueueList = () => {
                   draggableId={String(qId)}
                   index={i}
                   key={qId}
-                  // A round is the server's to place, not a singer's to drag.
-                  // Disabling it here rather than leaving the row without a
-                  // handle: dnd asserts every enabled Draggable has one, and
-                  // the assert fires as a console error on every render.
-                  isDragDisabled={isTriviaItem(queue.entities[qId])}
+                  // A round is the server's to place, not a singer's to drag,
+                  // and a battle belongs to two people — dragging it would move
+                  // somebody else's turn along with your own. Disabling it here
+                  // rather than leaving the row without a handle: dnd asserts
+                  // every enabled Draggable has one, and the assert fires as a
+                  // console error on every render.
+                  isDragDisabled={isTriviaItem(queue.entities[qId]) || isBattleItem(queue.entities[qId])}
                 >
                   {dragProvided => (
                     <div ref={dragProvided.innerRef} {...dragProvided.draggableProps}>

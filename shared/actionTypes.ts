@@ -79,6 +79,28 @@ export const TRIVIA_SCORES_RESET = 'server/TRIVIA_SCORES_RESET'
 export const TRIVIA_ROUND = 'trivia/ROUND'
 export const TRIVIA_RESULT = 'trivia/RESULT'
 
+// Battle
+// Two singers, one turn, each singing what the other picked. The negotiation
+// is four steps and every one of them is a round trip, because both phones and
+// the player have to agree on a thing neither of them owns.
+export const BATTLE_REQ_SINGERS = 'server/BATTLE_REQ_SINGERS'
+export const BATTLE_CHALLENGE = 'server/BATTLE_CHALLENGE'
+export const BATTLE_ACCEPT = 'server/BATTLE_ACCEPT'
+export const BATTLE_DECLINE = 'server/BATTLE_DECLINE'
+export const BATTLE_PICK = 'server/BATTLE_PICK'
+export const BATTLE_CANCEL = 'server/BATTLE_CANCEL'
+export const BATTLE_REQ_TURN = 'server/BATTLE_REQ_TURN'
+export const BATTLE_SONG_ENDED = 'server/BATTLE_SONG_ENDED'
+export const BATTLE_SCORE = 'server/BATTLE_SCORE'
+export const BATTLE_SINGERS = 'battle/SINGERS'
+export const BATTLE_INVITE = 'battle/INVITE'
+export const BATTLE_INVITE_CLEAR = 'battle/INVITE_CLEAR'
+export const BATTLE_TURN = 'battle/TURN'
+export const BATTLE_TURN_CLEAR = 'battle/TURN_CLEAR'
+// local only: the library is picking a song for someone else, and the picker
+// is on whichever tab they were on when they said yes
+export const BATTLE_PICK_MODE_EXIT = 'battle/PICK_MODE_EXIT'
+
 // Stars
 export const STAR_SONG = 'server/STAR_SONG'
 export const UNSTAR_SONG = 'server/UNSTAR_SONG'

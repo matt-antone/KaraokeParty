@@ -1,0 +1,30 @@
+.heading {
+  button {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    padding: var(--gap-2);
+    font-size: var(--text-m);
+  }
+
+  svg {
+    height: var(--icon-m);
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-3);
+}
+
+/* Help, not a warning. The microphone note explains a property of the room's
+   setup rather than reporting a fault, so it takes the same tertiary ink the
+   rest of Settings uses for meta text — an alert colour here would have hosts
+   hunting for something to fix. */
+.note {
+  margin: 0;
+  font-size: var(--text-s);
+  line-height: 1.45;
+  color: var(--ink-3);
+}

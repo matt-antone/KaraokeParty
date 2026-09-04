@@ -1,6 +1,6 @@
 import type { RootState } from 'store/store'
 import { createSelector } from '@reduxjs/toolkit'
-import { isTriviaItem } from 'shared/types'
+import { isBattleItem, isTriviaItem } from 'shared/types'
 import getRoundRobinQueue from './getRoundRobinQueue'
 
 const getQueueId = (state: RootState) => state.status.queueId
@@ -34,6 +34,17 @@ const getMyRotation = createSelector(
 
       const singer = entities[qId]?.userId
       if (singer !== undefined && !order.includes(singer)) order.push(singer)
+
+      // A battle is two people's turn, and the opponent's only one. Counting
+      // just the challenger — whose id is the row's userId — tells an opponent
+      // with no song of their own that they have nothing coming up, which is
+      // the "0" the header reads as "you are not in the rotation", while they
+      // are in fact next up at the microphone. They go in after the
+      // challenger because the challenger sings first.
+      if (!isBattleItem(entities[qId])) continue
+
+      const opponent = entities[qId].opponentUserId
+      if (opponent && !order.includes(opponent)) order.push(opponent)
     }
 
     return {
