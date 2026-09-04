@@ -43,21 +43,12 @@ describe('TriviaDialog', () => {
    * between questions has to land there too — a screen only the TV shows is
    * one half the party never sees.
    */
-  it('splits the room into correct and wrong once the answer has been up', () => {
-    const markup = render({
-      round: triviaRound(),
-      result: triviaResult({
-        answered: [
-          { userId: 42, name: 'Dot Matrix', isCorrect: true },
-          { userId: 43, name: 'Barf', isCorrect: false },
-        ],
-      }),
-    })
+  it('counts who got it once the answer has been up', () => {
+    const markup = render({ round: triviaRound(), result: triviaResult({ numCorrect: 2 }) })
 
     expect(markup).toContain('Who got it')
-    expect(markup).toContain('correct 01')
-    expect(markup).toContain('wrong 01')
-    expect(markup).toContain('Barf')
+    expect(markup).toContain('>2<')
+    expect(markup).toContain('got it')
   })
 
   it('keeps the standings for the last question', () => {

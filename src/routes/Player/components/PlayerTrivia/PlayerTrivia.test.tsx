@@ -9,41 +9,23 @@ const render = (props: Partial<React.ComponentProps<typeof PlayerTrivia>>) =>
 
 describe('PlayerTrivia', () => {
   /**
-   * Between questions the room wants to know who got it, not where the night
-   * stands — the standings still have four questions to settle, and the split
-   * is the thing people say something about.
+   * Between questions the room wants to know how it did, not where the night
+   * stands — the standings still have four questions to settle, and this beat
+   * lasts three seconds.
    */
-  it('splits the room into correct and wrong after a question that is not the last', () => {
-    const markup = render({
-      result: triviaResult({
-        answered: [
-          { userId: 42, name: 'Dot Matrix', isCorrect: true },
-          { userId: 43, name: 'Barf', isCorrect: false },
-        ],
-      }),
-    })
+  it('counts who got it after a question that is not the last', () => {
+    const markup = render({ result: triviaResult({ numCorrect: 3 }) })
 
-    expect(markup).toContain('correct 01')
-    expect(markup).toContain('wrong 01')
-    expect(markup).toContain('Dot Matrix')
-    expect(markup).toContain('Barf')
+    expect(markup).toContain('got it')
+    expect(markup).toContain('>3<')
     // the standings are the last question's beat, not this one's
     expect(markup).not.toContain('scores')
+    expect(markup).not.toContain('Dot Matrix')
   })
 
-  /** Both columns are drawn whatever the split: a round nobody got wrong is an
-   *  empty column, not a screen with one column on it. */
-  it('keeps both columns when everyone got it', () => {
-    const markup = render({
-      result: triviaResult({ answered: [{ userId: 42, name: 'Dot Matrix', isCorrect: true }] }),
-    })
-
-    expect(markup).toContain('correct 01')
-    expect(markup).toContain('wrong 00')
-  })
-
-  it('says so when nobody answered', () => {
-    expect(render({ result: triviaResult({ answered: [] }) })).toContain('Nobody answered')
+  /** Zero is a fine answer and gets no special case. */
+  it('counts a question nobody got', () => {
+    expect(render({ result: triviaResult({ numCorrect: 0 }) })).toContain('>0<')
   })
 
   /** The last question's board is the round's result, so it keeps the
@@ -68,7 +50,7 @@ describe('PlayerTrivia', () => {
       endsAt: Date.now() + 62000,
     })
 
-    expect(render({ result: skewed })).toContain('Dot Matrix')
+    expect(render({ result: skewed })).toContain('got it')
   })
 
   it('shows the answer, not the standings, until the scoreboard is due', () => {

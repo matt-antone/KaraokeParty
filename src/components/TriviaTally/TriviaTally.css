@@ -1,0 +1,40 @@
+/* Read top to bottom in one glance from the back of the room: the party, the
+   number, what the number counts. */
+.tally {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-1);
+}
+
+/* in the hand */
+.party {
+  font-size: var(--display-m);
+  line-height: 1;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: var(--display-m);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--vu);
+}
+
+.label {
+  color: var(--ink-3);
+}
+
+/* across the room: sized in vh like everything else the TV draws */
+.player .party {
+  font-size: 14vh;
+}
+
+.player .count {
+  font-size: var(--display-xl);
+}
+
+.player .label {
+  font-size: 1.8vh;
+}
