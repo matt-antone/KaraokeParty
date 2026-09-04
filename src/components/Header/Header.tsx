@@ -62,10 +62,16 @@ const setChromeShift = (px: number) => {
   document.documentElement.style.setProperty('--chrome-shift', `${px}px`)
 }
 
+interface HeaderProps {
+  /** Open the battle roster. Owned by CoreLayout because the key that opens it
+   *  lives in here and the dialog it opens is mounted out there, beside the
+   *  trivia pad. Absent on any surface that has no dialog to open. */
+  onBattle?: () => void
+}
+
 // component
-const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
+const Header = React.forwardRef<HTMLDivElement, HeaderProps>(({ onBattle }, ref) => {
   const isAdmin = useAppSelector(state => state.user.isAdmin)
-  const isPlayerPresent = useAppSelector(state => state.status.isPlayerPresent)
   const isScanning = useAppSelector(state => state.prefs.isScanning)
   const scannerText = useAppSelector(state => state.prefs.scannerText)
   const scannerPct = useAppSelector(state => state.prefs.scannerPct)
@@ -99,6 +105,15 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
   const isPaused = useAppSelector(state => ensureState(state.queue).pausedUserIds.includes(userId))
   const roomName = useAppSelector(state => (
     state.user.roomId === null ? undefined : state.rooms.entities[state.user.roomId]?.name
+  ))
+
+  // Read off the room the way the QR overlay reads its own pref, and defaulted
+  // to off: a room whose prefs have never been saved has no battle key, so an
+  // upgraded install does not sprout a feature nobody switched on.
+  const isBattleEnabled = useAppSelector(state => (
+    state.user.roomId === null
+      ? false
+      : state.rooms.entities[state.user.roomId]?.prefs?.battle?.isEnabled === true
   ))
 
   const location = useLocation()
@@ -161,8 +176,16 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
         </div>
       )}
 
-      {/* nothing queued and not sitting out means no status to report */}
-      {!isPlayer && isPlayerPresent && (songCount > 0 || isPaused)
+      {/* Every screen but the player, queued or not. This used to wait for a
+          song in the queue or a paused singer — nothing queued meant no status
+          to report — but the Battle key lives in this strip, and the moment
+          somebody most wants to challenge a friend is exactly the moment they
+          have nothing queued and are looking for a reason to sing. The strip
+          carries an idle state for that, so it is always there to be reached.
+
+          Still not on the player: that screen is a fixture in the room, not a
+          phone somebody is holding. */}
+      {!isPlayer
         && (
           <YourTurn
             inHeader
@@ -175,6 +198,8 @@ const Header = React.forwardRef<HTMLDivElement>((_, ref) => {
             nextSong={nextSong}
             waitLevel={waitLevel}
             onTogglePaused={() => dispatch(setPaused({ isPaused: !isPaused }))}
+            onBattle={onBattle}
+            isBattleEnabled={isBattleEnabled}
           />
         )}
 

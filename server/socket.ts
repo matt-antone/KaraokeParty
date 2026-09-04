@@ -1,6 +1,8 @@
 import getLogger from './lib/Log.js'
 import jsonWebToken from 'jsonwebtoken'
 import parseCookie from './lib/parseCookie.js'
+import Battle from './Battle/Battle.js'
+import BattleSocket from './Battle/socket.js'
 import Library from './Library/Library.js'
 import LibrarySocket from './Library/socket.js'
 import PlayerSocket from './Player/socket.js'
@@ -14,6 +16,8 @@ import Trivia from './Trivia/Trivia.js'
 import TriviaSocket from './Trivia/socket.js'
 
 import {
+  BATTLE_INVITE,
+  BATTLE_TURN,
   LIBRARY_PUSH,
   QUEUE_PUSH,
   STARS_PUSH,
@@ -27,7 +31,12 @@ import {
 } from '../shared/actionTypes.js'
 const log = getLogger('server')
 
+// Every 'server/' action type a client can send has to appear here. An
+// unregistered one logs "No handler" and returns without ever calling
+// acknowledge — and the client's optimistic transaction then waits for an
+// answer that is never coming, for the life of the page.
 const handlers = {
+  ...BattleSocket,
   ...LibrarySocket,
   ...QueueSocket,
   ...PlayerSocket,
@@ -194,6 +203,31 @@ export default function (io, jwtKey) {
         // its own clock offset has to be measured against now, not against
         // whenever the room first saw the question
         payload: { ...round, sentAt: Date.now() },
+      })
+    }
+
+    // A challenge is only ever sent to the two phones it concerns, so a
+    // fighter whose phone dropped and came back has no other way to get it —
+    // and the other one is sitting there waiting on an answer that can no
+    // longer be given.
+    const invite = Battle.getInvite(sock.user.roomId)
+
+    if (invite && (invite.challengerUserId === sock.user.userId || invite.opponentUserId === sock.user.userId)) {
+      io.to(sock.id).emit('action', {
+        type: BATTLE_INVITE,
+        payload: invite,
+      })
+    }
+
+    // and anyone joining mid-battle gets the beat in play, re-stamped for the
+    // same reason the round above is: this client is meeting the beat
+    // part-way through and has to measure its own clock against now
+    const turn = Battle.getTurn(sock.user.roomId)
+
+    if (turn) {
+      io.to(sock.id).emit('action', {
+        type: BATTLE_TURN,
+        payload: { ...turn, sentAt: Date.now() },
       })
     }
   })

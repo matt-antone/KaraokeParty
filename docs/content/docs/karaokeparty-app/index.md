@@ -153,6 +153,7 @@ Admins get a fourth navigation entry with everything that configures the party: 
 - [Users (admin only)](#users-admin-only)
 - [Player (admin only)](#player-admin-only)
 - [Trivia](#trivia)
+- [Battle](#battle)
 - [Preferences (admin only)](#preferences-admin-only)
 
 ### Rooms (admin only)
@@ -175,6 +176,7 @@ Rooms have a number of options, including:
 - **Users**: Only users with existing accounts can join a room by default. You can optionally allow users to join with new accounts and/or as guests
 - **QR Code**: Displays a QR code in the room's player that will link users to the app, automatically choosing the room and optionally including the room's password if one is set
 - **Trivia**: Plays music trivia rounds between singers. See [Trivia](#trivia)
+- **Battle**: Lets singers challenge each other to a head-to-head turn. See [Battle](#battle)
 
 **Reset for New Night** hands a used room back in the state a new one arrives in: its queue is emptied, paused singers are un-paused, and the player's list of what has been sung is cleared, so the whole library is selectable again. Use it instead of creating a room per session. Each singer's own record of everything they have ever sung is separate and is not touched.
 
@@ -222,6 +224,25 @@ Anyone in the room can answer, whether or not they have a song queued. You get o
 **Answer time** applies to each question, so a round takes roughly five times that plus the answer reveals - at the default 20 seconds that is a little over two minutes. Turn it down if that is longer than your room wants to wait between singers.
 
 Questions come from the [Open Trivia Database](https://opentdb.com/){{% icon-external %}} (music category), and are cached on the server well ahead of time so a party on a LAN with no internet still plays. The cache is topped up whenever the server can reach the API; if a very long party runs through every music question there is, rounds carry on with the ones seen longest ago. Question content is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/){{% icon-external %}}, and the attribution appears on the player screen during every round.
+
+### Battle
+
+A battle is one turn with two singers in it, and each of them picks the other's song. Switch it on per room in the room editor.
+
+- **Allow song battles**: Turns battles on for this room
+
+Once it's on, a **Battle** key appears in the [status strip](#status-strip) next to the pause key. Tapping it lists everyone else in the room; pick somebody and the app drops you into the library in *picking for them* mode, where the next song you tap is the one **they** will have to sing. Their phone then shows the challenge - who threw it and what they'd be singing - and they can decline it or accept. Accepting puts them into the library the same way, and the song they pick is the one **you** sing. Neither of you sees the other's choice until the battle is on screen.
+
+The battle takes over the challenger's next queued song, keeping its exact place in the rotation - so a battle costs the challenger the turn they already had rather than adding one, and nobody waiting behind them moves back. If the challenger has nothing queued, it joins the back of the queue as a new turn. Either singer can back out until both songs are in; after that it's a queue row like any other and the usual swipe actions apply.
+
+When the player reaches it, the row runs as one continuous sequence: both fighters and both songs, then each singer introduced and singing in turn, then the verdict. **Each song is capped at two minutes** - it ends at the cap or when the song runs out, whichever comes first - so a whole battle is about five minutes of the night. That's two songs' worth of queue time spent on one turn, which is the trade to know about before switching it on for a room with a long queue.
+
+The winner is decided by the room. After both songs the player listens through the microphone and takes a reading while the room cheers for each singer in turn, and the loudest one wins.
+
+<aside class="info">
+  {{% icon-info %}}
+  <p>Crowd scoring only works on a player opened at <code>http://localhost</code>, on the machine running the server - browsers only hand a page the microphone on a secure origin, and a LAN address isn't one. A player opened anywhere else can't hear the room, and its battles are decided as a draw.</p>
+</aside>
 
 ### Preferences (admin only)
 

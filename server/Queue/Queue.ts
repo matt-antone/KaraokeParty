@@ -1,7 +1,7 @@
 import path from 'path'
 import { db } from '../lib/Database.js'
 import sql from 'sqlate'
-import { clampKeyChange, QueueItem } from '../../shared/types.js'
+import { clampKeyChange, QueueItem, QueueItemType } from '../../shared/types.js'
 
 class Queue {
   /**
@@ -143,6 +143,84 @@ class Queue {
   }
 
   /**
+   * Turn the challenger's own upcoming song into the battle they just agreed
+   * to, in place.
+   *
+   * In place, rather than appending: the row keeps its exact slot in the
+   * prevQueueId chain, so a battle costs the challenger the turn they already
+   * had rather than buying them a second one. That is the deal both fighters
+   * agreed to, and it is also the only version that cannot be used to jump the
+   * queue — challenge somebody, get a turn, repeat.
+   *
+   * A single UPDATE rather than a read-then-write: the guard is in the WHERE,
+   * so two clients racing on the same row leave exactly one battle behind and
+   * the loser gets false back. Guarded on roomId and userId as well as the id
+   * so a hand-crafted payload cannot convert a stranger's row in another room,
+   * and on type = 'song' so a row that is already a battle or a trivia round
+   * is never overwritten.
+   *
+   * Returns whether it actually converted anything; addBattle is the fallback.
+   */
+  static setBattle ({ roomId, queueId, challengerUserId, challengerSongId, opponentUserId, opponentSongId }: {
+    roomId: number
+    queueId: number
+    challengerUserId: number
+    challengerSongId: number
+    opponentUserId: number
+    opponentSongId: number
+  }): boolean {
+    const query = sql`
+      UPDATE queue
+      SET type = 'battle',
+        songId = ${challengerSongId},
+        opponentUserId = ${opponentUserId},
+        opponentSongId = ${opponentSongId}
+      WHERE queueId = ${queueId}
+        AND roomId = ${roomId}
+        AND userId = ${challengerUserId}
+        AND type = 'song'
+        AND datePlayed IS NULL
+    `
+    return db.run(String(query), query.parameters).changes === 1
+  }
+
+  /**
+   * Append a battle at the tail of a room's queue.
+   *
+   * The fallback for setBattle finding nothing to convert: the challenger had
+   * no song of their own waiting, or the one they offered has since been sung,
+   * moved or removed. They still agreed to a battle, so it goes to the back of
+   * the queue like any other new turn — the same prevQueueId subselect add()
+   * uses, which is "the row nobody points at yet", i.e. the tail.
+   */
+  static addBattle ({ roomId, challengerUserId, challengerSongId, opponentUserId, opponentSongId }: {
+    roomId: number
+    challengerUserId: number
+    challengerSongId: number
+    opponentUserId: number
+    opponentSongId: number
+  }): number {
+    const query = sql`
+      INSERT INTO queue (roomId, type, userId, songId, opponentUserId, opponentSongId, prevQueueId)
+      VALUES (${roomId}, 'battle', ${challengerUserId}, ${challengerSongId},
+        ${opponentUserId}, ${opponentSongId}, (
+        SELECT queueId
+        FROM queue
+        WHERE roomId = ${roomId} AND queueId NOT IN (
+          SELECT prevQueueId
+          FROM queue
+          WHERE prevQueueId IS NOT NULL
+        )
+      ))
+    `
+    const res = db.run(String(query), query.parameters)
+
+    if (res.changes !== 1) throw new Error('Could not add a battle to the queue')
+
+    return res.lastID
+  }
+
+  /**
    * Get queued items for a given room
    */
   static get (roomId: number): { result: number[], entities: Record<number, QueueItem>, pausedUserIds: number[] } {
@@ -156,24 +234,59 @@ class Queue {
     // The INNER joins used to double as a filter — a song whose media has gone
     // is not playable and must not appear — so that filter is now written out
     // in the WHERE clause rather than lost.
+    //
+    // The media joins used to be `LEFT JOIN media USING(songId)` plus a bare
+    // `MAX(isPreferred)`, leaning on SQLite's rule that bare columns beside a
+    // lone MAX() come from the row that produced it. A battle needs a second
+    // song resolved on the same row, and a second plain join would have made
+    // that MAX() range over the cross product of both songs' media — silently
+    // handing back a file belonging to the wrong song. So each side now names
+    // its own media row through a correlated subselect and joins on the
+    // mediaId that comes back: one row per side, no aggregate, and nothing
+    // that depends on which row an aggregate happened to look at last.
+    //
+    // The subselect's ORDER BY is the pick the old MAX() was reaching for,
+    // written down: most preferred first, then the highest-priority folder
+    // (`priority ASC` is what Library.get orders by too), then the oldest
+    // mediaId so a song with two equal files always resolves to the same one
+    // rather than to whatever the query planner scanned last.
+    const preferredMedia = (songId: ReturnType<typeof sql>) => sql`(
+      SELECT m.mediaId
+      FROM media AS m
+        INNER JOIN paths AS p USING(pathId)
+      WHERE m.songId = ${songId}
+      ORDER BY m.isPreferred DESC, p.priority ASC, m.mediaId ASC
+      LIMIT 1
+    )`
+
     const query = sql`
-      SELECT queueId, type, songId, userId, prevQueueId, keyChange, datePlayed,
+      SELECT queue.queueId, queue.type, queue.songId, queue.userId, queue.prevQueueId,
+        queue.keyChange, queue.datePlayed, queue.opponentSongId, queue.opponentUserId,
         media.mediaId, media.relPath, media.rgTrackGain, media.rgTrackPeak,
         users.name AS userDisplayName, users.dateUpdated AS userDateUpdated,
         paths.pathId, paths.data AS pathData,
-        MAX(isPreferred) AS isPreferred
+        oppMedia.mediaId AS opponentMediaId, oppMedia.relPath AS opponentRelPath,
+        oppMedia.rgTrackGain AS opponentRgTrackGain, oppMedia.rgTrackPeak AS opponentRgTrackPeak,
+        oppUsers.name AS opponentDisplayName, oppUsers.dateUpdated AS opponentDateUpdated,
+        oppPaths.pathId AS opponentPathId, oppPaths.data AS opponentPathData
       FROM queue
-        LEFT JOIN users USING(userId)
-        LEFT JOIN media USING(songId)
-        LEFT JOIN paths USING(pathId)
-      WHERE roomId = ${roomId}
-        AND (queue.type <> 'song' OR media.mediaId IS NOT NULL)
-      GROUP BY queueId
-      ORDER BY queueId, paths.priority ASC
+        LEFT JOIN users ON users.userId = queue.userId
+        LEFT JOIN media ON media.mediaId = ${preferredMedia(sql`queue.songId`)}
+        LEFT JOIN paths ON paths.pathId = media.pathId
+        LEFT JOIN users AS oppUsers ON oppUsers.userId = queue.opponentUserId
+        LEFT JOIN media AS oppMedia ON oppMedia.mediaId = ${preferredMedia(sql`queue.opponentSongId`)}
+        LEFT JOIN paths AS oppPaths ON oppPaths.pathId = oppMedia.pathId
+      WHERE queue.roomId = ${roomId}
+        AND (
+          queue.type = 'trivia'
+          OR (queue.type = 'song' AND media.mediaId IS NOT NULL)
+          OR (queue.type = 'battle' AND media.mediaId IS NOT NULL AND oppMedia.mediaId IS NOT NULL)
+        )
+      ORDER BY queue.queueId
     `
     const rows = db.all<{
       queueId: number
-      type: 'song' | 'trivia'
+      type: QueueItemType
       datePlayed: number | null
       songId: number | null
       userId: number | null
@@ -187,24 +300,58 @@ class Queue {
       userDateUpdated: number
       pathId: number
       pathData: string
-      isPreferred: number
+      opponentSongId: number | null
+      opponentUserId: number | null
+      opponentMediaId: number | null
+      opponentRelPath: string | null
+      opponentRgTrackGain: number | null
+      opponentRgTrackPeak: number | null
+      opponentDisplayName: string | null
+      opponentDateUpdated: number | null
+      opponentPathId: number | null
+      opponentPathData: string | null
     }>(String(query), query.parameters)
 
-    for (const row of rows) {
-      if (!pathData.has(row.pathId)) {
-        pathData.set(row.pathId, JSON.parse(row.pathData))
+    /** A folder's prefs, parsed once per folder rather than once per row. */
+    const prefsForPath = (pathId: number | null, data: string | null) => {
+      if (pathId === null) return undefined
+
+      if (!pathData.has(pathId)) {
+        pathData.set(pathId, JSON.parse(data as string))
       }
 
-      const pathPrefs = pathData.get(row.pathId)?.prefs
+      return pathData.get(pathId)?.prefs
+    }
+
+    for (const row of rows) {
+      const pathPrefs = prefsForPath(row.pathId, row.pathData)
+      const oppPathPrefs = prefsForPath(row.opponentPathId, row.opponentPathData)
 
       entities[row.queueId] = row
-      entities[row.queueId].mediaType = row.type === 'song' ? this.getType(row.relPath) : null
+      entities[row.queueId].mediaType = row.type === 'trivia' ? null : this.getType(row.relPath)
       entities[row.queueId].isVideoKeyingEnabled = !!pathPrefs?.isVideoKeyingEnabled
 
       // a round has no singer and no song; 0 keeps every consumer that filters
       // by userId or looks a song up by songId working without a null check
       entities[row.queueId].songId = row.songId ?? 0
       entities[row.queueId].userId = row.userId ?? 0
+
+      // Same rule for the second fighter, on every row rather than only on a
+      // battle: a consumer that reads opponentUserId without knowing about
+      // battles gets 0 and filters the row out, which is what it means.
+      entities[row.queueId].opponentSongId = row.opponentSongId ?? 0
+      entities[row.queueId].opponentUserId = row.opponentUserId ?? 0
+      entities[row.queueId].opponentDisplayName = row.opponentDisplayName ?? ''
+      entities[row.queueId].opponentDateUpdated = row.opponentDateUpdated ?? 0
+      entities[row.queueId].opponentMediaId = row.opponentMediaId ?? 0
+      entities[row.queueId].opponentMediaType = row.type === 'battle' ? this.getType(row.opponentRelPath as string) : null
+      entities[row.queueId].opponentIsVideoKeyingEnabled = !!oppPathPrefs?.isVideoKeyingEnabled
+
+      // ponytail: no column behind this, so a battle always plays the
+      // opponent's half in the recording's own key. The row already carries
+      // one keyChange for the challenger; giving the second singer their own
+      // needs a migration, and nobody has asked to transpose half a battle.
+      entities[row.queueId].opponentKeyChange = 0
 
       // The player names whoever is up next during the intermission, in the
       // corner panel and in the coming-up line. A round is up next like anyone
@@ -219,8 +366,10 @@ class Queue {
 
       // don't send over the wire
       delete entities[row.queueId].relPath
-      delete entities[row.queueId].isPreferred
       delete entities[row.queueId].pathData
+      delete entities[row.queueId].opponentRelPath
+      delete entities[row.queueId].opponentPathId
+      delete entities[row.queueId].opponentPathData
 
       if (row.prevQueueId === null) {
         // found the first item
@@ -394,6 +543,14 @@ class Queue {
 
   /**
    * Check if user owns queue item(s)
+   *
+   * A battle belongs to both fighters. The opponent did not queue the row and
+   * their userId is not on it, but it is half theirs — they chose one of the
+   * songs and they are singing the other — so they may move it, re-key it or
+   * pull out of it. Widened here rather than at the three call sites because
+   * this one function is the whole gate on QUEUE_MOVE, QUEUE_SET_KEY and
+   * QUEUE_REMOVE; teaching each of them about battles separately is three
+   * chances to teach only two.
    */
   static isOwner (userId: number, queueId: number | number[]): boolean {
     const ids = Array.isArray(queueId) ? queueId : [queueId]
@@ -402,7 +559,8 @@ class Queue {
     const query = sql`
       SELECT COUNT(*) AS count
       FROM queue
-      WHERE userId = ${userId} AND queueId IN ${sql.tuple(ids)}
+      WHERE (userId = ${userId} OR opponentUserId = ${userId})
+        AND queueId IN ${sql.tuple(ids)}
     `
     const res = db.get<{ count: number }>(String(query), query.parameters)
     return res.count === ids.length

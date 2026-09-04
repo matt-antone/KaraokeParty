@@ -5,6 +5,7 @@ import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
 import Rooms, { STATUSES } from '../Rooms/Rooms.js'
 import setRoomTransport from './transport.js'
+import Battle from '../Battle/Battle.js'
 import Trivia from '../Trivia/Trivia.js'
 import { ValidationError } from '../lib/Errors.js'
 
@@ -138,6 +139,10 @@ router.delete('/:roomId', requireAdmin, (ctx) => {
   db.run(String(scoresQuery), scoresQuery.parameters)
 
   Trivia.stopRoom(roomId)
+
+  // same for a battle: its beats are on setTimeout and the room they emit into
+  // is about to stop existing
+  Battle.stopRoom(roomId)
 
   // remove room
   const roomQuery = sql`

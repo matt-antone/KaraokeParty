@@ -32,11 +32,18 @@ export const clampKeyChange = (n: number): number => (
  *  0 rather than null on the wire: every consumer that already filters by
  *  userId or looks a song up by songId keeps working untouched, because no
  *  user or song has id 0. The database stores real NULLs. */
-export type QueueItemType = 'song' | 'trivia'
+export type QueueItemType = 'song' | 'trivia' | 'battle'
 
 /** Rounds are told apart by this and nothing else — never by a missing song or
  *  an absent singer, which are consequences rather than the fact itself. */
 export const isTriviaItem = (item?: { type?: QueueItemType }): boolean => item?.type === 'trivia'
+
+/** Same rule for a battle: one turn, two singers, two songs. A battle row is
+ *  deliberately readable as an ordinary one — userId sings songId — so code
+ *  that has not been taught about battles shows the challenger and their song
+ *  rather than crashing on a missing field. Only the places that must know the
+ *  difference ask. */
+export const isBattleItem = (item?: { type?: QueueItemType }): boolean => item?.type === 'battle'
 
 export interface QueueItem {
   queueId: number
@@ -61,6 +68,22 @@ export interface QueueItem {
   mediaType: 'cdg' | 'mp4'
   isOptimistic?: false
   isVideoKeyingEnabled: boolean
+  /** Battle rows only, and 0 on every other row for the same reason songId and
+   *  userId are — no user and no song has id 0, so a consumer that filters on
+   *  these without knowing about battles filters them all out rather than
+   *  reading undefined. */
+  opponentUserId: number
+  opponentSongId: number
+  opponentDisplayName: string
+  opponentDateUpdated: number
+  /** The opponent's half of the turn, resolved from its own media row. Null on
+   *  a row with no second song. */
+  opponentMediaId: number
+  opponentMediaType: 'cdg' | 'mp4' | null
+  opponentKeyChange: number
+  opponentRgTrackGain: number
+  opponentRgTrackPeak: number
+  opponentIsVideoKeyingEnabled: boolean
 }
 
 export interface OptimisticQueueItem {
@@ -89,6 +112,9 @@ export interface IRoomPrefs {
     isEnabled?: boolean
     /** How long an answer stays open, in seconds. */
     countdownSeconds?: number
+  }
+  battle?: {
+    isEnabled?: boolean
   }
   user?: {
     isNewAllowed?: boolean
@@ -282,3 +308,141 @@ export interface TriviaResult {
   /** Epoch ms this payload was sent. See TriviaRound.sentAt. */
   sentAt: number
 }
+
+/** How long each beat of a battle holds the stage, in ms. The whole sequence
+ *  is nine beats and runs a shade over five minutes, so these are the numbers
+ *  that decide how much of the night one battle costs.
+ *
+ *  The three splashes are the same length on purpose: a room reads "something
+ *  is about to happen" from the rhythm, and a rhythm needs a beat it can
+ *  predict. The judging beats are longer because a crowd needs a moment to
+ *  work out that it is being asked for something. */
+export const BATTLE_VERSUS_MS = 5000
+export const BATTLE_INTRO_MS = 5000
+export const BATTLE_JUDGE_MS = 5000
+export const BATTLE_METER_MS = 15000
+export const BATTLE_WINNER_MS = 15000
+
+/** How much of each song gets sung. Two minutes is about a verse, a chorus and
+ *  out — long enough to be a performance, short enough that the other fighter
+ *  is still in the room for it. A song shorter than this simply ends and the
+ *  battle moves on early. */
+export const BATTLE_SING_MS = 120000
+
+/** The beats, in order. The player draws one thing per beat and nothing else,
+ *  and the server hands out exactly one of these at a time.
+ *
+ *  - `versus`   both fighters, both songs, before a note is played
+ *  - `intro1`   the challenger alone
+ *  - `sing1`    the challenger sings the song their opponent chose
+ *  - `intro2`   the opponent alone
+ *  - `sing2`    the opponent sings the song the challenger chose
+ *  - `judge`    the ask: who wins
+ *  - `meter1`   the room is heard for the challenger
+ *  - `meter2`   the room is heard for the opponent
+ *  - `winner`   the verdict, with both grades
+ *
+ *  `meter1`/`meter2` are skipped when the player cannot hear the room, which
+ *  is the ordinary case for a player opened at a LAN address rather than on
+ *  the machine running the server. See BattleTurn.isJudgedByCrowd. */
+export type BattlePhase
+  = | 'versus'
+    | 'intro1'
+    | 'sing1'
+    | 'intro2'
+    | 'sing2'
+    | 'judge'
+    | 'meter1'
+    | 'meter2'
+    | 'winner'
+
+/** Which fighter a beat or a score belongs to. 1 is always the challenger. */
+export type BattleSide = 1 | 2
+
+/** A battle in progress, as the whole room sees it. One of these is emitted
+ *  per beat rather than one for the sequence, because the two singing beats
+ *  end on whichever comes first — the two-minute cut or the song running out —
+ *  and a pre-stamped sequence would be wrong from beat three onwards. */
+export interface BattleTurn {
+  /** The queue row being fought over. The player uses it to tell its own row's
+   *  battle from one it has already seen through. */
+  queueId: number
+  phase: BattlePhase
+  /** Epoch ms this beat gives way to the next. Every beat has one, including
+   *  the singing beats, where it is the two-minute cut. */
+  endsAt: number
+  /** Epoch ms this payload was sent, by the server's clock. See
+   *  TriviaRound.sentAt — same reason, same correction. */
+  sentAt: number
+  challengerUserId: number
+  challengerName: string
+  challengerDateUpdated: number
+  opponentUserId: number
+  opponentName: string
+  opponentDateUpdated: number
+  /** What each fighter sings, already resolved to artist and title so the
+   *  splash does not have to reach into the library. */
+  challengerSong: BattleSong
+  opponentSong: BattleSong
+  /** False when the player told us it cannot hear the room. The two metering
+   *  beats never happen, and `winner` is a draw. */
+  isJudgedByCrowd: boolean
+  /** 0 until that fighter's metering beat has finished. */
+  challengerScore: number
+  opponentScore: number
+}
+
+export interface BattleSong {
+  songId: number
+  artist: string
+  title: string
+}
+
+/** Somebody in the room who could be challenged. Deliberately not `User`: a
+ *  phone has no business knowing who is an admin or what anyone's username is,
+ *  and this list is assembled from live sockets rather than from the users
+ *  table. */
+export interface BattleSinger {
+  userId: number
+  name: string
+  dateUpdated: number
+}
+
+/** A challenge that has been thrown and not yet answered. The challenger holds
+ *  one of these to know it is waiting; the opponent holds one to know it is
+ *  being asked. */
+export interface BattleInvite {
+  challengerUserId: number
+  challengerName: string
+  challengerDateUpdated: number
+  opponentUserId: number
+  opponentName: string
+  opponentDateUpdated: number
+  /** The song the challenger picked for the opponent to sing. Shown on the
+   *  invite because "do you want to battle" and "singing this" are one
+   *  decision, not two. */
+  songId: number
+  artist: string
+  title: string
+  /** Set once the opponent accepts and is choosing the challenger's song. */
+  isAccepted: boolean
+}
+
+/** The server's answer to "run this row's battle".
+ *  - `started`      it just began; wait for it
+ *  - `inProgress`   already under way on this row; wait for it
+ *  - `unavailable`  this row is not a battle, or is already spent; move on
+ *
+ *  Three named values rather than a boolean for the reason spelled out on
+ *  TriviaRoundRequestStatus: two of these mean wait and the third means the
+ *  opposite, and collapsing them ends the feature after its first beat under
+ *  React's double-invoked effects. */
+export type BattleTurnRequestStatus = 'started' | 'inProgress' | 'unavailable'
+
+/** Bounds on a crowd grade. Out of 100 because that is how a room reads a
+ *  score without being told how to. */
+export const BATTLE_SCORE_MAX = 100
+
+export const clampBattleScore = (n: number): number => (
+  Number.isFinite(n) ? Math.max(0, Math.min(BATTLE_SCORE_MAX, Math.round(n))) : 0
+)

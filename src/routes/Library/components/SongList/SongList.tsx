@@ -4,6 +4,8 @@ import { ensureState } from 'redux-optimistic-ui'
 import SongItem from '../SongItem/SongItem'
 import { queueSong, removeItem } from 'routes/Queue/modules/queue'
 import { toggleSongStarred } from 'store/modules/userStars'
+import { challengeSinger, getBattlePick, pickBattleSong } from 'store/modules/battle'
+import getBattleTargetQueueId from 'routes/Queue/selectors/getBattleTargetQueueId'
 import getSongsStatus from '../../selectors/getSongsStatus'
 
 interface SongListProps {
@@ -21,7 +23,29 @@ const SongList = (props: SongListProps) => {
   const isAdmin = useAppSelector(state => state.user.isAdmin)
   const { played, upcoming, current, mine } = useAppSelector(getSongsStatus)
 
-  const handleSongQueue = (songId: number) => dispatch(queueSong(songId))
+  // The one question the library asks about battles. Selected down to a string
+  // rather than taken as the object getBattlePick returns: that object is built
+  // fresh on every call, so a component subscribing to it re-renders on every
+  // action in the app — and this one is inside a virtualized list.
+  const battleForName = useAppSelector(state => getBattlePick(state)?.forName ?? '')
+
+  // Which half of the negotiation this device is in. `pending` is set only on
+  // the challenger's phone and only before the challenge has been thrown, so it
+  // is the whole discriminator: with it, this tap creates the challenge; without
+  // it, this tap is the opponent answering one.
+  const pendingUserId = useAppSelector(state => state.battle.pending?.userId ?? 0)
+  const battleQueueId = useAppSelector(getBattleTargetQueueId)
+
+  const handleSongQueue = (songId: number) => {
+    if (!battleForName) return dispatch(queueSong(songId))
+
+    // The challenger spends the turn they already had — getBattleTargetQueueId
+    // is 0 when they have none, and the server appends a fresh row instead.
+    if (pendingUserId) return dispatch(challengeSinger(pendingUserId, songId, battleQueueId))
+
+    dispatch(pickBattleSong(songId))
+  }
+
   const handleSongDequeue = (queueId: number) => dispatch(removeItem({ queueId }))
   const handleSongStar = (songId: number) => dispatch(toggleSongStarred(songId))
 
@@ -29,6 +53,7 @@ const SongList = (props: SongListProps) => {
     <SongItem
       {...songs[songId]}
       artist={props.showArtist ? artists[songs[songId].artistId].name : ''}
+      battleForName={battleForName}
       filterKeywords={props.filterKeywords}
       isPlayed={played.includes(songId)}
       isUpcoming={upcoming.includes(songId) || current === songId}

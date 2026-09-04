@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import React from 'react'
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import YourTurn, { type YourTurnProps } from './YourTurn'
 
 /**
@@ -21,8 +21,11 @@ const read = (props: YourTurnProps) => {
     headline: container.querySelector('.wait')?.textContent,
     label: container.querySelector('.label')?.textContent,
     level: Number(meter.getAttribute('aria-valuenow')),
-    // the pause key is icon-only, so its name is the accessible one
-    button: screen.getByRole('button').getAttribute('aria-label'),
+    // the pause key is icon-only, so its name is the accessible one. Matched by
+    // name rather than by being the only button: the strip carries a second key
+    // whenever the room offers battles, and a bare getByRole('button') throws
+    // "found multiple elements" and fails every test that shares this helper.
+    button: screen.getByRole('button', { name: /my songs/ }).getAttribute('aria-label'),
     // every state is a tinted well; the class names which tint
     standby: container.firstElementChild?.classList.contains('standby'),
     onStage: container.firstElementChild?.classList.contains('onStage'),
@@ -73,13 +76,35 @@ describe('YourTurn', () => {
     })
   })
 
-  it('nothing queued: no wait to show, and a half-scale idle meter', () => {
+  // The strip is on screen from the moment somebody walks in now, because the
+  // Battle key rides in it, so this is the first state most people ever see.
+  // It used to sit at half scale in standby teal, which was harmless when you
+  // only got here by queueing something and unqueueing it again — and reads as
+  // a promise of a turn when it is the thing greeting you at the door.
+  it('nothing queued: no wait to show, and an empty meter rather than a promise', () => {
     expect(read({})).toMatchObject({
       headline: '--',
       label: 'nothing queued',
-      level: 0.5,
+      level: 0,
       button: 'Pause my songs',
     })
+  })
+
+  it('nothing queued is idle, not armed: no standby tint', () => {
+    expect(read({}).standby).toBe(false)
+  })
+
+  // songCount is what Header actually passes; position is what the older
+  // fixtures set. Either one means there is a turn coming, and a singer with a
+  // turn coming must not be mistaken for somebody who has just walked in.
+  // One render per test: read() does not clean up after itself, so two calls
+  // in one test leave two meters in the document and getByRole throws.
+  it('a place in the rotation counts as queued even with no count passed', () => {
+    expect(read({ wait: '8 min', position: 2, rotationSize: 6 }).standby).toBe(true)
+  })
+
+  it('a song count counts as queued even with no place passed', () => {
+    expect(read({ songCount: 1, wait: '8 min' }).standby).toBe(true)
   })
 
   it('counts songs in words a human uses', () => {
@@ -135,5 +160,46 @@ describe('YourTurn', () => {
 
   it('still says paused over any next song', () => {
     expect(read({ isPaused: true, nextSong: 'Dancing Queen' }).label).toBe('you are out of the rotation')
+  })
+
+  /**
+   * The Battle key. It shares its slot with the song count and only one of them
+   * fits — see the note in YourTurn.tsx — so these pin both halves of that
+   * trade, and that the key is only there when there is something behind it.
+   */
+  it('carries a battle key that names itself', () => {
+    render(<YourTurn songCount={2} isBattleEnabled onBattle={() => {}} />)
+
+    const key = screen.getByRole('button', { name: 'Challenge someone to a battle' })
+    expect(key.hasAttribute('disabled')).toBe(false)
+  })
+
+  it('spends the song count on the key rather than wrapping the strip', () => {
+    const { container } = render(<YourTurn songCount={2} isBattleEnabled onBattle={() => {}} />)
+
+    expect(container.querySelector('.songCount')).toBeNull()
+  })
+
+  it('keeps the count when there is no battle key to show', () => {
+    const { container } = render(<YourTurn songCount={2} />)
+
+    expect(container.querySelector('.songCount')?.textContent).toBe('2 songs')
+    expect(screen.queryByRole('button', { name: /battle/i })).toBeNull()
+  })
+
+  it('leaves the key dead, and says why, when the room has battles off', () => {
+    render(<YourTurn songCount={2} onBattle={() => {}} />)
+
+    const key = screen.getByRole('button', { name: 'Battles are switched off for this room' })
+    expect(key.hasAttribute('disabled')).toBe(true)
+    expect(key.getAttribute('title')).toBe('Battles are switched off for this room')
+  })
+
+  it('opens the roster on a press', () => {
+    const onBattle = vi.fn()
+    render(<YourTurn songCount={2} isBattleEnabled onBattle={onBattle} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Challenge someone to a battle' }))
+    expect(onBattle).toHaveBeenCalledTimes(1)
   })
 })

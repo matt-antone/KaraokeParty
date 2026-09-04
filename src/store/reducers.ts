@@ -2,6 +2,7 @@ import { combineSlices } from '@reduxjs/toolkit'
 import { optimistic } from 'redux-optimistic-ui'
 
 import artists from 'routes/Library/modules/artists'
+import battle from './modules/battle'
 import library from 'routes/Library/modules/library'
 import prefs from './modules/prefs'
 import queue from 'routes/Queue/modules/queue'
@@ -18,6 +19,9 @@ export interface LazyLoadedSlices {} // eslint-disable-line @typescript-eslint/n
 
 const combinedReducer = combineSlices({
   artists,
+  // eager rather than lazy-loaded: the phone needs it to negotiate a challenge
+  // and the player needs it to run one, so there is no route that can own it
+  battle,
   library,
   prefs,
   queue: optimistic(queue),

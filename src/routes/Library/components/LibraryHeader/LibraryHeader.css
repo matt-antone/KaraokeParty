@@ -65,3 +65,49 @@
 .tabRow {
   padding: 0 var(--gutter) var(--gap-3);
 }
+
+/* Battle mode. Above the search rather than below it, because it changes what
+   every tap in the list means and a modifier has to be read before the thing it
+   modifies. The crimson edge is the challenger's channel, the same one the TV
+   and the queue row use, so the three surfaces agree about who is who.
+
+   Sized off the same tokens as the rows below it: entering and leaving battle
+   mode grows and shrinks the header, and every list under it takes its padding
+   from the measured header height — the strip is why they re-measure. */
+.battleStrip {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: var(--gap-2) var(--gutter);
+  border-left: 2px solid var(--ans-1-hi);
+  background-color: var(--key-well);
+  box-shadow: var(--well);
+}
+
+.battleFor {
+  flex: 1;
+  min-width: 0;
+}
+
+.battleLegend {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.battleName {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--ink);
+}
+
+/* Button is width:100% on every variant, which would take the whole strip */
+.battleCancel {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: var(--target);
+  padding: var(--gap-2) var(--gap-3);
+}

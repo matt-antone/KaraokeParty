@@ -18,7 +18,21 @@ const getMyUpcoming = createSelector(
   (sections, queue, userId, pausedUserIds, myPaused) => (
     pausedUserIds.includes(userId)
       ? myPaused
-      : sections.upcoming.filter(qId => queue.entities[qId].userId === userId)
+      // A battle row carries the challenger in userId and the opponent in
+      // opponentUserId, so filtering on userId alone hides it from the person
+      // who is about to sing half of it: the opponent's Me tab shows nothing
+      // coming up, and they find out they are on when the versus splash goes
+      // up with their face on it. opponentUserId is 0 on every other row, and
+      // no user has id 0, so this adds nothing anywhere else.
+      //
+      // ponytail: only the unpaused branch. getUpcoming, which feeds the
+      // paused one, is shared with other callers and filters on userId alone —
+      // a paused opponent loses sight of their battle until they unpause. Push
+      // the same OR into getUpcoming if that turns out to bite.
+      : sections.upcoming.filter((qId) => {
+          const item = queue.entities[qId]
+          return item.userId === userId || item.opponentUserId === userId
+        })
   ),
 )
 

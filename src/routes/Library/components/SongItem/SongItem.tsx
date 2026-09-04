@@ -20,6 +20,12 @@ interface SongItemProps {
   isAdmin: boolean
   /** Set when this song is the signed-in user's own upcoming item: tapping takes it back out. */
   myQueueId?: number
+  /**
+   * Who this device is currently picking a song FOR, or '' when it is browsing
+   * normally. In battle mode every row is tappable and a tap means one thing
+   * only: this is the song that person sings.
+   */
+  battleForName?: string
   numStars: number
   numMedia: number
   filterKeywords: string[]
@@ -46,13 +52,23 @@ const SongItem = ({
   isUpcoming,
   isAdmin,
   myQueueId,
+  battleForName,
   numStars,
   numMedia,
   filterKeywords,
 }: SongItemProps) => {
   const isMine = myQueueId !== undefined
-  const isInert = (isUpcoming || isPlayed) && !isMine
-  const handleClick = () => isMine ? onSongDequeue(myQueueId) : onSongQueue(songId)
+
+  // Normally a song somebody else has queued, or one the room has already sung,
+  // is dead: tapping it would do nothing and the row says so rather than
+  // swallowing the tap. In battle mode that rule is wrong — you are choosing
+  // what your opponent has to sing, and the song you want is very often one
+  // already in the queue or one the room heard an hour ago. Nothing is inert
+  // while picking, and no tap removes anything either: a battle pick is not a
+  // queue action and must not take somebody's own song back out from under them.
+  const isBattle = !!battleForName
+  const isInert = !isBattle && (isUpcoming || isPlayed) && !isMine
+  const handleClick = () => isMine && !isBattle ? onSongDequeue(myQueueId) : onSongQueue(songId)
   const handleStarClick = () => onSongStarClick(songId)
 
   return (
@@ -71,7 +87,9 @@ const SongItem = ({
         type='button'
         onClick={isInert ? undefined : handleClick}
         disabled={isInert}
-        aria-label={isMine ? `Remove ${title} from queue` : undefined}
+        aria-label={isBattle
+          ? `Pick ${title} for ${battleForName}`
+          : isMine ? `Remove ${title} from queue` : undefined}
         className={styles.primary}
       >
         {/* titles always show in full: they wrap, and the row grows to fit */}
@@ -86,8 +104,16 @@ const SongItem = ({
         )}
       </button>
 
-      {isUpcoming
-        ? <span className={styles.queued}>{isMine ? 'TAP TO REMOVE' : 'QUEUED'}</span>
+      {/* The row's one word of state. In battle mode it is the instruction
+          instead, on exactly the rows that would otherwise read as unavailable —
+          the star stays on every other row so the list does not change height
+          and PaddedList's measurement cache stays valid. */}
+      {isUpcoming || (isBattle && isPlayed)
+        ? (
+            <span className={styles.queued}>
+              {isBattle ? 'TAP TO PICK' : isMine ? 'TAP TO REMOVE' : 'QUEUED'}
+            </span>
+          )
         : (
             <ButtonStar
               className={styles.btn}

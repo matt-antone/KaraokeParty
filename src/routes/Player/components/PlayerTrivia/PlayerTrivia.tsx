@@ -6,33 +6,12 @@ import TriviaTally from 'components/TriviaTally/TriviaTally'
 import useNow from 'lib/useNow'
 import serverNow from 'lib/serverNow'
 import type { TriviaResult, TriviaRound } from 'shared/types'
+import { CHEER, GROAN, playCue, soundCue } from 'lib/soundCue'
 import styles from './PlayerTrivia.css'
 
 /** Scoreboard rows that fit the stage without shrinking the type. The rest of
  *  the room is still on the board, just below the fold of this screen. */
 const SCOREBOARD_ROWS = 6
-
-/** Served straight off the assets folder, the way index.html takes its icons —
- *  a sound played once needs no bundling. */
-const CHEER = 'assets/audience-applause.mp3'
-const GROAN = 'assets/losing-horns-1.mp3'
-
-/** One element per file, kept for the night. Built on demand rather than at
- *  module scope: this module is imported by tests that render without a DOM,
- *  where Audio does not exist. */
-const cues = new Map<string, HTMLAudioElement>()
-
-function cue (src: string): HTMLAudioElement {
-  let audio = cues.get(src)
-
-  if (!audio) {
-    audio = new Audio(src)
-    audio.preload = 'auto'
-    cues.set(src, audio)
-  }
-
-  return audio
-}
 
 /* OpenTDB is CC BY-SA 4.0. The attribution is a licence obligation, so it
    rides on the screen the questions appear on, not only in the docs — which
@@ -85,9 +64,7 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
   useEffect(() => {
     if (!isTally || isScoreboard) return
 
-    const audio = cue(numCorrect ? CHEER : GROAN)
-    audio.currentTime = 0
-    void audio.play().catch(() => {})
+    playCue(numCorrect ? CHEER : GROAN)
   }, [isTally, isScoreboard, numCorrect, result?.roundId])
 
   // Both cues are fetched while the question is still being answered: the
@@ -96,7 +73,7 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
   // lands. Which one plays is not known until then, so both are pulled.
   useEffect(() => {
     if (result) return
-    for (const src of [CHEER, GROAN]) cue(src).load()
+    for (const src of [CHEER, GROAN]) soundCue(src).load()
   }, [result, round.roundId])
 
   const stateOf = (i: number): AnswerKeyState => {
