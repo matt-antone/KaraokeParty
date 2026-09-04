@@ -64,6 +64,19 @@ const Intermission = ({
   const now = useNow()
   const secondsLeft = Math.max(0, Math.ceil((endsAt - now) / 1000))
 
+  // A trivia round is handed the stage by the mark drawn behind this overlay,
+  // and the mark already says what is coming — in the round's own colours, with
+  // TRIVIA on the nameplate. So the page stands down and leaves the clock: a
+  // headline naming a singer nobody is waiting for, over the top of a card
+  // saying the same thing, was two screens for one handover.
+  if (isTriviaItem(nextQueueItem)) {
+    return (
+      <PlayerHeadline key={secondsLeft} className={styles.leadInCountdown}>
+        {secondsLeft}
+      </PlayerHeadline>
+    )
+  }
+
   // one order, always: next song, face, name, countdown, coming up
   return (
     <>
@@ -73,9 +86,7 @@ const Intermission = ({
           {nextSongArtist && <div className={styles.nextSongArtist}>{nextSongArtist}</div>}
         </div>
       )}
-      {/* a trivia round is up next like anyone else, but it has no face —
-          asking for one fetches an avatar for user 0 and gets a 404 */}
-      {nextQueueItem && !isTriviaItem(nextQueueItem) && (
+      {nextQueueItem && (
         <UserImage
           userId={nextQueueItem.userId}
           dateUpdated={nextQueueItem.userDateUpdated}

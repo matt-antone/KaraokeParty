@@ -144,6 +144,18 @@
   animation: tick 200ms var(--ease-key);
 }
 
+/* The trivia lead-in. The mark's card owns the middle of the stage — it is
+   60vw wide and reaches within a tenth of the frame's height — so the clock
+   takes a corner rather than the centre, and keeps the headline's own size
+   rather than the countdown numeral's. Centred and full size it landed across the bottom row
+   of segments. Same tick either way: one clock, two placements. */
+.leadInCountdown {
+  position: absolute;
+  right: 4vh;
+  bottom: 3vh;
+  animation: tick 200ms var(--ease-key);
+}
+
 /* one line under the countdown */
 .comingUp {
   max-width: 90vw;

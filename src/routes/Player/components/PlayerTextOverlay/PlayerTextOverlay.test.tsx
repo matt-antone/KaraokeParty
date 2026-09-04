@@ -72,6 +72,25 @@ describe('PlayerTextOverlay intermission', () => {
     expect(text).toContain('Barf — Ludicrous Speed')
     expect(text).toContain('Lone Starr — Combing the Desert')
   })
+
+  // The mark is drawn behind this overlay and already says a round is coming,
+  // so the page stands down and leaves the clock. It is one handover, and it
+  // used to be two screens.
+  it('keeps only the clock when a trivia round is next', () => {
+    const html = render({
+      nextQueueItem: { queueId: 2, userId: 0, userDisplayName: 'Trivia', type: 'trivia' } as QueueItem,
+      nextSongTitle: undefined,
+      nextSongArtist: undefined,
+      comingUpSongTitles: ['Ludicrous Speed', 'Combing the Desert'],
+    })
+    const text = html.replace(/<[^>]+>/g, '')
+
+    expect(text).toMatch(/^\d+$/)
+    expect(text).not.toContain('Trivia')
+    expect(text).not.toContain('coming up')
+    // no face: a trivia row is user 0, and asking for its avatar is a 404
+    expect(html).not.toContain('api/user/')
+  })
 })
 
 describe('PlayerTextOverlay up next', () => {

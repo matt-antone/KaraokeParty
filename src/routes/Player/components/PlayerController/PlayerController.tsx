@@ -80,6 +80,12 @@ const PlayerController = (props: PlayerControllerProps) => {
   const isTriviaRow = isTriviaItem(queueItem)
   const isTriviaOnStage = isTriviaRow && trivia.round?.queueId === player.queueId
 
+  // The mark holds the stage for the whole handover: the intermission that
+  // hands it over, and the gap after the row goes current while the round is
+  // asked for. One state rather than two, because they are one wait — the
+  // intermission page and the mark were two screens for one thing.
+  const isTriviaLeadIn = isTriviaRow || (!!intermissionEndsAt && isTriviaItem(nextQueueItem))
+
   const handleStatus = useCallback((status?: Partial<PlayerState>) => dispatch(playerStatus(status)), [dispatch])
   const handleLoad = () => dispatch(playerLoad())
   const handlePlay = () => dispatch(playerPlay())
@@ -319,12 +325,13 @@ const PlayerController = (props: PlayerControllerProps) => {
   }, [handleStatus, player.isErrored, player.isPlaying])
 
   // the media layer covers the stage completely; the thread field behind it stops
-  // drawing whenever it does
+  // drawing whenever it does — and the mark's card is opaque too, so a lead-in
+  // stops it for the same reason
   const isMediaVisible = !!queueItem && !isTriviaRow && !player.isErrored && !player.isAtQueueEnd && !intermissionEndsAt
 
   return (
     <>
-      <PlayerBackdrop isCovered={isMediaVisible} />
+      <PlayerBackdrop isCovered={isMediaVisible || isTriviaLeadIn} />
       <Player
         cdgAlpha={player.cdgAlpha}
         cdgSize={player.cdgSize}
@@ -363,28 +370,35 @@ const PlayerController = (props: PlayerControllerProps) => {
               height={props.height}
             />
           )
-        : isTriviaRow
-          ? <TriviaMark variant='stage' />
-          : (
-              <PlayerTextOverlay
-                queueItem={queueItem as QueueItem}
-                nextQueueItem={nextQueueItem as QueueItem}
-                comingUpQueueItems={comingUpQueueItems as QueueItem[]}
-                comingUpSongTitles={comingUpSongTitles}
-                songTitle={song?.title}
-                songArtist={artist?.name}
-                nextSongTitle={nextSong?.title}
-                nextSongArtist={nextArtist?.name}
-                queueDepth={Math.max(0, queue.result.length - nextIdx)}
-                isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
-                isAtQueueEnd={player.isAtQueueEnd}
-                isQueueEmpty={!queue.result.length}
-                intermissionEndsAt={intermissionEndsAt}
-                isErrored={player.isErrored}
-                width={props.width}
-                height={props.height}
-              />
-            )}
+        : (
+            <>
+              {/* One mount across the whole lead-in. Rendering the mark from
+                  the intermission branch and again from the row's would replay
+                  the sting the moment the row went current, and the question
+                  would cut the replay off halfway. */}
+              {isTriviaLeadIn && <TriviaMark variant='stage' />}
+              {!isTriviaRow && (
+                <PlayerTextOverlay
+                  queueItem={queueItem as QueueItem}
+                  nextQueueItem={nextQueueItem as QueueItem}
+                  comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+                  comingUpSongTitles={comingUpSongTitles}
+                  songTitle={song?.title}
+                  songArtist={artist?.name}
+                  nextSongTitle={nextSong?.title}
+                  nextSongArtist={nextArtist?.name}
+                  queueDepth={Math.max(0, queue.result.length - nextIdx)}
+                  isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
+                  isAtQueueEnd={player.isAtQueueEnd}
+                  isQueueEmpty={!queue.result.length}
+                  intermissionEndsAt={intermissionEndsAt}
+                  isErrored={player.isErrored}
+                  width={props.width}
+                  height={props.height}
+                />
+              )}
+            </>
+          )}
       {roomPrefs?.qr?.isEnabled && (
         <PlayerQR
           height={props.height}
