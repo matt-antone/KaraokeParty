@@ -10,12 +10,13 @@ import styles from './AnswerKey.css'
  *   closed   dark — a key you did not press, and can no longer press
  *   correct  lit and ringed — the answer
  *   wrong    dark — not the answer, and not yours either
- *   missed   dark and still held down — not the answer, and yours
+ *   missed   its own colour turned down, still held down — not the answer, and yours
  *
  * `closed` and `missed` exist so a phone can always answer "which one did I
  * press?" without the guest holding it in their head: the moment you commit,
  * the other three go dark, and if you got it wrong yours stays down through
- * the reveal instead of vanishing into three identical dark keys.
+ * the reveal, still in its own colour, instead of vanishing into three
+ * identical dark keys.
  */
 export type AnswerKeyState = 'open' | 'chosen' | 'closed' | 'correct' | 'wrong' | 'missed'
 
