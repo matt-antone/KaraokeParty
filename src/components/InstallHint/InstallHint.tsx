@@ -22,16 +22,24 @@ const isIosSafari = () => {
 }
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
+// 10/8, 172.16/12, 192.168/16 and link-local — the ranges a karaoke server on
+// someone's house wifi actually sits on
+const PRIVATE_IPV4 = /^(10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/
 
 /**
  * Whether the address this page was loaded from is worth freezing.
  *
  * An install captures the URL it was added from and a standalone window has no
- * address bar to correct it, so an icon added from a raw IP is dead as soon as
- * the server moves network or its DHCP lease renews — and since private ranges
- * are heavily reused, it may reach an unrelated device rather than fail
- * cleanly. Better to never invite the install than to hand out an icon that
- * expires. The host opts in by giving the server a name (see KES_SERVER_URL).
+ * address bar to correct it, so an icon can outlive the address it points at.
+ * The join QR hands out a raw LAN IP by default (see getServerUrl), so gating
+ * every IP means gating every guest who actually arrives — the hint would never
+ * show. A private-range IP is accepted: it is at worst stale after the server
+ * changes network or renews its lease, and the guest rescans the QR, which is
+ * the flow they already know.
+ *
+ * A public IP is still refused. That address is routable, so a frozen icon can
+ * reach some unrelated stranger's machine rather than fail, and a host exposing
+ * the server past the LAN can name it via KES_SERVER_URL.
  *
  * location.hostname rather than prefs.serverUrl: the latter is what the join QR
  * will hand out next, which is a different question from how this guest
@@ -39,8 +47,9 @@ const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
  */
 const isDurableOrigin = () => {
   const { hostname } = window.location
+  if (IPV4.test(hostname)) return PRIVATE_IPV4.test(hostname)
   // IPv6 literals arrive bracketed, e.g. [fe80::1]
-  return !IPV4.test(hostname) && !hostname.includes(':') && !hostname.startsWith('[')
+  return !hostname.includes(':') && !hostname.startsWith('[')
 }
 
 // display-mode is the standard signal but only reached Safari in iOS 16.4;

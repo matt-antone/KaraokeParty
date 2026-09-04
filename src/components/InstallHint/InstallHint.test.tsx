@@ -74,10 +74,18 @@ describe('InstallHint', () => {
     expect(screen.getByText('Add to Home Screen')).toBeTruthy()
   })
 
-  // an icon added from an IP is dead once the server changes network or lease,
-  // and a standalone window has no address bar to recover through
-  it('stays hidden on a raw IPv4, which would freeze into a dead icon', () => {
+  // the join QR hands out a LAN IP by default, so this is how every real guest
+  // arrives; a stale icon just sends them back to rescanning the QR
+  it('shows on a private LAN IPv4, which is how guests actually arrive', () => {
     setHostname('192.168.86.235')
+    render(<InstallHint />)
+
+    expect(screen.getByText('Add to Home Screen')).toBeTruthy()
+  })
+
+  // routable, so a frozen icon can reach an unrelated machine rather than fail
+  it('stays hidden on a public IPv4', () => {
+    setHostname('203.0.113.9')
     render(<InstallHint />)
 
     expect(screen.queryByText('Add to Home Screen')).toBeNull()
