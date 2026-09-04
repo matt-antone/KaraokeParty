@@ -1,0 +1,25 @@
+/* Square keys in a fixed order, like the player's transport — the strip has to
+   read as one control rather than three buttons that happen to sit together.
+   Smaller than the player's: this one lives in a table row, one per room. */
+
+.container {
+  display: flex;
+  gap: var(--gap-1);
+}
+
+.key {
+  flex-shrink: 0;
+  width: var(--target);
+  min-height: var(--target);
+  padding: 0;
+
+  svg {
+    height: var(--icon-m);
+  }
+}
+
+/* the lit key is where the room is, so it stays lit rather than reading as a
+   hover or a press */
+.active {
+  cursor: default;
+}

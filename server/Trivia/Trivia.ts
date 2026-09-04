@@ -1,7 +1,7 @@
 import sql from 'sqlate'
 import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
-import Rooms from '../Rooms/Rooms.js'
+import Rooms, { STATUSES } from '../Rooms/Rooms.js'
 import Queue from '../Queue/Queue.js'
 import fetchQuestions, { type TriviaQuestion } from './Questions.js'
 import {
@@ -89,7 +89,7 @@ class Trivia {
   /** A room's trivia prefs, defaulted. Rooms created before trivia existed
    *  carry no key at all, which reads as off — the right default. */
   static getPrefs (roomId: number): { isEnabled: boolean, countdownSeconds: number } {
-    const prefs = Rooms.get(roomId, { status: ['open', 'closed'] }).entities[roomId]?.prefs?.trivia
+    const prefs = Rooms.get(roomId, { status: STATUSES }).entities[roomId]?.prefs?.trivia
 
     return {
       isEnabled: !!prefs?.isEnabled,

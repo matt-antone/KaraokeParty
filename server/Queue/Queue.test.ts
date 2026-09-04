@@ -12,7 +12,7 @@ describe('singer pause', () => {
     close()
     open({ file: ':memory:', ro: false })
 
-    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'play'])
     db.run(`INSERT INTO users (userId, username, password, name, roleId)
       VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [ALICE, 'alice', 'x', 'Alice'])
     db.run(`INSERT INTO users (userId, username, password, name, roleId)
@@ -51,8 +51,8 @@ describe('clear', () => {
     close()
     open({ file: ':memory:', ro: false })
 
-    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
-    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_2, 'Other', 'open'])
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'play'])
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_2, 'Other', 'play'])
     db.run(`INSERT INTO users (userId, username, password, name, roleId)
       VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [ALICE, 'alice', 'x', 'Alice'])
     db.run(`INSERT INTO users (userId, username, password, name, roleId)
@@ -103,7 +103,7 @@ describe('move', () => {
     close()
     open({ file: ':memory:', ro: false })
 
-    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'play'])
     db.run(`INSERT INTO users (userId, username, password, name, roleId)
       VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [ALICE, 'alice', 'x', 'Alice'])
     db.run('INSERT INTO artists (artistId, name, nameNorm) VALUES (1, ?, ?)', ['Eurythmics', 'eurythmics'])
@@ -141,7 +141,7 @@ describe('key change', () => {
     close()
     open({ file: ':memory:', ro: false })
 
-    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
+    db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'play'])
     db.run(`INSERT INTO users (userId, username, password, name, roleId)
       VALUES (?, ?, ?, ?, (SELECT roleId FROM roles WHERE name = 'standard'))`, [ALICE, 'alice', 'x', 'Alice'])
     db.run(`INSERT INTO users (userId, username, password, name, roleId)

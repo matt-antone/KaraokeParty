@@ -28,8 +28,9 @@
   width: 100%;
 }
 
+/* three square keys, seams included */
 .table th:nth-child(2) {
-  min-width: 70px;
+  min-width: 140px;
 }
 
 .table td {
@@ -38,12 +39,23 @@
   white-space: nowrap;
 }
 
-/* meta columns are data printed on the panel, so they are mono */
-.table td:nth-child(2),
-.table td:nth-child(3) {
+/* meta columns are data printed on the panel, so they are mono. The transport
+   in column 2 is a control, not data, so it is skipped */
+.table td:nth-child(3),
+.table td:nth-child(4) {
   font-family: var(--font-mono);
   font-size: var(--text-s);
   color: var(--ink-3);
+}
+
+/* the two meta columns are narrow enough to collide without this, and their
+   headings read as one word when they do */
+.table th:nth-child(3),
+.table th:nth-child(4),
+.table td:nth-child(3),
+.table td:nth-child(4) {
+  padding-left: var(--gap-3);
+  text-align: right;
 }
 
 .table td:first-child  {

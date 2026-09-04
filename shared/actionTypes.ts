@@ -65,12 +65,12 @@ export const ROOMS_REQUEST = 'rooms/REQUEST'
 export const ROOM_UPDATE = 'rooms/UPDATE'
 export const ROOM_CREATE = 'rooms/CREATE'
 export const ROOM_REMOVE = 'rooms/REMOVE'
+export const ROOM_SET_STATUS = 'rooms/SET_STATUS'
 export const ROOM_EDITOR_OPEN = 'rooms/EDITOR_OPEN'
 export const ROOM_EDITOR_CLOSE = 'rooms/EDITOR_CLOSE'
 export const ROOM_FILTER_STATUS = 'rooms/TOGGLE_SHOW_ALL'
 export const ROOM_PREFS_PUSH = 'rooms/ROOM_PREFS_PUSH'
 export const ROOM_PREFS_PUSH_REQUEST = 'server/ROOM_PREFS_PUSH_REQUEST'
-export const ROOM_RESET_REQUEST = 'server/ROOM_RESET_REQUEST'
 
 // Trivia
 export const TRIVIA_ANSWER = 'server/TRIVIA_ANSWER'

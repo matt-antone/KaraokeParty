@@ -60,7 +60,7 @@ function setupRoom () {
   close()
   open({ file: ':memory:', ro: false })
 
-  db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'open'])
+  db.run('INSERT INTO rooms (roomId, name, status) VALUES (?, ?, ?)', [ROOM_ID, 'Room', 'play'])
   user(ALICE, 'Alice')
   user(BOB, 'Bob')
   user(CAROL, 'Carol')
