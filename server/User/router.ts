@@ -9,6 +9,7 @@ import Prefs from '../Prefs/Prefs.js'
 import Queue from '../Queue/Queue.js'
 import Rooms from '../Rooms/Rooms.js'
 import User from '../User/User.js'
+import mountDevLogin from './devLogin.js'
 import { QUEUE_PUSH } from '../../shared/actionTypes.js'
 import {
   USERNAME_MIN_LENGTH,
@@ -47,6 +48,11 @@ const setSessionCookie = (ctx, userCtx) => {
     maxAge: SESSION_MAX_AGE,
   })
 }
+
+// Development only, and off unless KES_DEV_LOGIN is set: sign in as an admin
+// without a password, from loopback. See devLogin.ts for why it mints the
+// ordinary session cookie rather than teaching any guard a new way to say yes.
+mountDevLogin(router, setSessionCookie)
 
 // Takes the "raw" object returned by the User class and massages it
 // into the shape used by the client (state.user) and in server-side
