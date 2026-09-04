@@ -1,0 +1,12 @@
+/* The bottom chrome, as one measured stack. The nav used to pin itself, but
+   anything else down here (the install hint) has to be inside whatever
+   useResizeObserver measures — --nav-h is what the views pad themselves by and
+   what the virtualized lists subtract, so chrome outside it covers content. */
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 99;
+}

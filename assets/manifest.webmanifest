@@ -1,0 +1,17 @@
+{
+  "name": "KaraokeParty",
+  "short_name": "Karaoke",
+  "description": "Find and queue songs from your phone.",
+  "start_url": "../",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#141414",
+  "icons": [
+    {
+      "src": "app.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

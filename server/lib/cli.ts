@@ -34,6 +34,7 @@ const env = {
   KES_SCANNER_LOG_LEVEL: parseInt(process.env.KES_SCANNER_LOG_LEVEL, 10) || undefined,
   KES_SERVER_CONSOLE_LEVEL: parseInt(process.env.KES_SERVER_CONSOLE_LEVEL, 10) || undefined,
   KES_SERVER_LOG_LEVEL: parseInt(process.env.KES_SERVER_LOG_LEVEL, 10) || undefined,
+  KES_SERVER_URL: process.env.KES_SERVER_URL,
   KES_URL_PATH: process.env.KES_URL_PATH || '/',
   // support PUID/PGID convention
   KES_PUID: parseInt(process.env.PUID, 10) || undefined,
@@ -51,6 +52,9 @@ const HELP = `KaraokeParty Server
   --scannerLogLevel <n>      Media scanner log file level (default=3)
   --serverConsoleLevel <n>   Web server console output level (default=4)
   --serverLogLevel <n>       Web server log file level (default=3)
+  --serverUrl <url>          Absolute URL guests reach this server at, for join
+                             QR codes and home screen installs. Defaults to the
+                             current LAN IP, which changes with the network
   --urlPath <path>           Web server URL base path (default=/)
   -v, --version              Output the KaraokeParty Server version and exit
   -h, --help                 Show this help and exit
@@ -67,6 +71,7 @@ const opts = {
   scannerLogLevel: 'KES_SCANNER_LOG_LEVEL',
   serverConsoleLevel: 'KES_SERVER_CONSOLE_LEVEL',
   serverLogLevel: 'KES_SERVER_LOG_LEVEL',
+  serverUrl: 'KES_SERVER_URL',
   urlPath: 'KES_URL_PATH',
 }
 

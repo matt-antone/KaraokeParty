@@ -11,13 +11,14 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist'
-import { windowResize } from './modules/ui'
+import { getViewportSize, windowResize } from './modules/ui'
 
-// resize action
-window.addEventListener('resize', () => store.dispatch(windowResize({
-  innerWidth: window.innerWidth,
-  innerHeight: window.innerHeight,
-})))
+// resize action. visualViewport is what moves when the software keyboard opens;
+// window still fires for orientation and desktop window changes, and dispatching
+// both is free since the reducer no-ops on unchanged values.
+const onResize = () => store.dispatch(windowResize(getViewportSize()))
+window.addEventListener('resize', onResize)
+window.visualViewport?.addEventListener('resize', onResize)
 
 export interface OptimisticAction extends Action {
   meta: {

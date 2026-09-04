@@ -12,6 +12,18 @@ import type { RootState } from 'store/store'
 const MAX_CONTENT_WIDTH = 768
 let scrollLockTimer: ReturnType<typeof setTimeout> | null
 
+// iOS overlays the software keyboard on the layout viewport instead of shrinking
+// it: window.innerHeight doesn't change and no resize event fires, so the
+// virtualized lists and the fixed bottom nav stay sized for a viewport the
+// keyboard is covering. visualViewport reports the space actually left over and
+// does fire resize. Width stays on the layout viewport, since visualViewport's
+// width tracks pinch-zoom rather than anything the layout should follow.
+export const getViewportSize = () => ({
+  innerWidth: window.innerWidth,
+  // fractional CSS pixels here would churn the lists on every subpixel change
+  innerHeight: Math.round(window.visualViewport?.height ?? window.innerHeight),
+})
+
 // ------------------------------------
 // Actions
 // ------------------------------------
@@ -82,8 +94,7 @@ const initialState: UIState = {
   errorMessage: null,
   footerHeight: 0,
   headerHeight: 0,
-  innerWidth: window.innerWidth,
-  innerHeight: window.innerHeight,
+  ...getViewportSize(),
   contentWidth: Math.min(window.innerWidth, MAX_CONTENT_WIDTH),
   queueTab: 'queue',
 }

@@ -16,11 +16,11 @@ const NAV = [
   { to: '/settings', icon: 'TUNE', label: 'Settings', adminOnly: true },
 ] as const
 
-const Navigation = React.forwardRef<HTMLDivElement>((_, ref) => {
+const Navigation = () => {
   const isAdmin = useAppSelector(state => state.user.isAdmin)
 
   return (
-    <div className={styles.container} ref={ref}>
+    <div className={styles.container}>
       {NAV.filter(({ adminOnly }) => !adminOnly || isAdmin).map(({ to, icon, label }) => (
         <NavLink
           key={to}
@@ -41,8 +41,6 @@ const Navigation = React.forwardRef<HTMLDivElement>((_, ref) => {
       ))}
     </div>
   )
-})
-
-Navigation.displayName = 'Navigation'
+}
 
 export default Navigation
