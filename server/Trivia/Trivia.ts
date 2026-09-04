@@ -66,6 +66,13 @@ const rounds = new Map<number, ActiveRound>()
  *  room sees. */
 const starting = new Set<number>()
 
+/** A room's next questions, already on the wire. The promise rather than the
+ *  questions: it is stored the moment the fetch starts, so two calls a
+ *  millisecond apart cannot both fetch. Held until a round uses it — questions
+ *  that came back are five the session token will never hand back again — and
+ *  dropped with the room, which is where "held" ends. */
+const primed = new Map<number, Promise<TriviaQuestion[]>>()
+
 let nextRoundId = 1
 
 function shuffle<T> (items: T[]): T[] {
@@ -137,6 +144,22 @@ class Trivia {
     return true
   }
 
+  /**
+   * Fetch the pending row's questions now, rather than when the player reaches
+   * it. The row is queued minutes ahead and the mark's splash covers the gap
+   * before a round arrives, so by the time anyone is looking at the stage the
+   * questions are in memory and the round starts on the frame it is asked for.
+   *
+   * Fire and forget: fetchQuestions never throws, and an empty result just
+   * means the round fetches its own when it starts, exactly as it used to.
+   */
+  static prime (roomId: number): void {
+    if (primed.has(roomId) || rounds.has(roomId) || starting.has(roomId)) return
+    if (Queue.getPendingTriviaId(roomId) === null) return
+
+    primed.set(roomId, fetchQuestions(TRIVIA_QUESTIONS_PER_ROUND))
+  }
+
   /** Sync the queue and tell the room, when there is anything to tell. */
   static syncQueueAndPush (io, roomId: number): void {
     if (this.syncQueue(io, roomId)) {
@@ -145,6 +168,10 @@ class Trivia {
         payload: Queue.get(roomId),
       })
     }
+
+    // after the sync, never before: the sync is what creates the row being
+    // primed for
+    this.prime(roomId)
   }
 
   /**
@@ -182,10 +209,14 @@ class Trivia {
 
     starting.add(roomId)
 
+    // primed by the row being queued, or fetched here if that never happened
+    const ahead = primed.get(roomId)
+    primed.delete(roomId)
+
     let questions: TriviaQuestion[]
 
     try {
-      questions = await fetchQuestions(TRIVIA_QUESTIONS_PER_ROUND)
+      questions = await (ahead ?? fetchQuestions(TRIVIA_QUESTIONS_PER_ROUND))
     } finally {
       starting.delete(roomId)
     }
@@ -405,6 +436,7 @@ class Trivia {
     if (active?.timer) clearTimeout(active.timer)
 
     rounds.delete(roomId)
+    primed.delete(roomId)
   }
 }
 

@@ -76,6 +76,7 @@ function setupRoom () {
   // fewer than asked for is a short round, which is a round: the room gets
   // whatever the network had
   vi.mocked(fetchQuestions).mockImplementation(async count => pool.slice(0, count))
+  vi.mocked(fetchQuestions).mockClear()
 
   Trivia.stopRoom(ROOM_ID)
 }
@@ -105,6 +106,22 @@ describe('trivia rounds', () => {
     queueSong(ALICE)
     expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(true)
     expect(Queue.getPendingTriviaId(ROOM_ID)).not.toBeNull()
+  })
+
+  /** The questions are fetched when the row is queued, minutes before anyone
+   *  reaches it, so the round starts on the frame it is asked for rather than
+   *  on whenever OpenTDB answers. */
+  it('fetches the round ahead of the row, and starts without fetching again', async () => {
+    queueSong(ALICE)
+    Trivia.syncQueueAndPush(playerIo, ROOM_ID)
+
+    expect(fetchQuestions).toHaveBeenCalledTimes(1)
+
+    const queueId = Queue.getPendingTriviaId(ROOM_ID)
+    const round = await Trivia.startRound(playerIo, ROOM_ID, queueId as number)
+
+    expect(round?.question).toBe('Who?')
+    expect(fetchQuestions).toHaveBeenCalledTimes(1)
   })
 
   it('waits for the player to be playing before adding a round', async () => {
@@ -372,10 +389,11 @@ describe('trivia rounds', () => {
     expect(first).toHaveLength(TRIVIA_QUESTIONS_PER_ROUND)
     expect(second).toHaveLength(TRIVIA_QUESTIONS_PER_ROUND)
 
-    // one call per round, for the whole round. Not asking the same question
-    // twice in a night is the session token's job on the other side of this
-    // seam, not something the room has to keep a ledger for.
-    expect(fetchQuestions).toHaveBeenCalledTimes(2)
+    // one call per round, for the whole round — plus the one standing ahead of
+    // the row nobody reached, which is the point of priming. Not asking the
+    // same question twice in a night is the session token's job on the other
+    // side of this seam, not something the room has to keep a ledger for.
+    expect(fetchQuestions).toHaveBeenCalledTimes(3)
     expect(fetchQuestions).toHaveBeenCalledWith(TRIVIA_QUESTIONS_PER_ROUND)
   })
 
