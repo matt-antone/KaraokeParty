@@ -1,0 +1,73 @@
+/* The same panel-in-a-well the scoreboard rows sit in, so the beat after the
+   answer is recognisably the same screen furniture — only the sorting changed.
+
+   The columns keep equal width whatever the split is. A wipeout that squeezed
+   "wrong" to a sliver would read as a layout fault rather than as the joke it
+   actually is. */
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-2);
+}
+
+.player {
+  gap: var(--gap-4);
+  width: 100%;
+  max-width: 52rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-1);
+  padding: var(--gap-3);
+  border-radius: var(--radius-panel);
+  background: var(--faceplate);
+  box-shadow: var(--well);
+  /* the column's own ink: the names below inherit it, so correct and wrong are
+     told apart by colour once and never per row */
+  color: var(--ink);
+}
+
+/* Dim by colour, never by opacity — a wrong answer is still a thing you did.
+   Amber is what the room is meant to look at, which here is the column you
+   want to be in. */
+.correct .columnHeading {
+  color: var(--vu);
+}
+
+.wrong {
+  color: var(--ink-4);
+}
+
+.wrong .columnHeading {
+  color: var(--ink-3);
+}
+
+.columnHeading {
+  margin-bottom: var(--gap-1);
+  color: var(--ink-3);
+}
+
+.answeredName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* amber is "yours" on this deck, in both columns */
+.answeredName.mine {
+  color: var(--mine);
+}
+
+/* across the room rather than in the hand: sized in vh like everything else
+   the TV draws */
+.player .columnHeading {
+  margin-bottom: var(--gap-2);
+  font-size: 1.8vh;
+}
+
+.player .answeredName {
+  font-size: 3vh;
+  line-height: 1.35;
+}

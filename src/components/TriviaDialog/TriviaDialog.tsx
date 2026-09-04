@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from 'store/hooks'
 import AnswerKey, { type AnswerKeyState } from 'components/AnswerKey/AnswerKey'
 import Modal from 'components/Modal/Modal'
 import TriviaRail from 'components/TriviaRail/TriviaRail'
+import TriviaSplit from 'components/TriviaSplit/TriviaSplit'
 import alertCue from 'lib/alertCue'
 import serverNow from 'lib/serverNow'
 import useNow from 'lib/useNow'
@@ -68,38 +69,14 @@ const TriviaDialog = () => {
   // in two columns. The standings keep the last question, which is the one
   // they settle.
   if (isScoreboard && !result.isFinal) {
-    const answered = result.answered ?? []
-
     return (
       <Modal
         className={styles.modal}
         title='Who got it'
         onClose={() => setDismissedRoundId(round.roundId)}
       >
-        {answered.length > 0
-          ? (
-              <div className={styles.split}>
-                {[
-                  { key: 'correct', label: 'correct', names: answered.filter(a => a.isCorrect) },
-                  { key: 'wrong', label: 'wrong', names: answered.filter(a => !a.isCorrect) },
-                ].map(col => (
-                  <div key={col.key} className={clsx(styles.column, styles[col.key])}>
-                    <div className={clsx('silkscreen', styles.columnHeading)}>
-                      {`${col.label} ${String(col.names.length).padStart(2, '0')}`}
-                    </div>
-                    {col.names.map(a => (
-                      <div
-                        key={a.userId}
-                        className={clsx(styles.answeredName, a.userId === userId && styles.mine)}
-                        translate='no'
-                      >
-                        {a.name}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )
+        {result.answered.length > 0
+          ? <TriviaSplit answered={result.answered} userId={userId} variant='pad' />
           : <div className={styles.hint}>Nobody answered</div>}
       </Modal>
     )
