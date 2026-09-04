@@ -5,6 +5,7 @@ import PlayerBackdrop from '../PlayerBackdrop/PlayerBackdrop'
 import PlayerTextOverlay from '../PlayerTextOverlay/PlayerTextOverlay'
 import PlayerQR from '../PlayerQR/PlayerQR'
 import PlayerTrivia from '../PlayerTrivia/PlayerTrivia'
+import TriviaMark from 'components/TriviaMark/TriviaMark'
 import getRoundRobinQueue from 'routes/Queue/selectors/getRoundRobinQueue'
 import { playerLeave, playerError, playerLoad, playerPlay, playerStatus, type PlayerState } from '../../modules/player'
 import getRoomPrefs from '../../selectors/getRoomPrefs'
@@ -362,26 +363,28 @@ const PlayerController = (props: PlayerControllerProps) => {
               height={props.height}
             />
           )
-        : (
-            <PlayerTextOverlay
-              queueItem={queueItem as QueueItem}
-              nextQueueItem={nextQueueItem as QueueItem}
-              comingUpQueueItems={comingUpQueueItems as QueueItem[]}
-              comingUpSongTitles={comingUpSongTitles}
-              songTitle={song?.title}
-              songArtist={artist?.name}
-              nextSongTitle={nextSong?.title}
-              nextSongArtist={nextArtist?.name}
-              queueDepth={Math.max(0, queue.result.length - nextIdx)}
-              isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
-              isAtQueueEnd={player.isAtQueueEnd}
-              isQueueEmpty={!queue.result.length}
-              intermissionEndsAt={intermissionEndsAt}
-              isErrored={player.isErrored}
-              width={props.width}
-              height={props.height}
-            />
-          )}
+        : isTriviaRow
+          ? <TriviaMark variant='stage' />
+          : (
+              <PlayerTextOverlay
+                queueItem={queueItem as QueueItem}
+                nextQueueItem={nextQueueItem as QueueItem}
+                comingUpQueueItems={comingUpQueueItems as QueueItem[]}
+                comingUpSongTitles={comingUpSongTitles}
+                songTitle={song?.title}
+                songArtist={artist?.name}
+                nextSongTitle={nextSong?.title}
+                nextSongArtist={nextArtist?.name}
+                queueDepth={Math.max(0, queue.result.length - nextIdx)}
+                isSongEnding={player.duration > 0 && player.duration - player.position <= UP_NEXT_SECS}
+                isAtQueueEnd={player.isAtQueueEnd}
+                isQueueEmpty={!queue.result.length}
+                intermissionEndsAt={intermissionEndsAt}
+                isErrored={player.isErrored}
+                width={props.width}
+                height={props.height}
+              />
+            )}
       {roomPrefs?.qr?.isEnabled && (
         <PlayerQR
           height={props.height}
