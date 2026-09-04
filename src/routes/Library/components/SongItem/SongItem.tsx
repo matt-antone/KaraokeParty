@@ -12,11 +12,14 @@ interface SongItemProps {
   tags: string[]
   duration: number
   onSongQueue(songId: number): void
+  onSongDequeue(queueId: number): void
   onSongStarClick(songId: number): void
   isPlayed: boolean
   isStarred: boolean
   isUpcoming: boolean
   isAdmin: boolean
+  /** Set when this song is the signed-in user's own upcoming item: tapping takes it back out. */
+  myQueueId?: number
   numStars: number
   numMedia: number
   filterKeywords: string[]
@@ -25,8 +28,9 @@ interface SongItemProps {
 /**
  * The library's unit of action: an un-queued song is a raised key, a queued
  * song drops to a teal standby well and goes inert, a played song loses its
- * key face entirely and dims down the ink ramp. One tap queues it — the star
- * is the row's only other action.
+ * key face entirely and dims down the ink ramp. One tap queues it, and one
+ * more takes your own queued song back out — the star is the row's only
+ * other action.
  */
 const SongItem = ({
   songId,
@@ -35,16 +39,20 @@ const SongItem = ({
   tags,
   duration,
   onSongQueue,
+  onSongDequeue,
   onSongStarClick,
   isPlayed,
   isStarred,
   isUpcoming,
   isAdmin,
+  myQueueId,
   numStars,
   numMedia,
   filterKeywords,
 }: SongItemProps) => {
-  const handleClick = () => onSongQueue(songId)
+  const isMine = myQueueId !== undefined
+  const isInert = (isUpcoming || isPlayed) && !isMine
+  const handleClick = () => isMine ? onSongDequeue(myQueueId) : onSongQueue(songId)
   const handleStarClick = () => onSongStarClick(songId)
 
   return (
@@ -61,8 +69,9 @@ const SongItem = ({
 
       <button
         type='button'
-        onClick={isUpcoming || isPlayed ? undefined : handleClick}
-        disabled={isUpcoming || isPlayed}
+        onClick={isInert ? undefined : handleClick}
+        disabled={isInert}
+        aria-label={isMine ? `Remove ${title} from queue` : undefined}
         className={styles.primary}
       >
         {/* titles always show in full: they wrap, and the row grows to fit */}
@@ -78,7 +87,7 @@ const SongItem = ({
       </button>
 
       {isUpcoming
-        ? <span className={styles.queued}>QUEUED</span>
+        ? <span className={styles.queued}>{isMine ? 'TAP TO REMOVE' : 'QUEUED'}</span>
         : (
             <ButtonStar
               className={styles.btn}
