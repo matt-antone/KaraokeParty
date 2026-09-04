@@ -109,7 +109,8 @@ describe('DECK rules', () => {
     // "No emoji. Anywhere." The favourite control is a text star and library
     // facets are words on keys.
     //
-    // One exception, granted deliberately: the party on TriviaTally. It was
+    // One exception, granted deliberately: the faces on TriviaTally — a party
+    // when the room got the question, a grimace when nobody did. They were
     // asked for by name, and it is the one place on the deck that is cheering
     // rather than reporting. Listed here rather than allowed by character, so
     // the rule still holds for every other file and this stays one decision
@@ -123,7 +124,11 @@ describe('DECK rules', () => {
     const EMOJI = new RegExp('\\p{Extended_Pictographic}|\\uFE0F', 'u')
     const hits: string[] = []
 
-    const EXCEPT = ['components/TriviaTally/TriviaTally.tsx']
+    const EXCEPT = [
+      'components/TriviaTally/TriviaTally.tsx',
+      // and the test that pins which face goes with which count
+      'routes/Player/components/PlayerTrivia/PlayerTrivia.test.tsx',
+    ]
 
     for (const file of files('*.tsx')) {
       if (EXCEPT.includes(file)) continue
