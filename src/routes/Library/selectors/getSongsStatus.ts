@@ -24,16 +24,27 @@ const getSongsStatus: Selector<RootState, SongsStatus> = createSelector(
     const mine: Record<number, number> = {}
 
     queue.result.forEach((queueId) => {
-      const { songId, userId: itemUserId } = queue.entities[queueId]
+      const item = queue.entities[queueId]
 
       if (history.includes(queueId)) {
-        played.push(songId)
+        played.push(item.songId)
       } else if (queueId !== curId) {
-        upcoming.push(songId)
+        upcoming.push(item.songId)
 
+        // An optimistic row is never offered as dequeueable, even though it is
+        // by definition your own: its queueId is one this client invented
+        // while the server's answer is in flight, so a dequeue would name a
+        // row nobody else has. The real row arrives a moment later and is
+        // dequeueable then.
+        //
+        // Narrowed on `userId` rather than on `isOptimistic`, which is the
+        // discriminant: this project compiles without strictNullChecks, so a
+        // truthiness test on an optional `false` narrows nothing. `in` narrows
+        // either way, and it is the field being reached for.
+        //
         // first one wins: a song queued twice dequeues oldest-first
-        if (itemUserId === userId && !(songId in mine)) {
-          mine[songId] = queueId
+        if ('userId' in item && item.userId === userId && !(item.songId in mine)) {
+          mine[item.songId] = queueId
         }
       }
     })
