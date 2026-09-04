@@ -24,54 +24,36 @@
   }
 }
 
-/* The numeral is the channel that works without colour, so it is set in the
-   mono face at a size you can read across a room, never below the label. */
-.numeral {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.5em;
-  font-family: var(--font-mono);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
-}
-
 .label {
   flex: 1;
-  text-align: left;
-  font-size: var(--text-l);
   font-weight: var(--weight-semibold);
 }
 
-/* A labelled key is the player screen's, and only ever the player screen's:
-   the phone passes no label. So this is the one block sized for a room rather
-   than a hand — in vh, like every other thing the TV shows, because 16px of
-   answer text is unreadable from a sofa. */
-.labelled {
-  gap: var(--gap-4);
+/* Sized for a room: in vh, like every other thing the TV shows, because 16px
+   of answer text is unreadable from a sofa. */
+.player {
   padding: 2.2vh var(--gap-4);
 
-  .numeral {
-    min-width: 1.4em;
-    font-size: 3.8vh;
-  }
-
   .label {
+    text-align: left;
     font-size: 2.9vh;
     line-height: 1.2;
   }
 }
 
-/* an unlabelled key is the phone's: nothing but colour and a numeral, so it
-   centres and grows to fill its half of the grid */
-.key:not(.labelled) {
+/* Sized for a hand, and centred in it: the key is thumbed at, so the text sits
+   in the middle of the target rather than along one edge of it. */
+.pad {
   justify-content: center;
   min-height: 0;
   height: 100%;
 
-  .numeral {
-    font-size: var(--display-m);
+  .label {
+    text-align: center;
+    font-size: var(--text-l);
+    line-height: 1.25;
+    /* four keys in a phone-sized grid, and OpenTDB writes some long ones */
+    overflow-wrap: anywhere;
   }
 }
 
@@ -107,11 +89,12 @@
    graphite and keeps its numeral, so it is still readable. The one still lit
    is the answer, and there is only ever one.
 
-   Three roads into graphite, and they differ only in what happens to the
-   numeral: `closed` is a key you never pressed, `wrong` is one nobody's
-   reveal kept, and `missed` is the one you did press — dark like its
-   neighbours, but held down and a step brighter, so your answer is still
-   findable on a board of four dark keys. */
+   Three roads into graphite: `closed` is a key you never pressed, `wrong` is
+   one nobody's reveal kept, and `missed` is the one you did press — dark like
+   its neighbours, but held down, a step brighter, and ringed in the same ink,
+   so your answer is findable at a glance on a board of four dark keys. The
+   ring is what the numeral used to do: without it, "which one did I press?"
+   came down to two steps of grey. */
 .closed,
 .wrong,
 .missed {
@@ -122,6 +105,9 @@
 
 .missed {
   color: var(--ink-2);
+  /* the dim twin of .correct's ring: same mark, said quietly, so the answer is
+     still the only thing lit */
+  box-shadow: var(--well), inset 0 0 0 2px var(--ink-5);
 }
 
 .correct {

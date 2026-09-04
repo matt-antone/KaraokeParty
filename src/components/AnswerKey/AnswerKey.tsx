@@ -20,11 +20,13 @@ import styles from './AnswerKey.css'
 export type AnswerKeyState = 'open' | 'chosen' | 'closed' | 'correct' | 'wrong' | 'missed'
 
 interface AnswerKeyProps {
-  /** 0-3. Fixes both the colour and the numeral, on every surface. */
+  /** 0-3. Fixes the colour and the position, on every surface. */
   index: number
-  /** The answer itself. Shown on the player screen; the phone passes none,
-   *  so a guest has to look up at the screen to know what they are choosing. */
-  label?: string
+  /** The answer itself, on both surfaces now: a guest reads what they are
+   *  choosing rather than looking up to find out. */
+  label: string
+  /** 'player' is sized for a room, 'pad' for a hand. */
+  variant: 'player' | 'pad'
   state?: AnswerKeyState
   disabled?: boolean
   onClick?: () => void
@@ -33,25 +35,23 @@ interface AnswerKeyProps {
 /**
  * One of the four trivia answer keys, and the single place their appearance is
  * decided — the player screen and every phone render this same component, so
- * key 3 cannot come out amber in one place and indigo in the other. That
- * agreement is the whole mechanism: the phone shows no answer text, and a
- * guest matches their key to the screen's.
+ * key 3 cannot come out amber in one place and indigo in the other.
  *
- * The match is carried three ways, not one: position in the 2x2 grid, the
- * numeral, and colour. Colour alone would not do — roughly one in twelve men
- * cannot separate red from green — and position alone would not survive a
- * phone held in landscape.
+ * The answer is now written on the key itself, on both surfaces. The numeral
+ * that used to sit beside it existed to bridge the phone to the screen, and
+ * bridges nothing once the phone says "Saturn" too: a guest reads the key they
+ * are pressing. Position and colour still separate the four from each other,
+ * and neither carries the meaning alone — roughly one in twelve men cannot
+ * separate red from green, and a phone in landscape moves the grid.
  */
-const AnswerKey = ({ index, label, state = 'open', disabled, onClick }: AnswerKeyProps) => (
+const AnswerKey = ({ index, label, variant, state = 'open', disabled, onClick }: AnswerKeyProps) => (
   <button
     type='button'
-    className={clsx(styles.key, styles[`k${index}`], styles[state], label && styles.labelled)}
+    className={clsx(styles.key, styles[`k${index}`], styles[state], styles[variant])}
     disabled={disabled}
     onClick={onClick}
-    aria-label={label ? undefined : `Answer ${index + 1}`}
   >
-    <span className={styles.numeral}>{index + 1}</span>
-    {label && <span className={styles.label}>{label}</span>}
+    <span className={styles.label}>{label}</span>
   </button>
 )
 

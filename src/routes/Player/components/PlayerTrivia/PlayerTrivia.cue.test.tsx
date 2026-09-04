@@ -11,10 +11,17 @@ import { triviaResult, triviaRound } from 'lib/triviaFixtures'
  * seconds and the component re-renders on every tick of the clock behind it.
  */
 const played: string[] = []
+const loaded: string[] = []
 
 class FakeAudio {
-  constructor (src: string) { played.push(src) }
-  play () { return Promise.resolve() }
+  currentTime = 0
+  preload = ''
+  constructor (readonly src: string) {}
+  load () { loaded.push(this.src) }
+  play () {
+    played.push(this.src)
+    return Promise.resolve()
+  }
 }
 
 vi.stubGlobal('Audio', FakeAudio)
@@ -31,9 +38,20 @@ const stage = (numCorrect: number, boardFrom: number | null = null) => (
 afterEach(() => {
   cleanup()
   played.length = 0
+  loaded.length = 0
 })
 
 describe('the tally cue', () => {
+  /** Both files are pulled while the question is still being answered: a
+   *  party's wifi is the wrong thing to be waiting on when the count lands,
+   *  and which one plays is not known until then. */
+  it('fetches both cues while the question is up', () => {
+    render(<PlayerTrivia round={triviaRound()} width={1280} height={720} />)
+
+    expect(loaded).toEqual(['assets/audience-applause.mp3', 'assets/losing-horns-1.mp3'])
+    expect(played).toEqual([])
+  })
+
   it('cheers when the room got it', () => {
     render(stage(3))
     expect(played).toEqual(['assets/audience-applause.mp3'])

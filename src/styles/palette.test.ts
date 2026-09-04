@@ -76,7 +76,7 @@ describe('DECK palette contrast', () => {
     ['teal standby on a panel', 'standby', 'faceplate', AA_NORMAL],
   ]
 
-  // Every trivia answer key is filled and carries a numeral in --ink, so each
+  // Every trivia answer key is filled and carries its answer in --ink, so each
   // gradient stop has to clear AA on its own. They are deliberately matched:
   // an answer that reads brighter than its three peers looks like the answer.
   const answerStops = [1, 2, 3, 4].flatMap(n => [`ans-${n}-hi`, `ans-${n}-lo`])
@@ -117,9 +117,9 @@ describe('DECK palette contrast', () => {
     // little slack; below that two keys start reading as the same key.
     //
     // Nothing here compares an answer to --vu, --standby or --alert. An
-    // answer never appears on the same surface as a state indicator, and the
-    // mapping a guest actually uses is position and the numeral; colour is
-    // the third channel, not the only one.
+    // answer never appears on the same surface as a state indicator, and what
+    // a guest actually reads is the answer written on the key; colour and
+    // position separate the four, they do not carry the meaning.
     const hues = [1, 2, 3, 4].map(n => hue(token(`ans-${n}-hi`)))
 
     for (let i = 0; i < hues.length; i++) {

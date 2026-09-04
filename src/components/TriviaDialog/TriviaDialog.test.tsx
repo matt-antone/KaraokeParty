@@ -69,24 +69,26 @@ describe('TriviaDialog', () => {
     expect(board).toContain('Dot Matrix')
   })
 
-  /** The question is on the pad; the four answers never are, or the room is
-   *  twelve people reading twelve phones. */
-  it('carries the question and no answer text while answering is open', () => {
+  /** The whole round is in the hand: nobody has to look up at the TV to play. */
+  it('carries the question and all four answers while answering is open', () => {
     const markup = renderOpen()
 
     expect(markup).toContain('Who?')
-    expect(markup).not.toContain('Ludicrous Speed')
+    for (const answer of ['Ludicrous Speed', 'Ridiculous', 'Light', 'Plaid']) {
+      expect(markup).toContain(answer)
+    }
+    // the keys say what they are, not which they are
+    expect(markup).not.toContain('numeral')
   })
 
-  it('shows the right answer once answering has closed', () => {
+  it('lights the right key once answering has closed', () => {
     const markup = render({
       round: triviaRound({ answers: ['Ludicrous Speed', 'Ridiculous', 'Light', 'Plaid'] }),
       result: triviaResult({ correctIdx: 0, scoresFrom: Date.now() + 5000 }),
     })
 
-    expect(markup).toContain('Ludicrous Speed')
-    // the answer, and still none of the ones it was up against
-    expect(markup).not.toContain('Plaid')
+    // the correct key carries the answer's own text
+    expect(markup).toMatch(/class="[^"]*correct[^"]*"[^>]*>[^<]*<span[^>]*>Ludicrous Speed/)
     expect(markup).not.toContain('Dot Matrix')
   })
 })
