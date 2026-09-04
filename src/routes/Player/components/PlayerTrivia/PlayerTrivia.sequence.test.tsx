@@ -37,6 +37,7 @@ const result: TriviaResult = {
   scores: [{ userId: 42, name: 'Dot Matrix', score: 3, numAnswered: 2 }],
   numCorrect: 2,
   scoresFrom: SERVER_T0 + 26000,
+  boardFrom: null,
   endsAt: SERVER_T0 + 29000,
   sentAt: SERVER_T0 + 20000,
 }
