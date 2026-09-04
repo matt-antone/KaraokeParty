@@ -2,7 +2,22 @@ import React from 'react'
 import clsx from 'clsx'
 import styles from './AnswerKey.css'
 
-export type AnswerKeyState = 'open' | 'chosen' | 'correct' | 'wrong'
+/**
+ * Six states, in the order a key passes through them:
+ *
+ *   open     lit, still takeable
+ *   chosen   lit and held down — the one you pressed, answering still open
+ *   closed   dark — a key you did not press, and can no longer press
+ *   correct  lit and ringed — the answer
+ *   wrong    dark — not the answer, and not yours either
+ *   missed   dark and still held down — not the answer, and yours
+ *
+ * `closed` and `missed` exist so a phone can always answer "which one did I
+ * press?" without the guest holding it in their head: the moment you commit,
+ * the other three go dark, and if you got it wrong yours stays down through
+ * the reveal instead of vanishing into three identical dark keys.
+ */
+export type AnswerKeyState = 'open' | 'chosen' | 'closed' | 'correct' | 'wrong' | 'missed'
 
 interface AnswerKeyProps {
   /** 0-3. Fixes both the colour and the numeral, on every surface. */

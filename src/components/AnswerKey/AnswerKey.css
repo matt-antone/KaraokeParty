@@ -44,6 +44,25 @@
   font-weight: var(--weight-semibold);
 }
 
+/* A labelled key is the player screen's, and only ever the player screen's:
+   the phone passes no label. So this is the one block sized for a room rather
+   than a hand — in vh, like every other thing the TV shows, because 16px of
+   answer text is unreadable from a sofa. */
+.labelled {
+  gap: var(--gap-4);
+  padding: 2.2vh var(--gap-4);
+
+  .numeral {
+    min-width: 1.4em;
+    font-size: 3.8vh;
+  }
+
+  .label {
+    font-size: 2.9vh;
+    line-height: 1.2;
+  }
+}
+
 /* an unlabelled key is the phone's: nothing but colour and a numeral, so it
    centres and grows to fill its half of the grid */
 .key:not(.labelled) {
@@ -78,18 +97,31 @@
 
 /* Chosen: the key stays down. Pressed is a position on this deck, not a
    flash, so the state that says "you answered" is the key still travelled. */
-.chosen {
+.chosen,
+.missed {
   transform: translateY(1px);
   box-shadow: var(--well);
 }
 
-/* The reveal dims by colour, never by opacity: a wrong key goes back to
-   graphite and keeps its numeral, so it is still readable as the key you
-   pressed. The right one is simply the only one left lit. */
-.wrong {
+/* The reveal dims by colour, never by opacity: a key that is out goes back to
+   graphite and keeps its numeral, so it is still readable. The one still lit
+   is the answer, and there is only ever one.
+
+   Three roads into graphite, and they differ only in what happens to the
+   numeral: `closed` is a key you never pressed, `wrong` is one nobody's
+   reveal kept, and `missed` is the one you did press — dark like its
+   neighbours, but held down and a step brighter, so your answer is still
+   findable on a board of four dark keys. */
+.closed,
+.wrong,
+.missed {
   background-color: var(--key);
   background-image: var(--key-face);
   color: var(--ink-4);
+}
+
+.missed {
+  color: var(--ink-2);
 }
 
 .correct {

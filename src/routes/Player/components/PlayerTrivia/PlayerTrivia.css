@@ -1,3 +1,5 @@
+/* The stage is a panel with a top rail, a middle, and a footer — read in that
+   order, sized in vh because the reader is across the room. */
 .container {
   font-family: var(--font-body);
   position: absolute;
@@ -5,37 +7,45 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--gap-4);
-  padding: var(--gap-5);
+  gap: 2vh;
+  padding: 3vh 4vw 2vh;
   text-align: center;
 }
 
-.label {
-  color: var(--ink-3);
+/* the middle takes whatever the rail and the keys leave, and centres in it */
+.stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
 }
 
 .question {
-  max-width: 24ch;
-  font-size: var(--display-m);
+  max-width: 28ch;
+  font-size: 5vh;
   font-weight: var(--weight-semibold);
-  line-height: 1.25;
+  line-height: 1.2;
   color: var(--ink);
 }
 
 /* Two by two, and the same two by two on the phone. The order the server sent
    is the order both surfaces lay out, which is what makes "the second key on
-   the left" mean one thing in the room. */
+   the left" mean one thing in the room.
+
+   Recessed: four lit keys in a machined tray. The well is what gives the
+   colours an edge to sit against — on the bare chassis they float. */
 .answers {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--gap-3);
+  gap: var(--gap-2);
   width: 100%;
-  max-width: 46rem;
-}
-
-.countdown {
-  margin: 0;
+  max-width: 64rem;
+  padding: var(--gap-2);
+  border-radius: var(--radius-panel);
+  background: var(--chassis-deep);
+  box-shadow: var(--well);
 }
 
 .scoreboard {
@@ -43,18 +53,14 @@
   flex-direction: column;
   gap: var(--gap-1);
   width: 100%;
-  max-width: 26rem;
-}
-
-.scoreboardHeading {
-  color: var(--ink-3);
+  max-width: 40rem;
 }
 
 .scoreRow {
   display: flex;
   align-items: baseline;
-  gap: var(--gap-3);
-  padding: var(--gap-2) var(--gap-3);
+  gap: var(--gap-4);
+  padding: 1vh var(--gap-4);
   border-radius: var(--radius-panel);
   background: var(--faceplate);
   box-shadow: var(--well);
@@ -62,14 +68,14 @@
 
 .rank {
   font-family: var(--font-mono);
-  font-size: var(--text-s);
+  font-size: 2vh;
   color: var(--ink-3);
 }
 
 .scoreName {
   flex: 1;
   text-align: left;
-  font-size: var(--text-xl);
+  font-size: 3vh;
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -78,9 +84,10 @@
 
 .score {
   font-family: var(--font-mono);
-  font-size: var(--text-2xl);
+  font-size: 3.2vh;
   font-weight: var(--weight-bold);
   color: var(--vu);
+  font-variant-numeric: tabular-nums;
 }
 
 .attribution {
