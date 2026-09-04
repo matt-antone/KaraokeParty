@@ -14,15 +14,19 @@ import styles from './TriviaDialog.css'
 /**
  * The answer pad, on a phone.
  *
- * It carries no answer text on purpose — four colours and four numerals and
- * nothing else. The question and its answers are on the player screen, so the
- * room looks up at the TV together rather than down at twelve phones, and
- * whoever is at the microphone is not competing with a wall of reading.
+ * It carries the question, the clock, and four colours and four numerals — but
+ * never the four answers. That is the line: reading the question on your own
+ * phone costs the room nothing, and it means a guest who looked away, or who
+ * cannot read the TV from where they are standing, is still in the round. Four
+ * answers in the hand would be a different thing entirely — twelve people
+ * reading twelve phones instead of looking up, and the person at the
+ * microphone competing with all of them.
  *
- * What it does carry is the clock, in the same two marks the TV uses: how far
- * through the round you are, and how much of the answering time is left. Those
- * are the two things a guest was previously having to look up to find, and
- * neither of them gives the question away.
+ * The right answer does appear, once answering has closed and there is nothing
+ * left to give away.
+ *
+ * The clock is the same two marks the TV uses: how far through the round you
+ * are, and how much of the answering time is left.
  */
 /** What fits a phone without scrolling. Everyone else is still on the board;
  *  the TV carries the same list. */
@@ -58,6 +62,47 @@ const TriviaDialog = () => {
 
     if (answeredIdx === null) return 'open'
     return i === answeredIdx ? 'chosen' : 'closed'
+  }
+
+  // Between questions the pad shows the same split the TV does: who got it,
+  // in two columns. The standings keep the last question, which is the one
+  // they settle.
+  if (isScoreboard && !result.isFinal) {
+    const answered = result.answered ?? []
+
+    return (
+      <Modal
+        className={styles.modal}
+        title='Who got it'
+        onClose={() => setDismissedRoundId(round.roundId)}
+      >
+        {answered.length > 0
+          ? (
+              <div className={styles.split}>
+                {[
+                  { key: 'correct', label: 'correct', names: answered.filter(a => a.isCorrect) },
+                  { key: 'wrong', label: 'wrong', names: answered.filter(a => !a.isCorrect) },
+                ].map(col => (
+                  <div key={col.key} className={clsx(styles.column, styles[col.key])}>
+                    <div className={clsx('silkscreen', styles.columnHeading)}>
+                      {`${col.label} ${String(col.names.length).padStart(2, '0')}`}
+                    </div>
+                    {col.names.map(a => (
+                      <div
+                        key={a.userId}
+                        className={clsx(styles.answeredName, a.userId === userId && styles.mine)}
+                        translate='no'
+                      >
+                        {a.name}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )
+          : <div className={styles.hint}>Nobody answered</div>}
+      </Modal>
+    )
   }
 
   if (isScoreboard) {
@@ -111,6 +156,15 @@ const TriviaDialog = () => {
           clock — and no answer text, so the question stays on the screen. */}
       <TriviaRail round={round} isRunning={!result} variant='pad' />
 
+      <div className={styles.question} translate='no'>{round.question}</div>
+
+      {result && (
+        <div className={styles.answer}>
+          <div className={clsx('silkscreen', styles.answerLabel)}>answer</div>
+          <div className={styles.answerText} translate='no'>{round.answers[result.correctIdx]}</div>
+        </div>
+      )}
+
       <div className={styles.keys}>
         {round.answers.map((answer, i) => (
           <AnswerKey
@@ -123,11 +177,11 @@ const TriviaDialog = () => {
           />
         ))}
       </div>
-      <div className={styles.hint}>
-        {result
-          ? 'The lit key was the answer'
-          : answeredIdx !== null ? 'Locked in' : 'Match your answer on the screen'}
-      </div>
+      {!result && (
+        <div className={styles.hint}>
+          {answeredIdx !== null ? 'Locked in' : 'Match your answer on the screen'}
+        </div>
+      )}
     </Modal>
   )
 }

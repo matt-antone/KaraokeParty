@@ -35,6 +35,10 @@ const result: TriviaResult = {
   isFinal: false,
   correctIdx: 0,
   scores: [{ userId: 42, name: 'Dot Matrix', score: 3, numAnswered: 2 }],
+  answered: [
+    { userId: 42, name: 'Dot Matrix', isCorrect: true },
+    { userId: 43, name: 'Barf', isCorrect: false },
+  ],
   scoresFrom: SERVER_T0 + 26000,
   endsAt: SERVER_T0 + 29000,
   sentAt: SERVER_T0 + 20000,
@@ -49,7 +53,7 @@ afterEach(() => {
 })
 
 describe('a round, beat by beat', () => {
-  it('goes question, then answer, then leaderboard', () => {
+  it('goes question, then answer, then who got it', () => {
     vi.useFakeTimers()
 
     // the player's clock is a minute behind the server's, as a TV box's is
@@ -68,9 +72,12 @@ describe('a round, beat by beat', () => {
     expect(answer).toContain('answer')
     expect(answer).not.toContain('Dot Matrix')
 
-    // 6s later the standings take the stage, and hold for 3s
+    // 6s later the split takes the stage, and holds for 3s
     vi.setSystemTime(SERVER_T0 + 26500 - 60000)
-    expect(screen(state)).toContain('Dot Matrix')
+    const split = screen(state)
+    expect(split).toContain('who got it')
+    expect(split).toContain('Dot Matrix')
+    expect(split).toContain('Barf')
 
     vi.setSystemTime(SERVER_T0 + 28900 - 60000)
     expect(screen(state)).toContain('Dot Matrix')

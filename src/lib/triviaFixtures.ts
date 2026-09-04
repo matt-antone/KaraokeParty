@@ -27,6 +27,7 @@ export const triviaResult = (over: Partial<TriviaResult> = {}): TriviaResult => 
   isFinal: false,
   correctIdx: 0,
   scores: [{ userId: 42, name: 'Dot Matrix', score: 3, numAnswered: 4 }],
+  answered: [{ userId: 42, name: 'Dot Matrix', isCorrect: true }],
   // already past, so the scoreboard is what a bare call renders
   scoresFrom: Date.now() - 1000,
   endsAt: Date.now() + 2000,

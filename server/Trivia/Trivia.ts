@@ -276,6 +276,18 @@ class Trivia {
 
     const { current } = active
     const isFinal = active.index >= active.questions.length - 1
+    const scores = this.getScores(roomId)
+
+    // Names come off the scoreboard rather than a second query: answering is
+    // what puts a guest on it, so everyone who answered this question is
+    // already there.
+    const nameOf = new Map(scores.map(s => [s.userId, s.name]))
+
+    const answered = [...current.answered].map(([userId, answerIdx]) => ({
+      userId,
+      name: nameOf.get(userId) ?? '',
+      isCorrect: answerIdx === current.correctIdx,
+    }))
 
     const payload: TriviaResult = {
       roundId: current.roundId,
@@ -284,7 +296,8 @@ class Trivia {
       questionCount: current.round.questionCount,
       isFinal,
       correctIdx: current.correctIdx,
-      scores: this.getScores(roomId),
+      scores,
+      answered,
       scoresFrom: Date.now() + REVEAL_MS,
       endsAt: Date.now() + REVEAL_MS + SCOREBOARD_MS * (isFinal ? FINAL_SCOREBOARD_FACTOR : 1),
       sentAt: Date.now(),

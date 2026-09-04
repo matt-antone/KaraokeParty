@@ -46,6 +46,51 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
     return i === result.correctIdx ? 'correct' : 'wrong'
   }
 
+  // Between questions the room wants to know who got it, not where the night
+  // stands — the standings have four more questions to settle and the split
+  // has a shelf life of about ten seconds. The last question keeps the board:
+  // that one *is* the result.
+  if (isScoreboard && !result.isFinal) {
+    const answered = result.answered ?? []
+    const correct = answered.filter(a => a.isCorrect)
+    const wrong = answered.filter(a => !a.isCorrect)
+
+    return (
+      <div style={{ width, height }} className={styles.container}>
+        <TriviaRail round={round} label='who got it' variant='player' />
+
+        <div className={styles.stage}>
+          {answered.length > 0
+            ? (
+                <div className={styles.split}>
+                  {/* Both columns are always drawn, empty or not: a round
+                      nobody got wrong should read as an empty right-hand
+                      column, not as a screen with one column on it. */}
+                  {[
+                    { key: 'correct', label: 'correct', names: correct },
+                    { key: 'wrong', label: 'wrong', names: wrong },
+                  ].map(col => (
+                    <div key={col.key} className={clsx(styles.column, styles[col.key])}>
+                      <div className={clsx('silkscreen', styles.columnHeading)}>
+                        {`${col.label} ${String(col.names.length).padStart(2, '0')}`}
+                      </div>
+                      {col.names.map(a => (
+                        <div key={a.userId} className={styles.answeredName} translate='no'>{a.name}</div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )
+            : <div className={styles.question}>Nobody answered</div>}
+        </div>
+
+        <div className={clsx('silkscreen', styles.attribution)}>
+          questions from opentdb.com - CC BY-SA 4.0
+        </div>
+      </div>
+    )
+  }
+
   if (isScoreboard) {
     return (
       <div style={{ width, height }} className={styles.container}>
