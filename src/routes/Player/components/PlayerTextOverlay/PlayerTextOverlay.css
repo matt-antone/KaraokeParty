@@ -148,11 +148,14 @@
    60vw wide and reaches within a tenth of the frame's height — so the clock
    takes a corner rather than the centre, and keeps the headline's own size
    rather than the countdown numeral's. Centred and full size it landed across the bottom row
-   of segments. Same tick either way: one clock, two placements. */
+   of segments. Same tick either way: one clock, two placements.
+
+   Upper right, sharing the QR panel's right inset: the lower right is where
+   the QR lives, and one corner cannot hold both. */
 .leadInCountdown {
   position: absolute;
-  right: 4vh;
-  bottom: 3vh;
+  top: 3vh;
+  right: 3vh;
   animation: tick 200ms var(--ease-key);
 }
 
