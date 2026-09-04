@@ -4,6 +4,7 @@ import { formatShortDate } from 'lib/dateTime'
 import Panel from 'components/Panel/Panel'
 import Button from 'components/Button/Button'
 import EditRoom from './EditRoom/EditRoom'
+import RoomTransport from './RoomTransport/RoomTransport'
 import { closeRoomEditor, fetchRooms, filterByStatus, openRoomEditor } from 'store/modules/rooms'
 import { filterByRoom } from '../../modules/users'
 import getRoomList from '../../selectors/getRoomList'
@@ -38,16 +39,13 @@ const Rooms = () => {
       <tr key={String(roomId)}>
         <td translate='no'><a data-room-id={roomId} onClick={handleOpen}>{room.name}</a></td>
         <td>
-          {room.status}
+          <RoomTransport roomId={roomId} name={room.name} status={room.status} />
+        </td>
+        <td>
           {room.numUsers > 0 && (
-            <>
-&nbsp;
-              <a data-room-id={roomId} onClick={handleFilterUsers}>
-                (
-                {room.numUsers}
-                )
-              </a>
-            </>
+            <a data-room-id={roomId} onClick={handleFilterUsers}>
+              {room.numUsers}
+            </a>
           )}
         </td>
         <td>{formatShortDate(new Date(room.dateCreated * 1000))}</td>
@@ -58,8 +56,9 @@ const Rooms = () => {
   const roomsFilter = (
     <select className={styles.roomsFilter} onChange={handleFilterChange} value={filterStatus === false ? 'all' : filterStatus as string}>
       <option key='all' value='all'>All</option>
-      <option key='open' value='open'>Open</option>
-      <option key='closed' value='closed'>Closed</option>
+      <option key='play' value='play'>Playing</option>
+      <option key='paused' value='paused'>Paused</option>
+      <option key='stopped' value='stopped'>Stopped</option>
     </select>
   )
 
@@ -70,7 +69,8 @@ const Rooms = () => {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Status</th>
+              <th>Transport</th>
+              <th>In</th>
               <th>Created</th>
             </tr>
           </thead>

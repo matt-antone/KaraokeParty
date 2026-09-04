@@ -4,6 +4,7 @@ import sql from 'sqlate'
 import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
 import Rooms, { STATUSES } from '../Rooms/Rooms.js'
+import setRoomTransport from './transport.js'
 import Trivia from '../Trivia/Trivia.js'
 import { ValidationError } from '../lib/Errors.js'
 
@@ -19,7 +20,13 @@ import { ROOM_PREFS_PUSH } from '../../shared/actionTypes.js'
 // list rooms
 router.get(['/', '/:roomId'], (ctx) => {
   const roomId = ctx.params.roomId ? parseInt(ctx.params.roomId, 10) : undefined
-  const status = ctx.user.isAdmin ? STATUSES : undefined
+  // Admins see every room so they can work the transport. Everyone else sees
+  // only playing rooms — that list is the one they pick a room to join from —
+  // plus the room they are already in, whatever its transport: a paused room
+  // still has a player asking for its own prefs, and dropping it there blanks
+  // the QR and trivia settings mid-night.
+  const isOwnRoom = typeof roomId === 'number' && roomId === ctx.user.roomId
+  const status = ctx.user.isAdmin || isOwnRoom ? STATUSES : undefined
   const res = Rooms.get(roomId, { status })
 
   res.result.forEach((roomId) => {
@@ -76,6 +83,32 @@ router.put('/:roomId', requireAdmin, async (ctx) => {
       })
     }
   }
+
+  // send updated room list
+  ctx.body = Rooms.get(null, { status: STATUSES })
+})
+
+// move a room's transport
+//
+// Separate from the edit form's PUT because the transitions do work no form
+// save can: pausing and stopping have to reach the running player, and stopping
+// empties the room. Routed over HTTP rather than the socket so it answers with
+// the same room list every other write here does, and the client reduces it
+// without a second round trip.
+router.post('/:roomId/status', requireAdmin, (ctx) => {
+  const roomId = parseInt(ctx.params.roomId, 10)
+  const { status } = (ctx.request as unknown as RequestWithBody).body
+
+  if (!Number.isInteger(roomId)) ctx.throw(422, 'Invalid roomId')
+
+  try {
+    setRoomTransport(ctx.io, roomId, status as string)
+  } catch (err) {
+    if (err instanceof ValidationError) ctx.throw(422, err.message)
+    throw err
+  }
+
+  log.verbose('%s set roomId %s to %s', ctx.user.name, roomId, status)
 
   // send updated room list
   ctx.body = Rooms.get(null, { status: STATUSES })

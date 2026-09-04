@@ -1,6 +1,6 @@
 import { createAction, createAsyncThunk, createReducer } from '@reduxjs/toolkit'
 import type { AppThunk, RootState } from 'store/store'
-import type { IRoomPrefs, Room } from 'shared/types'
+import type { IRoomPrefs, Room, RoomStatus } from 'shared/types'
 import {
   ROOMS_RECEIVE,
   ROOMS_REQUEST,
@@ -10,9 +10,9 @@ import {
   ROOM_UPDATE,
   ROOM_CREATE,
   ROOM_REMOVE,
+  ROOM_SET_STATUS,
   ROOM_PREFS_PUSH,
   ROOM_PREFS_PUSH_REQUEST,
-  ROOM_RESET_REQUEST,
   TRIVIA_SCORES_RESET,
   LOGOUT,
 } from 'shared/actionTypes'
@@ -106,9 +106,20 @@ export function requestPrefsPush (roomId: number, prefs: IRoomPrefs): AppThunk {
   }
 }
 
-export const requestRoomReset = createAction(ROOM_RESET_REQUEST, (roomId: number) => ({
-  payload: { roomId },
-}))
+/** Move a room's transport. The server does the work each state implies —
+ *  stopping the player, and on stop emptying the queue and the scoreboard —
+ *  and answers with the updated room list, so this reduces like any other
+ *  room write. */
+export const setRoomStatus = createAsyncThunk(
+  ROOM_SET_STATUS,
+  async ({ roomId, status }: { roomId: number, status: RoomStatus }, thunkAPI) => {
+    const response = await api.post(`/${roomId}/status`, {
+      body: { status },
+    })
+
+    thunkAPI.dispatch(receiveRooms(response))
+  },
+)
 
 /** Clear a room's trivia scoreboard. Carries the roomId for the same reason
  *  the room reset above does: between nights the admin is not necessarily
@@ -130,7 +141,7 @@ interface RoomsState {
 const initialState: RoomsState = {
   result: [],
   entities: {},
-  filterStatus: 'open',
+  filterStatus: 'play',
   isEditorOpen: false,
 }
 

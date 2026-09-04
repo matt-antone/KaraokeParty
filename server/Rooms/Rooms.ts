@@ -2,12 +2,13 @@ import crypto from '../lib/crypto.js'
 import sql from 'sqlate'
 import { db } from '../lib/Database.js'
 import { ValidationError } from '../lib/Errors.js'
+import { ROOM_STATUSES } from '../../shared/types.js'
 
 const NAME_MIN_LENGTH = 1
 const NAME_MAX_LENGTH = 50
 const PASSWORD_MIN_LENGTH = 5
 
-export const STATUSES = ['open', 'closed']
+export const STATUSES = ROOM_STATUSES as string[]
 
 /**
  * Role prefs a room is created with: both guests and new standard accounts may
@@ -33,7 +34,7 @@ class Rooms {
    */
   static get (
     roomId: number | null | undefined = undefined,
-    { status = ['open'], includePassword = false }: { status?: string[], includePassword?: boolean } = {},
+    { status = ['play'], includePassword = false }: { status?: string[], includePassword?: boolean } = {},
   ): { result: number[], entities: Record<number, any> } {
     const result = []
     const entities = {}
@@ -96,7 +97,7 @@ class Rooms {
   }
 
   static async set (roomId, room) {
-    const { name, password, status, prefs } = room
+    const { name, password, prefs } = room
     let query
 
     if (!name || !name.trim() || name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
@@ -107,10 +108,6 @@ class Rooms {
       throw new ValidationError(`Room password must have at least ${PASSWORD_MIN_LENGTH} characters`)
     }
 
-    if (!status || !STATUSES.includes(status)) {
-      throw new ValidationError('Invalid room status')
-    }
-
     if (typeof roomId === 'number') {
       const passwordSql = typeof password === 'undefined'
         // leave unchanged
@@ -118,11 +115,14 @@ class Rooms {
         // empty string unsets password
         : sql`password = ${password === '' ? null : await crypto.hash(password)},`
 
+      // status is deliberately absent: it is the room's transport now, and the
+      // transport controls run side effects (stopping the player, clearing the
+      // queue) that an edit-form save has no way to perform. Saving the form
+      // must not silently move a room between states.
       query = sql`
         UPDATE rooms
         SET name = ${name},
             ${passwordSql}
-            status = ${status},
             data = json_set(data, '$.prefs', json(${JSON.stringify(prefs)}))
         WHERE roomId = ${roomId}
       `
@@ -134,12 +134,14 @@ class Rooms {
       // on INSERT, so an admin who later turns guests off stays turned off.
       const newPrefs = prefs?.roles ? prefs : { ...prefs, roles: defaultRoles() }
 
+      // a new room is playing. The host made it to start a night, and a room
+      // that arrives paused is a room whose first singer cannot get in
       query = sql`
         INSERT INTO rooms (name, password, status, dateCreated, data)
         VALUES (
           ${name},
           ${typeof password === 'undefined' ? null : await crypto.hash(password)},
-          ${status},
+          'play',
           ${Math.floor(Date.now() / 1000)},
           json_set('{}', '$.prefs', json(${JSON.stringify(newPrefs)}))
         )
@@ -172,8 +174,10 @@ class Rooms {
       throw new Error('Room not found')
     }
 
-    if (isOpen && room.status !== 'open') {
-      throw new Error('Room is no longer open')
+    if (isOpen && room.status !== 'play') {
+      throw new Error(room.status === 'paused'
+        ? 'Room is paused'
+        : 'Room is no longer open')
     }
 
     if (validatePassword && room.password) {
@@ -211,6 +215,24 @@ class Rooms {
     }
 
     return true
+  }
+
+  /**
+   * Move a room's transport. The side effects of stopping — emptying the queue,
+   * clearing the scoreboard, telling the player to stop — belong to the caller
+   * that has the socket server; this only records where the room now is.
+   */
+  static setStatus (roomId: number, status: string): void {
+    if (!STATUSES.includes(status)) {
+      throw new ValidationError('Invalid room status')
+    }
+
+    const query = sql`
+      UPDATE rooms
+      SET status = ${status}
+      WHERE roomId = ${roomId}
+    `
+    db.run(String(query), query.parameters)
   }
 
   static prefix (roomId: string | number = '') {

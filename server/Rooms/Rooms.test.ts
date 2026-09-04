@@ -26,7 +26,7 @@ describe('room defaults', () => {
   afterEach(close)
 
   it('lets guests into a newly created room', async () => {
-    await Rooms.set(null, { name: 'Living Room', status: 'open' })
+    await Rooms.set(null, { name: 'Living Room' })
 
     const room = db.get<{ roomId: number }>('SELECT roomId FROM rooms WHERE name = ?', ['Living Room'])!
     expect(prefsOf(room.roomId).roles[roleId('guest')!].allowNew).toBe(true)
@@ -34,7 +34,7 @@ describe('room defaults', () => {
 
   it('lets new standard accounts into a newly created room', async () => {
     // a singer who wants a real account must not need an admin to enable it first
-    await Rooms.set(null, { name: 'Living Room', status: 'open' })
+    await Rooms.set(null, { name: 'Living Room' })
 
     const room = db.get<{ roomId: number }>('SELECT roomId FROM rooms WHERE name = ?', ['Living Room'])!
     expect(prefsOf(room.roomId).roles[roleId('standard')!].allowNew).toBe(true)
@@ -45,7 +45,6 @@ describe('room defaults', () => {
     const guest = roleId('guest')!
     await Rooms.set(null, {
       name: 'Locked Room',
-      status: 'open',
       prefs: { roles: { [guest]: { allowNew: false } } },
     })
 
@@ -55,13 +54,12 @@ describe('room defaults', () => {
 
   it('does not re-apply the default when an existing room is edited', async () => {
     const guest = roleId('guest')!
-    await Rooms.set(null, { name: 'Room', status: 'open' })
+    await Rooms.set(null, { name: 'Room' })
     const roomId = db.get<{ roomId: number }>('SELECT roomId FROM rooms WHERE name = ?', ['Room'])!.roomId
 
     // the host turns guests off later; that must stick
     await Rooms.set(roomId, {
       name: 'Room',
-      status: 'open',
       prefs: { roles: { [guest]: { allowNew: false } } },
     })
 
@@ -74,7 +72,7 @@ describe('room defaults', () => {
     // singers, which is the same dead end the insert default was added to fix.
     db.run(
       'INSERT INTO rooms (name, status, dateCreated, data) VALUES (?, ?, 0, ?)',
-      ['Old Room', 'open', JSON.stringify({ prefs: { qr: { isEnabled: true } } })],
+      ['Old Room', 'play', JSON.stringify({ prefs: { qr: { isEnabled: true } } })],
     )
 
     const roomId = db.get<{ roomId: number }>('SELECT roomId FROM rooms WHERE name = ?', ['Old Room'])!.roomId
@@ -88,7 +86,7 @@ describe('room defaults', () => {
     const guest = roleId('guest')!
     db.run(
       'INSERT INTO rooms (name, status, dateCreated, data) VALUES (?, ?, 0, ?)',
-      ['Locked', 'open', JSON.stringify({ prefs: { roles: { [guest]: { allowNew: false } } } })],
+      ['Locked', 'play', JSON.stringify({ prefs: { roles: { [guest]: { allowNew: false } } } })],
     )
 
     const roomId = db.get<{ roomId: number }>('SELECT roomId FROM rooms WHERE name = ?', ['Locked'])!.roomId

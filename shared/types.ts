@@ -99,10 +99,24 @@ export interface IRoomPrefs {
   }>
 }
 
+/** A room's transport, and the only gate on getting into it.
+ *  - `play`     the room runs: singers join, queue up, and the player plays
+ *  - `paused`   an intermission. Nobody new joins and nothing new is queued,
+ *               and the player is stopped, but the queue and the scoreboard
+ *               are exactly where the room left them
+ *  - `stopped`  the night is over. Same gate as paused, and the queue and the
+ *               scores are cleared when it is pressed
+ *
+ *  paused and stopped keep out the same people; the difference is entirely in
+ *  what pressing stop threw away. */
+export type RoomStatus = 'play' | 'paused' | 'stopped'
+
+export const ROOM_STATUSES: RoomStatus[] = ['play', 'paused', 'stopped']
+
 export interface Room {
   roomId: number
   name: string
-  status: 'open' | 'closed'
+  status: RoomStatus
   dateCreated: number
   hasPassword: boolean
   numUsers: number
