@@ -23,9 +23,13 @@ describe('PlayerTrivia', () => {
     expect(markup).not.toContain('Dot Matrix')
   })
 
-  /** Zero is a fine answer and gets no special case. */
-  it('counts a question nobody got', () => {
-    expect(render({ result: triviaResult({ numCorrect: 0 }) })).toContain('>0<')
+  /** Zero needs no special case in the layout, but it does not get the party. */
+  it('counts a question nobody got, and does not cheer about it', () => {
+    const markup = render({ result: triviaResult({ numCorrect: 0 }) })
+
+    expect(markup).toContain('>0<')
+    expect(markup).toContain('😬')
+    expect(markup).not.toContain('🎉')
   })
 
   /** The last question earns a third beat: the count first, like every other
