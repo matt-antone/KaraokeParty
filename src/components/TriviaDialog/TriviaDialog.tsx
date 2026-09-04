@@ -57,6 +57,12 @@ const TriviaDialog = () => {
   const isTally = !!result && now >= result.scoresFrom
   const isScoreboard = !!result?.boardFrom && now >= result.boardFrom
 
+  const labelOf = (answer: string, state: AnswerKeyState, isMine: boolean) => {
+    if (state === 'correct' && isMine) return `🎉 ${answer}`
+    if (state === 'missed') return `😬 ${answer}`
+    return answer
+  }
+
   const stateOf = (i: number): AnswerKeyState => {
     if (result) {
       if (i === result.correctIdx) return 'correct'
@@ -134,18 +140,26 @@ const TriviaDialog = () => {
       <div className={styles.question} translate='no'>{round.question}</div>
 
       <div className={styles.keys}>
-        {round.answers.map((answer, i) => (
-          <AnswerKey
-            key={answer}
-            index={i}
-            label={answer}
-            variant='pad'
-            state={stateOf(i)}
-            // one answer each, and the reveal is not a chance to change it
-            disabled={answeredIdx !== null || !!result}
-            onClick={() => dispatch(answerTrivia(round.roundId, i))}
-          />
-        ))}
+        {round.answers.map((answer, i) => {
+          const state = stateOf(i)
+
+          return (
+            <AnswerKey
+              key={answer}
+              index={i}
+              // The two faces the tally already uses, said to one guest about
+              // one key: the popper on the answer you got, the grimace on the
+              // one you pressed instead. Both ride on your own key, so the pad
+              // tells you how you did without you counting keys.
+              label={labelOf(answer, state, i === answeredIdx)}
+              variant='pad'
+              state={state}
+              // one answer each, and the reveal is not a chance to change it
+              disabled={answeredIdx !== null || !!result}
+              onClick={() => dispatch(answerTrivia(round.roundId, i))}
+            />
+          )
+        })}
       </div>
       <div className={styles.hint}>
         {result

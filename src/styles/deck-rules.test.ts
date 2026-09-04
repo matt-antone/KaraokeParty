@@ -128,6 +128,10 @@ describe('DECK rules', () => {
       'components/TriviaTally/TriviaTally.tsx',
       // and the test that pins which face goes with which count
       'routes/Player/components/PlayerTrivia/PlayerTrivia.test.tsx',
+      // the same popper, thrown once more for the one guest who got it: the
+      // pad is where a singer finds out they were right, and that is the
+      // other place the deck cheers rather than reports
+      'components/TriviaDialog/TriviaDialog.tsx',
     ]
 
     for (const file of files('*.tsx')) {

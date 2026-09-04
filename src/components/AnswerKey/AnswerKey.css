@@ -89,25 +89,23 @@
    graphite and keeps its numeral, so it is still readable. The one still lit
    is the answer, and there is only ever one.
 
-   Three roads into graphite: `closed` is a key you never pressed, `wrong` is
-   one nobody's reveal kept, and `missed` is the one you did press — dark like
-   its neighbours, but held down, a step brighter, and ringed in the same ink,
-   so your answer is findable at a glance on a board of four dark keys. The
-   ring is what the numeral used to do: without it, "which one did I press?"
-   came down to two steps of grey. */
+   Two roads into graphite: `closed` is a key you never pressed, and `wrong` is
+   one nobody's reveal kept. */
 .closed,
-.wrong,
-.missed {
+.wrong {
   background-color: var(--key);
   background-image: var(--key-face);
   color: var(--ink-4);
 }
 
+/* The one you did press and got wrong keeps its own colour, turned down: it is
+   the only key on the board that is neither the answer nor graphite, so "which
+   one did I press?" is answered by colour rather than by two steps of grey.
+   Turned down rather than faded — the key stays opaque, nothing ghosts
+   through — and the label rides at full ink, so a wrong answer is still
+   readable next to the right one. */
 .missed {
-  color: var(--ink-2);
-  /* the dim twin of .correct's ring: same mark, said quietly, so the answer is
-     still the only thing lit */
-  box-shadow: var(--well), inset 0 0 0 2px var(--ink-5);
+  filter: brightness(.55);
 }
 
 .correct {
