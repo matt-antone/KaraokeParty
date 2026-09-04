@@ -81,10 +81,17 @@
      --ans-2 state". That is why they sit outside the vu/standby/alert family
      the palette test counts, and have a closure assertion of their own.
 
-     Tuned rather than picked. Every -hi stop measures 4.84-4.86:1 against
+     Tuned rather than picked. Every -hi stop measures 4.84-4.87:1 against
      --ink, the same footing --alert-key-hi has (4.89), so no answer looks
-     louder than another and one ink colour carries all four. Chroma is held
-     at DECK's level — machined, not confectionery.
+     louder than another and one ink colour carries all four.
+
+     Chroma is levelled as well as contrast, and that is a second pass over
+     the first set. Matching four hues on contrast alone left them at
+     saturations of 0.66 to 0.80: the moss came out greyer than the indigo
+     beside it, and a board of four peers read as one dull key and three
+     lit ones. All eight stops now sit at saturation 0.88, which is as pure
+     as this luminance allows before the ink stops clearing 4.5 — the keys
+     are more chromatic than they were and not one step brighter.
 
      Position and the numeral are the real mapping; colour is the third
      channel, because roughly one in twelve men cannot separate red from
@@ -96,18 +103,18 @@
      is a dark key face in a set of four. Different job, different colour.
      (Spelled in hex, and this comment avoids the banned function form on
      purpose — deck-rules greps the stylesheets, comments included.) */
-  --ans-1-hi: #ba2630;      /* crimson */
-  --ans-1-lo: #a12129;
-  --ans-2-hi: #1f6f42;      /* moss */
-  --ans-2-lo: #195834;
-  --ans-3-hi: #3959c4;      /* indigo */
-  --ans-3-lo: #324eac;
+  --ans-1-hi: #c01723;      /* crimson */
+  --ans-1-lo: #a7141e;
+  --ans-2-hi: #0d7039;      /* moss */
+  --ans-2-lo: #0b592d;
+  --ans-3-hi: #1d4ef1;      /* indigo */
+  --ans-3-lo: #1944d4;
   /* plum sits at hue 292 rather than a rounder 285: indigo and crimson are
      its neighbours on both sides and the set's tightest pair has to stay
      above 60 degrees. Amber and teal being spoken for is what squeezes the
      four into the arc they have. */
-  --ans-4-hi: #9638a4;      /* plum */
-  --ans-4-lo: #81308e;
+  --ans-4-hi: #a416b9;      /* plum */
+  --ans-4-lo: #8e13a0;
 
   /* the you-channel: amber is also "your row", because on a deck the lit
      channel is the one that's live. There is no separate personal colour. */

@@ -1,0 +1,75 @@
+/* What this is, how far through, and how long left: one rail, edge to edge, so
+   nothing in the middle of either surface has to carry status. */
+.strip {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-3);
+  width: 100%;
+}
+
+.label {
+  color: var(--ink-3);
+}
+
+/* pushed to the right edge, against the clock */
+.progress {
+  flex: 1;
+  text-align: right;
+  color: var(--ink-3);
+}
+
+/* The clock is data, so it is mono, and it is the one thing here the room
+   should act on, so it is amber. */
+.clock {
+  flex: none;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--vu);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeBar {
+  width: 100%;
+  border-radius: var(--radius-key);
+  background: var(--key-well);
+  box-shadow: var(--well);
+  overflow: hidden;
+}
+
+.timeFill {
+  height: 100%;
+  background-image: var(--key-face-vu);
+}
+
+/* Sized for a room: vh, like everything else the TV shows. Large enough to
+   read from the sofa and no larger — the question is what that screen is
+   for, and the clock outgrew it once already. */
+.player {
+  gap: var(--gap-4);
+
+  &.timeBar {
+    height: 0.8vh;
+    min-height: 5px;
+  }
+
+  .clock {
+    min-width: 2ch;
+    font-size: 4.6vh;
+  }
+}
+
+/* Sized for a hand, and spaced by margins because the modal's content box has
+   no gap of its own. */
+.pad {
+  margin-bottom: var(--gap-2);
+
+  &.timeBar {
+    height: 5px;
+    margin-bottom: var(--gap-3);
+  }
+
+  .clock {
+    font-size: var(--text-3xl);
+  }
+}
