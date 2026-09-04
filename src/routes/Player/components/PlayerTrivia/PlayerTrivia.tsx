@@ -2,6 +2,7 @@ import React from 'react'
 import clsx from 'clsx'
 import AnswerKey, { type AnswerKeyState } from 'components/AnswerKey/AnswerKey'
 import TriviaRail from 'components/TriviaRail/TriviaRail'
+import TriviaSplit from 'components/TriviaSplit/TriviaSplit'
 import useNow from 'lib/useNow'
 import serverNow from 'lib/serverNow'
 import type { TriviaResult, TriviaRound } from 'shared/types'
@@ -10,6 +11,15 @@ import styles from './PlayerTrivia.css'
 /** Scoreboard rows that fit the stage without shrinking the type. The rest of
  *  the room is still on the board, just below the fold of this screen. */
 const SCOREBOARD_ROWS = 6
+
+/* OpenTDB is CC BY-SA 4.0. The attribution is a licence obligation, so it
+   rides on the screen the questions appear on, not only in the docs — which
+   means every beat of the round, and one copy of it. */
+const attribution = (
+  <div className={clsx('silkscreen', styles.attribution)}>
+    questions from opentdb.com - CC BY-SA 4.0
+  </div>
+)
 
 interface PlayerTriviaProps {
   round: TriviaRound
@@ -23,8 +33,9 @@ interface PlayerTriviaProps {
  * A trivia round on the TV. It takes the gap between two singers, so it is a
  * full takeover of the stage in the same way the intermission is.
  *
- * The four answers are the only place their text appears — the phones show
- * colour and a numeral and nothing else, which is what makes the room look up.
+ * The four answers are the only place their text appears. The phones carry the
+ * question and four numerals, never the answers, which is what makes the room
+ * look up.
  *
  * The stage is read in one order, and it is laid out in that order: what this
  * is and how long is left along the top, the question in the middle at the
@@ -44,6 +55,26 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
   const stateOf = (i: number): AnswerKeyState => {
     if (!result) return 'open'
     return i === result.correctIdx ? 'correct' : 'wrong'
+  }
+
+  // Between questions the room wants to know who got it, not where the night
+  // stands — the standings have four more questions to settle and the split
+  // has a shelf life of about ten seconds. The last question keeps the board:
+  // that one *is* the result.
+  if (isScoreboard && !result.isFinal) {
+    return (
+      <div style={{ width, height }} className={styles.container}>
+        <TriviaRail round={round} label='who got it' variant='player' />
+
+        <div className={styles.stage}>
+          {result.answered.length > 0
+            ? <TriviaSplit answered={result.answered} variant='player' />
+            : <div className={styles.question}>Nobody answered</div>}
+        </div>
+
+        {attribution}
+      </div>
+    )
   }
 
   if (isScoreboard) {
@@ -67,9 +98,7 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
             : <div className={styles.question}>Nobody played</div>}
         </div>
 
-        <div className={clsx('silkscreen', styles.attribution)}>
-          questions from opentdb.com - CC BY-SA 4.0
-        </div>
+        {attribution}
       </div>
     )
   }
@@ -93,11 +122,7 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
         ))}
       </div>
 
-      {/* OpenTDB is CC BY-SA 4.0. The attribution is a licence obligation, so
-          it rides on the screen the questions appear on, not only in the docs. */}
-      <div className={clsx('silkscreen', styles.attribution)}>
-        questions from opentdb.com - CC BY-SA 4.0
-      </div>
+      {attribution}
     </div>
   )
 }

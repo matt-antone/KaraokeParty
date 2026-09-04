@@ -18,23 +18,73 @@ const render = (trivia: { round: TriviaRound, result: TriviaResult }) => renderT
   </Provider>,
 )
 
+const renderOpen = () => renderToStaticMarkup(
+  <Provider
+    store={{
+      getState: () => ({
+        trivia: {
+          answeredIdx: null as number | null,
+          round: triviaRound({ answers: ['Ludicrous Speed', 'Ridiculous', 'Light', 'Plaid'] }),
+          result: null as TriviaResult | null,
+        },
+        user: { userId: 7 },
+      }),
+      subscribe: () => () => {},
+      dispatch: () => {},
+    } as never}
+  >
+    <TriviaDialog />
+  </Provider>,
+)
+
 describe('TriviaDialog', () => {
   /**
-   * The phone is where the room actually looks during a round, so the
-   * standings have to land there too — a scoreboard only the TV shows is a
-   * scoreboard half the party never sees.
+   * The phone is where the room actually looks during a round, so the beat
+   * between questions has to land there too — a screen only the TV shows is
+   * one half the party never sees.
    */
-  it('shows the standings on the phone once the scoreboard is due', () => {
-    const markup = render({ round: triviaRound(), result: triviaResult() })
+  it('splits the room into correct and wrong once the answer has been up', () => {
+    const markup = render({
+      round: triviaRound(),
+      result: triviaResult({
+        answered: [
+          { userId: 42, name: 'Dot Matrix', isCorrect: true },
+          { userId: 43, name: 'Barf', isCorrect: false },
+        ],
+      }),
+    })
+
+    expect(markup).toContain('Who got it')
+    expect(markup).toContain('correct 01')
+    expect(markup).toContain('wrong 01')
+    expect(markup).toContain('Barf')
+  })
+
+  it('keeps the standings for the last question', () => {
+    const markup = render({ round: triviaRound(), result: triviaResult({ isFinal: true }) })
 
     expect(markup).toContain('Scores')
     expect(markup).toContain('Dot Matrix')
   })
 
-  it('shows the answer pad until then', () => {
-    const markup = render({ round: triviaRound(), result: triviaResult({ scoresFrom: Date.now() + 5000 }) })
+  /** The question is on the pad; the four answers never are, or the room is
+   *  twelve people reading twelve phones. */
+  it('carries the question and no answer text while answering is open', () => {
+    const markup = renderOpen()
 
-    expect(markup).toContain('Answer')
+    expect(markup).toContain('Who?')
+    expect(markup).not.toContain('Ludicrous Speed')
+  })
+
+  it('shows the right answer once answering has closed', () => {
+    const markup = render({
+      round: triviaRound({ answers: ['Ludicrous Speed', 'Ridiculous', 'Light', 'Plaid'] }),
+      result: triviaResult({ correctIdx: 0, scoresFrom: Date.now() + 5000 }),
+    })
+
+    expect(markup).toContain('Ludicrous Speed')
+    // the answer, and still none of the ones it was up against
+    expect(markup).not.toContain('Plaid')
     expect(markup).not.toContain('Dot Matrix')
   })
 })
