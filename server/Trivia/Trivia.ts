@@ -99,7 +99,7 @@ class Trivia {
    * Returns true when the queue actually changed, so the caller knows whether
    * the room needs telling.
    */
-  static syncQueue (roomId: number): boolean {
+  static syncQueue (io, roomId: number): boolean {
     if (this.getPrefs(roomId).isEnabled) {
       // A round on stage is spent the moment it starts, so without this the
       // next caller sees nothing pending and pushes its replacement while the
@@ -118,7 +118,13 @@ class Trivia {
       // nothing to take a turn between: a round on its own in an empty queue
       // would start the moment anyone pressed play
       const query = sql`SELECT COUNT(*) AS count FROM queue WHERE roomId = ${roomId} AND type = 'song'`
-      if ((db.get<{ count: number }>(String(query), query.parameters)?.count ?? 0) === 0) return false
+      if ((db.get<{ count: number }>(String(query), query.parameters)?.count ?? 0) === 0) return removed
+
+      // and nothing on stage: a round added to an idle room is the first thing
+      // the room sees when someone finally presses play, ahead of the singer
+      // who has been waiting for it. It goes in when the music does — the
+      // player's status handler syncs again the moment playback starts.
+      if (!Rooms.isPlayerPlaying(io, roomId)) return removed
 
       Queue.addTrivia(roomId)
       return true
@@ -133,7 +139,7 @@ class Trivia {
 
   /** Sync the queue and tell the room, when there is anything to tell. */
   static syncQueueAndPush (io, roomId: number): void {
-    if (this.syncQueue(roomId)) {
+    if (this.syncQueue(io, roomId)) {
       io.to(Rooms.prefix(roomId)).emit('action', {
         type: QUEUE_PUSH,
         payload: Queue.get(roomId),

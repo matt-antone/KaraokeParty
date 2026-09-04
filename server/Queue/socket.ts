@@ -27,7 +27,7 @@ const ACTION_HANDLERS = {
 
     // the first song in a room with trivia on is what puts the first round
     // behind it; after that there is always one waiting
-    Trivia.syncQueue(sock.user.roomId)
+    Trivia.syncQueue(sock.server, sock.user.roomId)
 
     // success
     acknowledge({ type: QUEUE_ADD + '_SUCCESS' })
