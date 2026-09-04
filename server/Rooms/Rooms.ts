@@ -248,6 +248,20 @@ class Rooms {
   }
 
   /**
+   * Utility method to determine if a room's player is playing, as opposed to
+   * merely being open somewhere with nothing on stage
+   */
+  static isPlayerPlaying (io, roomId: number): boolean {
+    for (const sock of io.of('/').sockets.values()) {
+      if (sock.user && sock.user.roomId === roomId && sock._lastPlayerStatus?.isPlaying) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  /**
    * Remember that a user has been in a room
    */
   static trackUser (roomId: number, userId: number) {

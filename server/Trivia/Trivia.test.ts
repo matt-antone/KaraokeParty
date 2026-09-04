@@ -17,11 +17,21 @@ const CAROL = 3
 
 interface Emitted { type: string, payload: TriviaRound | TriviaResult | unknown }
 
-/** Enough of socket.io's server to see what the room was told. */
-function fakeIo () {
+/** Enough of socket.io's server to see what the room was told, with a player
+ *  in the room that is playing — a round is only queued while one is. */
+function fakeIo ({ isPlaying = true } = {}) {
   const emitted: Emitted[] = []
-  return { emitted, to: () => ({ emit: (_e: string, action: Emitted) => emitted.push(action) }) }
+  const sockets = new Map([['p', { user: { roomId: ROOM_ID }, _lastPlayerStatus: { isPlaying } }]])
+
+  return {
+    emitted,
+    to: () => ({ emit: (_e: string, action: Emitted) => emitted.push(action) }),
+    of: () => ({ sockets }),
+  }
 }
+
+/** For the many calls that only care that the room is playing. */
+const playerIo = fakeIo()
 
 const user = (userId: number, name: string) =>
   db.run(`INSERT INTO users (userId, username, password, name, roleId)
@@ -83,29 +93,41 @@ describe('trivia rounds', () => {
     setTriviaPrefs({ isEnabled: false })
     queueSong(ALICE)
 
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(false)
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
   })
 
   it('puts a round in the queue once the room has something to sing', async () => {
     // nothing to take a turn between yet
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(false)
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
 
     queueSong(ALICE)
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(true)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(true)
+    expect(Queue.getPendingTriviaId(ROOM_ID)).not.toBeNull()
+  })
+
+  it('waits for the player to be playing before adding a round', async () => {
+    queueSong(ALICE)
+
+    // a room with the player open but nothing on stage gets nothing: the round
+    // would be sitting at the front of the queue when the music finally starts
+    expect(Trivia.syncQueue(fakeIo({ isPlaying: false }), ROOM_ID)).toBe(false)
+    expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
+
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(true)
     expect(Queue.getPendingTriviaId(ROOM_ID)).not.toBeNull()
   })
 
   it('keeps exactly one round waiting, however many callers ask', async () => {
     queueSong(ALICE)
 
-    const first = Trivia.syncQueue(ROOM_ID)
+    const first = Trivia.syncQueue(playerIo, ROOM_ID)
     const pending = Queue.getPendingTriviaId(ROOM_ID)
 
     expect(first).toBe(true)
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(false)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(false)
     expect(Queue.addTrivia(ROOM_ID)).toBe(pending)
 
     const rows = db.all<{ n: number }>(
@@ -115,10 +137,10 @@ describe('trivia rounds', () => {
 
   it('takes the waiting round back out when trivia is switched off', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
 
     setTriviaPrefs({ isEnabled: false })
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(true)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(true)
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
     // the singer's song is untouched
     expect(Queue.get(ROOM_ID).result).toHaveLength(1)
@@ -126,11 +148,11 @@ describe('trivia rounds', () => {
 
   it('leaves a round that was already played in the queue when switched off', async () => {
     queueSong(ALICE)
-    const pending = Trivia.syncQueue(ROOM_ID) && Queue.getPendingTriviaId(ROOM_ID)!
+    const pending = Trivia.syncQueue(playerIo, ROOM_ID) && Queue.getPendingTriviaId(ROOM_ID)!
     await Trivia.startRound(fakeIo(), ROOM_ID, pending as number)
 
     setTriviaPrefs({ isEnabled: false })
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
 
     // it is part of what the room did tonight, not a pending obligation
     expect(Queue.get(ROOM_ID).result).toContain(pending)
@@ -138,7 +160,7 @@ describe('trivia rounds', () => {
 
   it('shows the round in the queue with no singer and no song', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
 
     const { result, entities } = Queue.get(ROOM_ID)
     const trivia = result.map(id => entities[id]).find(e => e.type === 'trivia')!
@@ -164,7 +186,7 @@ describe('trivia rounds', () => {
 
   it('asks the round on the row the player has reached', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     const io = fakeIo()
@@ -176,7 +198,7 @@ describe('trivia rounds', () => {
 
   it('refuses to ask a row that is not the one waiting', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     const io = fakeIo()
@@ -186,7 +208,7 @@ describe('trivia rounds', () => {
 
   it('never asks the same row twice, however the player gets back to it', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     expect(await Trivia.startRound(fakeIo(), ROOM_ID, queueId)).not.toBeNull()
@@ -198,14 +220,14 @@ describe('trivia rounds', () => {
 
   it('keeps one round in the queue while another is on stage', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     await Trivia.startRound(fakeIo(), ROOM_ID, queueId)
 
     // the row is spent the moment the round starts; its replacement waits for
     // the round to finish rather than joining it in the queue
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(false)
     expect(triviaRowCount()).toBe(1)
 
     Trivia.closeRound(fakeIo(), ROOM_ID)
@@ -214,7 +236,7 @@ describe('trivia rounds', () => {
 
   it('tells the room the round is spent the moment it starts', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     const io = fakeIo()
@@ -238,18 +260,18 @@ describe('trivia rounds', () => {
 
     spent(1000)
     spent(2000)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     expect(triviaRowCount()).toBe(2) // the newest spent one, plus the new pending one
 
     // and nothing left to do on the next connect
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(false)
   })
 
   it('leaves one spent round behind, not one per lap', async () => {
     queueSong(ALICE)
 
     for (let lap = 0; lap < 3; lap++) {
-      Trivia.syncQueue(ROOM_ID)
+      Trivia.syncQueue(playerIo, ROOM_ID)
       await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)
       Trivia.closeRound(fakeIo(), ROOM_ID)
     }
@@ -261,7 +283,7 @@ describe('trivia rounds', () => {
 
   it('puts the next round at the back of the queue as one finishes', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const first = Queue.getPendingTriviaId(ROOM_ID)!
 
     await Trivia.startRound(fakeIo(), ROOM_ID, first)
@@ -276,7 +298,7 @@ describe('trivia rounds', () => {
 
   it('never runs two rounds at once, however many callers ask', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
     const io = fakeIo()
 
@@ -296,7 +318,7 @@ describe('trivia rounds', () => {
 
   it('says nothing at all when the cache is dry, leaving the row to try again', async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
     pool = []
     const io = fakeIo()
@@ -311,7 +333,7 @@ describe('trivia rounds', () => {
   const startPendingRound = async () => {
     if (Queue.getPendingTriviaId(ROOM_ID) === null) {
       queueSong(ALICE)
-      Trivia.syncQueue(ROOM_ID)
+      Trivia.syncQueue(playerIo, ROOM_ID)
     }
     return await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)
   }
@@ -376,7 +398,7 @@ describe('trivia answers and scores', () => {
     setupRoom()
 
     db.run('INSERT INTO queue (roomId, songId, userId) VALUES (?, 10, ?)', [ROOM_ID, ALICE])
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
 
     const round = await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
     roundId = round.roundId
@@ -478,7 +500,7 @@ describe('a round of several questions', () => {
   /** Start the round waiting on the room's pending trivia row. */
   const start = async () => {
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
     return await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
   }
 
@@ -639,7 +661,7 @@ describe('asking twice for the same round', () => {
     setupRoom()
     for (const q of ['q2', 'q3', 'q4', 'q5', 'q6']) addQuestion(q)
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
   })
 
   afterEach(teardownRoom)
@@ -690,7 +712,7 @@ describe('a room reset while trivia is running', () => {
     setupRoom()
     for (const q of ['q2', 'q3', 'q4', 'q5', 'q6']) addQuestion(q)
     queueSong(ALICE)
-    Trivia.syncQueue(ROOM_ID)
+    Trivia.syncQueue(playerIo, ROOM_ID)
   })
 
   afterEach(teardownRoom)
@@ -714,7 +736,7 @@ describe('a room reset while trivia is running', () => {
 
     // nothing to take a turn between, so a reset room stays empty until
     // somebody queues a song
-    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(Trivia.syncQueue(playerIo, ROOM_ID)).toBe(false)
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
   })
 })

@@ -1,4 +1,5 @@
 import Rooms from '../Rooms/Rooms.js'
+import Trivia from '../Trivia/Trivia.js'
 import User from '../User/User.js'
 
 import {
@@ -65,6 +66,8 @@ const ACTION_HANDLERS = {
     })
   },
   [PLAYER_EMIT_STATUS]: (sock, { payload }) => {
+    const wasPlaying = !!sock._lastPlayerStatus?.isPlaying
+
     // so we can tell the room when players leave and
     // relay last known player status on client join
     sock._lastPlayerStatus = payload
@@ -73,6 +76,13 @@ const ACTION_HANDLERS = {
       type: PLAYER_STATUS,
       payload,
     })
+
+    // A round is only put in the queue while something is on stage, so an idle
+    // room has none waiting — this is the moment it gets one. On the edge
+    // only: status lands several times a second while a song plays.
+    if (!wasPlaying && payload.isPlaying) {
+      Trivia.syncQueueAndPush(sock.server, sock.user.roomId)
+    }
   },
   // the song left the stage, whether it ended on its own or was skipped
   [SONG_PLAYED]: (sock, { payload }) => {
