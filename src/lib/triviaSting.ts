@@ -1,11 +1,13 @@
 /**
  * The trivia mark: four VU registers, one per answer colour, level-checking in
- * a four-beat and settling behind a silkscreened nameplate.
+ * 4/4 behind a silkscreened nameplate.
  *
- * Every frame is a pure function of elapsed milliseconds, so the resting mark
- * IS the sting's last frame — a still is `mode: 'still'`, which seeks to the
- * end and draws once. There is one drawing routine and one set of numbers, so
- * the card on the TV and the glyph in a queue row cannot drift apart.
+ * Every frame is a pure function of elapsed milliseconds. The animation is one
+ * movement from the first beat to the last — the bar it keeps at minute three
+ * is the bar it counted itself in with — so there is no last frame to rest on:
+ * `hold()` draws the resting silhouette instead, and that is what a still and
+ * every queue-row glyph get. One drawing routine and one set of numbers, so the
+ * card on the TV and the glyph in a row cannot drift apart.
  *
  * Framework-free on purpose, like threadField — it owns a canvas, nothing
  * else. The palette is read off the element so variables.css stays the source
@@ -21,26 +23,15 @@ const HOT_FROM = 0.55
  *  different duration stretches the same choreography rather than cutting it. */
 const REFERENCE_MS = 2500
 
-/** The resting silhouette, as a fraction of the register. Every bar tops out
- *  above the nameplate, so the four heights stay readable. */
+/** The resting silhouette, as a fraction of the register — the still mark, and
+ *  nothing else. It is not a frame of the animation: the animation is always on
+ *  a beat, and no beat is a good logo. Every bar tops out above the nameplate,
+ *  so the four heights stay readable. */
 const REST = [0.62, 0.94, 0.48, 0.78]
-/** Where each bar overshoots to before it settles. */
-const PEAK = [0.88, 1, 0.72, 0.95]
-/** The four-beat: when each register starts to fill. */
-const START = [160, 300, 440, 580]
-const RISE = 240
-const SETTLE = 300
-/** The nameplate wipes across, then TRIVIA arrives a glyph at a time. */
-const PLATE = [1150, 1400]
-const WORD_FROM = 1400
-const WORD_STEP = 70
 
-/** Once the sting has settled the registers keep level-checking for as long as
- *  the card is up. The mark holds the stage for a whole handover, which is
- *  rarely 2.5s, and a meter frozen mid-reading reads as a broken screen.
- *
- *  It keeps time rather than wandering: four beats to the bar at 120, which is
- *  a grid the room can count off the screen. */
+/** Four beats to the bar at 120, for as long as the card is up. The mark holds
+ *  the stage for a whole handover, and a meter that either freezes or wanders
+ *  reads as a broken screen. */
 const BEAT = 60000 / 120
 const BAR = BEAT * 4
 /** How hard each beat of the bar lands. One is the downbeat, three answers it,
@@ -54,20 +45,25 @@ const OFFBEAT = 0.45
 const ATTACK = 110
 const FALL = BEAT * 0.92
 /** The bed the registers sit on between hits, and the top of the swing. Held
- *  apart from REST and PEAK because those are a silhouette and these are a
- *  movement — but the floor still clears the nameplate, which is the thing REST
- *  was protecting. */
-const IDLE_LOW = [0.48, 0.52, 0.44, 0.5]
-const IDLE_HIGH = [0.88, 1, 0.74, 0.95]
-/** One bar to fade the movement in, so the still frame at REFERENCE_MS is
- *  exactly the resting silhouette it has always been. */
-const IDLE_IN = BAR
+ *  apart from REST because REST is a silhouette and this is a movement — but
+ *  the bed still clears the nameplate, which is what REST was protecting. */
+const LOW = [0.5, 0.6, 0.44, 0.54]
+const HIGH = [0.86, 1, 0.72, 0.94]
+/** How long the peak marker hangs at the top of a hit before it slides. */
+const PEAK_HOLD = 150
+
+/** The count-in is the first bar — the four registers arriving on the four
+ *  beats — so the nameplate wipes on the 1 of the second, and TRIVIA comes in
+ *  on sixteenths. Everything on the card is on the same grid or it reads as a
+ *  mistake. */
+const PLATE = [BAR, BAR + BEAT / 2]
+const WORD_FROM = PLATE[1]
+const WORD_STEP = BEAT / 4
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const span = (t: number, from: number, to: number) => clamp01((t - from) / (to - from))
 const outCubic = (t: number) => 1 - Math.pow(1 - t, 3)
-const outQuint = (t: number) => 1 - Math.pow(1 - t, 5)
 const smoothstep = (t: number) => t * t * (3 - 2 * t)
 
 interface Palette {
@@ -156,30 +152,14 @@ function face (
   }
 }
 
-/** How high register `i` stands at authored time `t`: up to its peak, then
- *  settled to its resting height. */
+/** How high register `i` stands at authored time `t`. One movement for the
+ *  whole animation — the count-in is the first bar of it, not a prologue to it. */
 function level (i: number, t: number) {
-  const s = START[i]
-  if (t < s) return 0
+  const n = Math.floor(t / BEAT)
+  const since = t - n * BEAT
 
-  const rise = span(t, s, s + RISE)
-  if (rise < 1) return PEAK[i] * outQuint(rise)
-
-  const settled = lerp(PEAK[i], REST[i], outCubic(span(t, s + RISE, s + RISE + SETTLE)))
-
-  // the sting hands over to the beat across one bar, so nothing snaps
-  const k = clamp01((t - REFERENCE_MS) / IDLE_IN)
-  return k > 0 ? lerp(settled, idle(i, t - REFERENCE_MS), k) : settled
-}
-
-/** Where register `i` stands `p` ms into the idle: on the bar, hit hardest on
- *  its own beat. Reading left to right you can count the four. */
-function idle (i: number, p: number) {
-  const n = Math.floor(p / BEAT)
-  const since = p - n * BEAT
-
-  // Both ends of a beat sit at the bed, so the swing changing on the bar line
-  // is never a jump — which is what lets the accents differ at all.
+  // Both ends of a beat sit on the bed, so the swing changing on the bar line
+  // is never a jump — which is what lets the four accents differ at all.
   // smoothstep on the way up rather than an out-ease: an out-ease puts most of
   // the swing in the first frame, which strobes instead of moving. The fall
   // keeps its corner at the peak — that corner is what a hit looks like.
@@ -187,25 +167,31 @@ function idle (i: number, p: number) {
     ? smoothstep(since / ATTACK)
     : 1 - outCubic(span(since, ATTACK, FALL))
 
-  const swing = ACCENT[n % 4] * (n % 4 === i ? 1 : OFFBEAT)
-  return lerp(IDLE_LOW[i], IDLE_HIGH[i], swing * attack)
+  return lerp(LOW[i], HIGH[i], swing(i, n) * attack) * arrival(i, t)
 }
 
-/** The peak-hold marker: rides the bar up, holds at the peak, then drops onto
- *  it and goes out. Null once it has nothing left to say. */
+/** How much of the hit on beat `n` belongs to register `i`: all of it on its
+ *  own beat, a share of it on the other three. Read left to right, the four
+ *  count the bar. */
+const swing = (i: number, n: number) => ACCENT[n % 4] * (n % 4 === i ? 1 : OFFBEAT)
+
+/** Each register arrives on its own first hit, so the opening bar counts the
+ *  four in using the same movement it keeps afterwards. 1 forever after that. */
+const arrival = (i: number, t: number) => clamp01((t - i * BEAT) / ATTACK)
+
+/** The peak-hold marker: rides the hit up, hangs at the top of it, then slides
+ *  down and lands back on the bar as the beat runs out. Pure in `t` like
+ *  everything else — a hit's peak needs no memory, it is the top of the attack. */
 function peakHold (i: number, t: number) {
-  const s = START[i]
-  if (t < s) return null
+  const at = arrival(i, t)
+  if (at <= 0) return null
 
-  const hold = s + RISE + 520
-  const alpha = 1 - span(t, hold + 260, hold + 360)
-  if (alpha <= 0) return null
+  const n = Math.floor(t / BEAT)
+  const since = t - n * BEAT
+  if (since < ATTACK) return level(i, t)
 
-  const at = t < hold
-    ? PEAK[i] * outQuint(span(t, s, s + RISE))
-    : lerp(PEAK[i], REST[i], outCubic(span(t, hold, hold + 320)))
-
-  return { at, alpha }
+  const top = lerp(LOW[i], HIGH[i], swing(i, n)) * at
+  return lerp(top, LOW[i] * at, outCubic(span(since, ATTACK + PEAK_HOLD, BEAT)))
 }
 
 export interface TriviaStingOptions {
@@ -229,7 +215,7 @@ export interface TriviaSting {
   replay (): void
   /** Jump to an authored millisecond and hold there. */
   seek (ms: number): void
-  /** The resting mark. */
+  /** The resting mark — the silhouette, not a moment in the animation. */
   hold (): void
   stop (): void
   /** Cancels the loop, drops the observer and releases the backing store. */
@@ -256,20 +242,20 @@ export default function createTriviaSting (
   let W = 1
   let H = 1
   let req: number | null = null
-  let t = isStill ? DUR : 0
+  // null is the resting still, not a moment on the timeline
+  let t: number | null = isStill ? null : 0
   let startedAt = 0
 
-  function frame (at: number) {
+  function frame (at: number | null) {
     if (isGlyph) ctx.clearRect(0, 0, W, H)
     else {
       ctx.fillStyle = P.bg
       ctx.fillRect(0, 0, W, H)
     }
 
-    // authored time: a caller's duration stretches the timeline, never trims it.
-    // Unclamped, because past REFERENCE_MS the idle drift is the timeline — the
-    // plate wipe and the word saturate on their own.
-    const a = at * (REFERENCE_MS / DUR)
+    // authored time: a caller's duration stretches the timeline, never trims it
+    const isRest = at === null
+    const a = (at ?? 0) * (REFERENCE_MS / DUR)
 
     const markW = isGlyph ? W : Math.min(W * 0.6, H * 1.16)
     const markH = isGlyph ? H : markW / 1.42
@@ -284,7 +270,7 @@ export default function createTriviaSting (
 
     for (let i = 0; i < 4; i++) {
       const bx = x0 + i * (barW + gapX)
-      const raw = level(i, a) * SEG
+      const raw = (isRest ? REST[i] : level(i, a)) * SEG
       const lit = Math.floor(raw)
       const partial = raw - lit
 
@@ -306,17 +292,17 @@ export default function createTriviaSting (
         }
       }
 
-      const pk = peakHold(i, a)
-      if (pk && pk.at > 0.02 && !opts.isDim) {
-        ctx.globalAlpha = pk.alpha
+      // no marker on the still: a peak hold is a reading, and a still is not
+      // reading anything
+      const pk = isRest || opts.isDim ? null : peakHold(i, a)
+      if (pk !== null && pk > 0.02) {
         ctx.fillStyle = P.vu
         ctx.fillRect(
           Math.round(bx),
-          Math.round(y0 + markH - pk.at * markH),
+          Math.round(y0 + markH - pk * markH),
           Math.round(barW),
           Math.max(1, Math.round(2 * DPR)),
         )
-        ctx.globalAlpha = 1
       }
     }
 
@@ -324,7 +310,7 @@ export default function createTriviaSting (
 
     // the nameplate: a graphite band engraved across the registers, low enough
     // that all four tops stay above it
-    const wipe = outCubic(span(a, PLATE[0], PLATE[1]))
+    const wipe = isRest ? 1 : outCubic(span(a, PLATE[0], PLATE[1]))
     if (wipe <= 0) return
 
     const plateH = markH * 0.26
@@ -338,7 +324,7 @@ export default function createTriviaSting (
     ctx.fillRect(plateX, plateY, Math.round(markW * 1.1 * wipe), 1)
     ctx.fillRect(plateX, plateY + Math.round(plateH) - 1, Math.round(markW * 1.1 * wipe), 1)
 
-    const shown = Math.max(0, Math.min(6, Math.floor((a - WORD_FROM) / WORD_STEP)))
+    const shown = isRest ? 6 : Math.max(0, Math.min(6, Math.floor((a - WORD_FROM) / WORD_STEP)))
     if (!shown) return
 
     const size = plateH * 0.42
@@ -354,8 +340,8 @@ export default function createTriviaSting (
     frame(t)
   }
 
-  // No terminal frame: after DUR the registers go on level-checking, so the
-  // loop runs until destroy(). rAF is already parked while the tab is hidden.
+  // No terminal frame: the registers keep the bar for as long as the card is
+  // up, so the loop runs until destroy(). rAF is already parked when hidden.
   function loop (now: number) {
     t = now - startedAt
     frame(t)
@@ -376,7 +362,7 @@ export default function createTriviaSting (
       }
 
       stop()
-      startedAt = performance.now() - t
+      startedAt = performance.now() - (t ?? 0)
       req = requestAnimationFrame(loop)
     },
     replay () {
@@ -389,7 +375,9 @@ export default function createTriviaSting (
       frame(t)
     },
     hold () {
-      api.seek(DUR)
+      stop()
+      t = null
+      frame(t)
     },
     stop,
     destroy () {
