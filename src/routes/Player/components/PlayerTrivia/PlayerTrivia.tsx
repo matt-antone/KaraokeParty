@@ -53,31 +53,32 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
   const scores = result?.scores ?? []
   const numCorrect = result?.numCorrect ?? 0
 
-  // Three beats, never two at once: the question, then the answer, then the
-  // standings. The scoreboard waits for its own moment because reading which
-  // one was right and finding yourself on a list are different jobs.
-  const isScoreboard = !!result && serverNow(result, tick) >= result.scoresFrom
+  // One beat at a time, never two at once: the question, then the answer, then
+  // how many got it — and on the last question the standings after that. Each
+  // waits for its own moment because reading which one was right, seeing how
+  // the room did, and finding yourself on a list are three different jobs.
+  const now = result ? serverNow(result, tick) : 0
+  const isTally = !!result && now >= result.scoresFrom
+  const isScoreboard = !!result?.boardFrom && now >= result.boardFrom
 
   // The count lands with a noise, on the one machine in the room with
   // speakers. Keyed on the question rather than the beat so it fires once
   // when the tally arrives, not on every tick it stays up, and best-effort
   // throughout: a player that will not autoplay still shows the number.
-  const isTally = isScoreboard && !result.isFinal
   useEffect(() => {
-    if (!isTally) return
+    if (!isTally || isScoreboard) return
     void new Audio(numCorrect ? CHEER : GROAN).play().catch(() => {})
-  }, [isTally, numCorrect, result?.roundId])
+  }, [isTally, isScoreboard, numCorrect, result?.roundId])
 
   const stateOf = (i: number): AnswerKeyState => {
     if (!result) return 'open'
     return i === result.correctIdx ? 'correct' : 'wrong'
   }
 
-  // Between questions the room wants to know how it did, not where the night
-  // stands — the standings have four more questions to settle and this beat
-  // lasts three seconds. The last question keeps the board: that one *is* the
-  // result.
-  if (isScoreboard && !result.isFinal) {
+  // How the room did on the question just asked. Every question gets this,
+  // the last one included — it is the beat people react to, and the standings
+  // that follow it on the last question are a different fact.
+  if (isTally && !isScoreboard) {
     return (
       <div style={{ width, height }} className={styles.container}>
         <TriviaRail round={round} label='who got it' variant='player' />

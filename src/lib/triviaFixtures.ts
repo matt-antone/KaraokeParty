@@ -28,8 +28,9 @@ export const triviaResult = (over: Partial<TriviaResult> = {}): TriviaResult => 
   correctIdx: 0,
   scores: [{ userId: 42, name: 'Dot Matrix', score: 3, numAnswered: 4 }],
   numCorrect: 1,
-  // already past, so the scoreboard is what a bare call renders
+  // already past, so the beat after the answer is what a bare call renders
   scoresFrom: Date.now() - 1000,
+  boardFrom: null,
   endsAt: Date.now() + 2000,
   sentAt: Date.now(),
   ...over,

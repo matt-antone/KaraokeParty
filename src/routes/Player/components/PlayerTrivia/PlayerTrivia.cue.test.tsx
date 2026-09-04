@@ -19,10 +19,10 @@ class FakeAudio {
 
 vi.stubGlobal('Audio', FakeAudio)
 
-const stage = (numCorrect: number, isFinal = false) => (
+const stage = (numCorrect: number, boardFrom: number | null = null) => (
   <PlayerTrivia
     round={triviaRound()}
-    result={triviaResult({ numCorrect, isFinal })}
+    result={triviaResult({ numCorrect, isFinal: boardFrom !== null, boardFrom })}
     width={1280}
     height={720}
   />
@@ -52,8 +52,15 @@ describe('the tally cue', () => {
     expect(played).toHaveLength(1)
   })
 
-  it('stays quiet on the final question, which is the scoreboard', () => {
-    render(stage(3, true))
+  it('cheers the last question too — its count is a beat like any other', () => {
+    render(stage(3, Date.now() + 2000))
+    expect(played).toEqual(['assets/audience-applause.mp3'])
+  })
+
+  /** A player that reloads onto the standings should not applaud a beat that
+   *  has already been and gone. */
+  it('stays quiet once the standings have taken over', () => {
+    render(stage(3, Date.now() - 500))
     expect(played).toEqual([])
   })
 })
