@@ -1,5 +1,21 @@
 .modal {
   width: min(92vw, 26rem);
+  /* The dialog only exists while a round is on, so mounting is the cue: an
+     amber ring blinks twice, the way an indicator lamp announces itself.
+     Declared here rather than in variables.css because css-loader hashes
+     animation names inside a module and a global keyframe resolves to
+     nothing. */
+  animation: trivia-alert 220ms steps(1, end) 4;
+}
+
+/* Hard-edged, on the inside of the panel: the deck has no glow. */
+@keyframes trivia-alert {
+  0%, 49.9% { outline: 2px solid var(--vu); outline-offset: -2px; }
+  50%, 100% { outline: 2px solid transparent; outline-offset: -2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal { animation: none; }
 }
 
 /* The same two by two the player screen lays out, so "top right on my phone"
@@ -20,4 +36,48 @@
   letter-spacing: var(--silkscreen-tracking);
   text-transform: uppercase;
   color: var(--ink-3);
+}
+
+/* The standings, phone-sized. Same shape as the player screen's board so a
+   glance down and a glance up read the same. */
+.scoreboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-1);
+}
+
+.scoreRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-3);
+  padding: var(--gap-2) var(--gap-3);
+  border-radius: var(--radius-panel);
+  background: var(--faceplate);
+  box-shadow: var(--well);
+}
+
+/* amber is "yours" everywhere else on the deck, so it is yours here */
+.mine .scoreName {
+  color: var(--mine);
+}
+
+.rank {
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  color: var(--ink-3);
+}
+
+.scoreName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.score {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--ink);
 }

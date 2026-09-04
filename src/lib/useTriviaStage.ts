@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAppSelector } from 'store/hooks'
+import serverNow from './serverNow'
 import type { TriviaResult, TriviaRound } from 'shared/types'
 
 /**
@@ -18,7 +19,10 @@ import type { TriviaResult, TriviaRound } from 'shared/types'
 export default function useTriviaStage (): { round: TriviaRound | null, result: TriviaResult | null } {
   const round = useAppSelector(state => state.trivia.round)
   const result = useAppSelector(state => state.trivia.result)
-  const endsAt = result?.endsAt ?? round?.endsAt ?? 0
+  // whichever payload is newest owns the deadline, and carries the stamp the
+  // deadline has to be read against
+  const latest = result ?? round
+  const endsAt = latest?.endsAt ?? 0
 
   const [now, setNow] = useState(() => Date.now())
 
@@ -29,11 +33,12 @@ export default function useTriviaStage (): { round: TriviaRound | null, result: 
     // payload that arrives late still has to move `now` past it, and a zero
     // timeout does that on the next tick instead of setting state inside the
     // effect body.
-    const timerID = setTimeout(() => setNow(Date.now()), Math.max(0, endsAt - Date.now()))
+    const remaining = latest ? endsAt - serverNow(latest, Date.now()) : 0
+    const timerID = setTimeout(() => setNow(Date.now()), Math.max(0, remaining))
     return () => clearTimeout(timerID)
-  }, [endsAt])
+  }, [endsAt, latest])
 
-  const isLive = !!round && endsAt > now
+  const isLive = !!round && !!latest && endsAt > serverNow(latest, now)
 
   return {
     round: isLive ? round : null,

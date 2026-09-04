@@ -1,5 +1,5 @@
 import React from 'react'
-import { SoundTouchNode } from '@soundtouchjs/audio-worklet'
+import type { SoundTouchNode } from '@soundtouchjs/audio-worklet'
 import CDGPlayer from './CDGPlayer/CDGPlayer'
 import MP4Player from './MP4Player/MP4Player'
 import MP4AlphaPlayer from './MP4Player/MP4AlphaPlayer'
@@ -184,6 +184,11 @@ class Player extends React.Component<PlayerProps> {
     if (!this.audioCtx.audioWorklet) {
       throw new Error('this browser has no AudioWorklet')
     }
+
+    // Loaded on demand: the package extends AudioWorkletNode at module scope,
+    // which does not exist on insecure origins (a LAN IP over http), so a
+    // static import would take the whole player down before playback starts.
+    const { SoundTouchNode } = await import('@soundtouchjs/audio-worklet')
 
     // registered once per context, not once per song
     this.pitchModule ??= SoundTouchNode.register(

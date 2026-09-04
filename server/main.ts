@@ -2,6 +2,7 @@
 import childProcess from 'child_process'
 import env from './lib/cli.js'
 import path from 'path'
+import claimDataDir from './lib/dataDirLock.js'
 import { initLogger } from './lib/Log.js'
 import { parsePathIds } from './lib/util.js'
 import {
@@ -59,6 +60,17 @@ process.on('unhandledRejection', (reason) => {
 })
 
 ;(async function () {
+  // One server per data directory. Sharing one is not a port conflict, so
+  // nothing else catches it: both start, both serve, and the room gets a
+  // queue two processes are writing to.
+  try {
+    const releaseDataDir = await claimDataDir(env.KES_PATH_DATA)
+    shutdownHandlers.push(async () => releaseDataDir())
+  } catch (err) {
+    log.error(err.message)
+    process.exit(1) // eslint-disable-line n/no-process-exit
+  }
+
   // init database
   const { open, close } = await import('./lib/Database.js')
   shutdownHandlers.push(async () => close())

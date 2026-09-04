@@ -190,7 +190,10 @@ export default function (io, jwtKey) {
     if (round) {
       io.to(sock.id).emit('action', {
         type: TRIVIA_ROUND,
-        payload: round,
+        // re-stamped: this phone is meeting the round part-way through, and
+        // its own clock offset has to be measured against now, not against
+        // whenever the room first saw the question
+        payload: { ...round, sentAt: Date.now() },
       })
     }
   })

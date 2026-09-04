@@ -1,10 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { db, open, close } from '../lib/Database.js'
 import Trivia from './Trivia.js'
-import QuestionCache from './QuestionCache.js'
+import fetchQuestions, { type TriviaQuestion } from './Questions.js'
 import Queue from '../Queue/Queue.js'
 import { QUEUE_PUSH, TRIVIA_RESULT, TRIVIA_ROUND } from '../../shared/actionTypes.js'
 import { TRIVIA_QUESTIONS_PER_ROUND, type TriviaResult, type TriviaRound } from '../../shared/types.js'
+
+// A round's questions come off the network now, so the network is the seam:
+// the pool below stands in for whatever OpenTDB would have answered.
+vi.mock('./Questions.js', () => ({ default: vi.fn() }))
 
 const ROOM_ID = 1
 const ALICE = 1
@@ -26,17 +30,22 @@ const user = (userId: number, name: string) =>
 const setTriviaPrefs = (prefs: object) =>
   db.run('UPDATE rooms SET data = ? WHERE roomId = ?', [JSON.stringify({ prefs: { trivia: prefs } }), ROOM_ID])
 
+/** What the next fetch will answer with. */
+let pool: TriviaQuestion[] = []
+
 const addQuestion = (question: string, correct = 'right') =>
-  db.run(`INSERT INTO triviaQuestions (question, correctAnswer, incorrectAnswers, difficulty, dateFetched)
-    VALUES (?, ?, ?, 'easy', 0)`, [question, correct, JSON.stringify(['w1', 'w2', 'w3'])])
+  pool.push({ question, correctAnswer: correct, incorrectAnswers: ['w1', 'w2', 'w3'], difficulty: 'easy' })
+
+const triviaRowCount = () => db.all<{ n: number }>(
+  'SELECT COUNT(*) AS n FROM queue WHERE roomId = ? AND type = \'trivia\'', [ROOM_ID])[0].n
 
 /** Queue a song so the room has singers to derive a lap length from. */
 const queueSong = (userId: number) =>
   db.run('INSERT INTO queue (roomId, songId, userId) VALUES (?, 10, ?)', [ROOM_ID, userId])
 
 /** A fresh in-memory database holding one open room with trivia on, three
- *  users and one cached question. Module state outlives the database between
- *  tests, so the round is cleared here too. */
+ *  users and one question waiting on the wire. Module state outlives the
+ *  database between tests, so the round is cleared here too. */
 function setupRoom () {
   close()
   open({ file: ':memory:', ro: false })
@@ -51,7 +60,13 @@ function setupRoom () {
   db.run('INSERT INTO media (mediaId, songId, pathId, relPath, duration, isPreferred) VALUES (100, 10, 1, ?, 60, 1)', ['a.mp4'])
 
   setTriviaPrefs({ isEnabled: true, countdownSeconds: 20 })
+
+  pool = []
   addQuestion('Who?')
+  // fewer than asked for is a short round, which is a round: the room gets
+  // whatever the network had
+  vi.mocked(fetchQuestions).mockImplementation(async count => pool.slice(0, count))
+
   Trivia.stopRoom(ROOM_ID)
 }
 
@@ -64,7 +79,7 @@ describe('trivia rounds', () => {
   beforeEach(setupRoom)
   afterEach(teardownRoom)
 
-  it('stays out of the way while trivia is off', () => {
+  it('stays out of the way while trivia is off', async () => {
     setTriviaPrefs({ isEnabled: false })
     queueSong(ALICE)
 
@@ -72,7 +87,7 @@ describe('trivia rounds', () => {
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
   })
 
-  it('puts a round in the queue once the room has something to sing', () => {
+  it('puts a round in the queue once the room has something to sing', async () => {
     // nothing to take a turn between yet
     expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull()
@@ -82,7 +97,7 @@ describe('trivia rounds', () => {
     expect(Queue.getPendingTriviaId(ROOM_ID)).not.toBeNull()
   })
 
-  it('keeps exactly one round waiting, however many callers ask', () => {
+  it('keeps exactly one round waiting, however many callers ask', async () => {
     queueSong(ALICE)
 
     const first = Trivia.syncQueue(ROOM_ID)
@@ -98,7 +113,7 @@ describe('trivia rounds', () => {
     expect(rows[0].n).toBe(1)
   })
 
-  it('takes the waiting round back out when trivia is switched off', () => {
+  it('takes the waiting round back out when trivia is switched off', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
 
@@ -109,10 +124,10 @@ describe('trivia rounds', () => {
     expect(Queue.get(ROOM_ID).result).toHaveLength(1)
   })
 
-  it('leaves a round that was already played in the queue when switched off', () => {
+  it('leaves a round that was already played in the queue when switched off', async () => {
     queueSong(ALICE)
     const pending = Trivia.syncQueue(ROOM_ID) && Queue.getPendingTriviaId(ROOM_ID)!
-    Trivia.startRound(fakeIo(), ROOM_ID, pending as number)
+    await Trivia.startRound(fakeIo(), ROOM_ID, pending as number)
 
     setTriviaPrefs({ isEnabled: false })
     Trivia.syncQueue(ROOM_ID)
@@ -121,7 +136,7 @@ describe('trivia rounds', () => {
     expect(Queue.get(ROOM_ID).result).toContain(pending)
   })
 
-  it('shows the round in the queue with no singer and no song', () => {
+  it('shows the round in the queue with no singer and no song', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
 
@@ -137,7 +152,7 @@ describe('trivia rounds', () => {
     expect(result.indexOf(trivia.queueId)).toBe(1)
   })
 
-  it('still hides a song whose media has gone, now the join is a LEFT one', () => {
+  it('still hides a song whose media has gone, now the join is a LEFT one', async () => {
     queueSong(ALICE)
     db.run('INSERT INTO songs (songId, artistId, title, titleNorm) VALUES (11, 1, ?, ?)', ['No Media', 'no media'])
     db.run('INSERT INTO queue (roomId, songId, userId, prevQueueId) VALUES (?, 11, ?, ?)',
@@ -147,46 +162,109 @@ describe('trivia rounds', () => {
     expect(Queue.get(ROOM_ID).result).toHaveLength(1)
   })
 
-  it('asks the round on the row the player has reached', () => {
+  it('asks the round on the row the player has reached', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     const io = fakeIo()
-    const round = Trivia.startRound(io, ROOM_ID, queueId)
+    const round = await Trivia.startRound(io, ROOM_ID, queueId)
 
     expect(round?.queueId).toBe(queueId)
-    expect(io.emitted[0].type).toBe(TRIVIA_ROUND)
+    expect(io.emitted.map(e => e.type)).toContain(TRIVIA_ROUND)
   })
 
-  it('refuses to ask a row that is not the one waiting', () => {
+  it('refuses to ask a row that is not the one waiting', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     const io = fakeIo()
-    expect(Trivia.startRound(io, ROOM_ID, queueId + 999)).toBeNull()
+    expect(await Trivia.startRound(io, ROOM_ID, queueId + 999)).toBeNull()
     expect(io.emitted).toEqual([])
   })
 
-  it('never asks the same row twice, however the player gets back to it', () => {
+  it('never asks the same row twice, however the player gets back to it', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
-    expect(Trivia.startRound(fakeIo(), ROOM_ID, queueId)).not.toBeNull()
+    expect(await Trivia.startRound(fakeIo(), ROOM_ID, queueId)).not.toBeNull()
     Trivia.closeRound(fakeIo(), ROOM_ID)
 
     // a player that reloads and replays its way back must not re-ask it
-    expect(Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
+    expect(await Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
   })
 
-  it('puts the next round at the back of the queue as one finishes', () => {
+  it('keeps one round in the queue while another is on stage', async () => {
+    queueSong(ALICE)
+    Trivia.syncQueue(ROOM_ID)
+    const queueId = Queue.getPendingTriviaId(ROOM_ID)!
+
+    await Trivia.startRound(fakeIo(), ROOM_ID, queueId)
+
+    // the row is spent the moment the round starts; its replacement waits for
+    // the round to finish rather than joining it in the queue
+    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+    expect(triviaRowCount()).toBe(1)
+
+    Trivia.closeRound(fakeIo(), ROOM_ID)
+    expect(triviaRowCount()).toBe(2)
+  })
+
+  it('tells the room the round is spent the moment it starts', async () => {
+    queueSong(ALICE)
+    Trivia.syncQueue(ROOM_ID)
+    const queueId = Queue.getPendingTriviaId(ROOM_ID)!
+
+    const io = fakeIo()
+    await Trivia.startRound(io, ROOM_ID, queueId)
+
+    // without this the room holds a copy saying the round is still to come,
+    // and shows it next to the one that really is
+    const push = io.emitted.find(e => e.type === QUEUE_PUSH)
+    expect(push).toBeDefined()
+    expect((push!.payload as ReturnType<typeof Queue.get>).entities[queueId].isPlayed).toBe(true)
+  })
+
+  it('clears spent rounds a reconnecting room is still carrying', async () => {
+    queueSong(ALICE)
+
+    // the shape a party in progress got into: rounds played but never cleared,
+    // so every one of them still reads as a round to come
+    const spent = (playedAt: number) => db.run(
+      'INSERT INTO queue (roomId, type, prevQueueId, datePlayed) VALUES (?, \'trivia\', NULL, ?)',
+      [ROOM_ID, playedAt])
+
+    spent(1000)
+    spent(2000)
+    Trivia.syncQueue(ROOM_ID)
+    expect(triviaRowCount()).toBe(2) // the newest spent one, plus the new pending one
+
+    // and nothing left to do on the next connect
+    expect(Trivia.syncQueue(ROOM_ID)).toBe(false)
+  })
+
+  it('leaves one spent round behind, not one per lap', async () => {
+    queueSong(ALICE)
+
+    for (let lap = 0; lap < 3; lap++) {
+      Trivia.syncQueue(ROOM_ID)
+      await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)
+      Trivia.closeRound(fakeIo(), ROOM_ID)
+    }
+
+    // the one just played, which the player may still be standing on, plus
+    // the one waiting. Never a lap's worth of dead rows.
+    expect(triviaRowCount()).toBe(2)
+  })
+
+  it('puts the next round at the back of the queue as one finishes', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
     const first = Queue.getPendingTriviaId(ROOM_ID)!
 
-    Trivia.startRound(fakeIo(), ROOM_ID, first)
+    await Trivia.startRound(fakeIo(), ROOM_ID, first)
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBeNull() // asked, so no longer waiting
 
     Trivia.closeRound(fakeIo(), ROOM_ID)
@@ -196,58 +274,58 @@ describe('trivia rounds', () => {
     expect(next).not.toBe(first)
   })
 
-  it('never runs two rounds at once, however many callers ask', () => {
+  it('never runs two rounds at once, however many callers ask', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
     const io = fakeIo()
 
-    expect(Trivia.startRound(io, ROOM_ID, queueId)).not.toBeNull()
-    expect(Trivia.startRound(io, ROOM_ID, queueId)).toBeNull()
-    expect(Trivia.startRound(io, ROOM_ID, queueId)).toBeNull()
-    expect(io.emitted).toHaveLength(1)
+    expect(await Trivia.startRound(io, ROOM_ID, queueId)).not.toBeNull()
+    expect(await Trivia.startRound(io, ROOM_ID, queueId)).toBeNull()
+    expect(await Trivia.startRound(io, ROOM_ID, queueId)).toBeNull()
+    expect(io.emitted.filter(e => e.type === TRIVIA_ROUND)).toHaveLength(1)
   })
 
-  it('sends the room four shuffled answers and no hint of which is right', () => {
-    const round = startPendingRound()
+  it('sends the room four shuffled answers and no hint of which is right', async () => {
+    const round = await startPendingRound()
 
     expect(round?.answers).toHaveLength(4)
     expect(round?.answers).toEqual(expect.arrayContaining(['right', 'w1', 'w2', 'w3']))
     expect(JSON.stringify(round)).not.toContain('correctIdx')
   })
 
-  it('says nothing at all when the cache is dry, leaving the row to try again', () => {
+  it('says nothing at all when the cache is dry, leaving the row to try again', async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
-    db.run('DELETE FROM triviaQuestions')
+    pool = []
     const io = fakeIo()
 
-    expect(Trivia.startRound(io, ROOM_ID, queueId)).toBeNull()
+    expect(await Trivia.startRound(io, ROOM_ID, queueId)).toBeNull()
     expect(io.emitted).toEqual([])
     // still waiting, so a later round can use it once questions arrive
     expect(Queue.getPendingTriviaId(ROOM_ID)).toBe(queueId)
   })
 
   /** Ask whichever round is waiting, queueing one first if needed. */
-  const startPendingRound = () => {
+  const startPendingRound = async () => {
     if (Queue.getPendingTriviaId(ROOM_ID) === null) {
       queueSong(ALICE)
       Trivia.syncQueue(ROOM_ID)
     }
-    return Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)
+    return await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)
   }
 
   /** Play a round through to its close and hand back the question asked. */
-  const playRound = () => {
-    const round = startPendingRound()
+  const playRound = async () => {
+    const round = await startPendingRound()
     Trivia.closeRound(fakeIo(), ROOM_ID)
     return round
   }
 
   /** Every question a whole round asks, in order. */
-  const collectRound = (): string[] => {
-    const first = startPendingRound()
+  const collectRound = async (): Promise<string[]> => {
+    const first = await startPendingRound()
     if (!first) return []
 
     const asked = [first.question]
@@ -262,26 +340,28 @@ describe('trivia rounds', () => {
     return asked
   }
 
-  it('marks a whole round used so the next one asks different questions', () => {
-    // two full rounds' worth, so the second can be entirely fresh. Asserting
-    // on the sets rather than on the first question of each: within a round
-    // the order is randomised, so comparing one question to one question is a
-    // coin flip rather than a test.
+  it('asks for a whole round of questions, once, each time round', async () => {
     for (let i = 0; i < TRIVIA_QUESTIONS_PER_ROUND * 2; i++) addQuestion(`q${i}`)
+    vi.mocked(fetchQuestions).mockClear()
 
-    const first = collectRound()
-    const second = collectRound()
+    const first = await collectRound()
+    const second = await collectRound()
 
     expect(first).toHaveLength(TRIVIA_QUESTIONS_PER_ROUND)
     expect(second).toHaveLength(TRIVIA_QUESTIONS_PER_ROUND)
-    expect(first.filter(q => second.includes(q))).toEqual([])
+
+    // one call per round, for the whole round. Not asking the same question
+    // twice in a night is the session token's job on the other side of this
+    // seam, not something the room has to keep a ledger for.
+    expect(fetchQuestions).toHaveBeenCalledTimes(2)
+    expect(fetchQuestions).toHaveBeenCalledWith(TRIVIA_QUESTIONS_PER_ROUND)
   })
 
-  it('falls back to the longest-unseen question rather than stopping', () => {
-    // one question, two rounds: a party outlasting the category repeats it
-    // rather than the room finding trivia has quietly stopped happening
-    const first = playRound()
-    const second = playRound()
+  it('repeats a question rather than letting trivia quietly stop', async () => {
+    // the network had one question to give, twice over: a room that has
+    // outlasted the category still gets a round
+    const first = await playRound()
+    const second = await playRound()
 
     expect(second?.question).toBe(first?.question)
     expect(second?.roundId).not.toBe(first?.roundId)
@@ -292,13 +372,13 @@ describe('trivia answers and scores', () => {
   let correctIdx: number
   let roundId: number
 
-  beforeEach(() => {
+  beforeEach(async () => {
     setupRoom()
 
     db.run('INSERT INTO queue (roomId, songId, userId) VALUES (?, 10, ?)', [ROOM_ID, ALICE])
     Trivia.syncQueue(ROOM_ID)
 
-    const round = Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
+    const round = await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
     roundId = round.roundId
     correctIdx = round.answers.indexOf('right')
   })
@@ -308,7 +388,7 @@ describe('trivia answers and scores', () => {
   const answer = (userId: number, answerIdx: number) =>
     Trivia.answer({ roomId: ROOM_ID, userId, roundId, answerIdx })
 
-  it('scores a right answer and still counts a wrong one as played', () => {
+  it('scores a right answer and still counts a wrong one as played', async () => {
     answer(ALICE, correctIdx)
     answer(BOB, (correctIdx + 1) % 4)
 
@@ -318,30 +398,30 @@ describe('trivia answers and scores', () => {
     ])
   })
 
-  it('takes the first answer only, so nobody can walk to the right key', () => {
+  it('takes the first answer only, so nobody can walk to the right key', async () => {
     answer(ALICE, (correctIdx + 1) % 4)
     expect(() => answer(ALICE, correctIdx)).toThrow(/already answered/)
 
     expect(Trivia.getScores(ROOM_ID)[0].score).toBe(0)
   })
 
-  it('refuses an answer to a round that has closed', () => {
+  it('refuses an answer to a round that has closed', async () => {
     Trivia.closeRound(fakeIo(), ROOM_ID)
     expect(() => answer(ALICE, correctIdx)).toThrow(/closed/)
   })
 
-  it('refuses an answer to some other round', () => {
+  it('refuses an answer to some other round', async () => {
     expect(() => Trivia.answer({ roomId: ROOM_ID, userId: ALICE, roundId: roundId + 99, answerIdx: 0 }))
       .toThrow(/closed/)
   })
 
-  it('refuses a key that is not one of the four', () => {
+  it('refuses a key that is not one of the four', async () => {
     expect(() => answer(ALICE, 4)).toThrow(/Invalid answer/)
     expect(() => answer(ALICE, -1)).toThrow(/Invalid answer/)
     expect(Trivia.getScores(ROOM_ID)).toEqual([])
   })
 
-  it('leaves everyone who has not played off the scoreboard', () => {
+  it('leaves everyone who has not played off the scoreboard', async () => {
     answer(ALICE, correctIdx)
 
     const scores = Trivia.getScores(ROOM_ID)
@@ -349,20 +429,20 @@ describe('trivia answers and scores', () => {
     expect(scores.map(s => s.name)).not.toContain('Carol')
   })
 
-  it('puts the best first, and the one who got there in fewer goes ahead', () => {
+  it('puts the best first, and the one who got there in fewer goes ahead', async () => {
     answer(ALICE, (correctIdx + 1) % 4)
     answer(BOB, correctIdx)
     answer(CAROL, correctIdx)
     Trivia.closeRound(fakeIo(), ROOM_ID)
 
     // Carol sits out the second round, so Bob answers twice for the same score
-    const second = Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
+    const second = await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
     Trivia.answer({ roomId: ROOM_ID, userId: BOB, roundId: second.roundId, answerIdx: (second.answers.indexOf('right') + 1) % 4 })
 
     expect(Trivia.getScores(ROOM_ID).map(s => s.name)).toEqual(['Carol', 'Bob', 'Alice'])
   })
 
-  it('tells the room what was right only once answering has closed', () => {
+  it('tells the room what was right only once answering has closed', async () => {
     const io = fakeIo()
     answer(ALICE, correctIdx)
     Trivia.closeRound(io, ROOM_ID)
@@ -375,7 +455,7 @@ describe('trivia answers and scores', () => {
     expect(Trivia.getRound(ROOM_ID)).toBeNull()
   })
 
-  it('closing twice tells the room once', () => {
+  it('closing twice tells the room once', async () => {
     const io = fakeIo()
     Trivia.closeRound(io, ROOM_ID)
     Trivia.closeRound(io, ROOM_ID)
@@ -383,92 +463,12 @@ describe('trivia answers and scores', () => {
     expect(io.emitted.filter(e => e.type === TRIVIA_RESULT)).toHaveLength(1)
   })
 
-  it('resets the scoreboard without touching the cached questions', () => {
+  it('resets the scoreboard without ending the round', async () => {
     answer(ALICE, correctIdx)
     Trivia.resetScores(ROOM_ID)
 
     expect(Trivia.getScores(ROOM_ID)).toEqual([])
-    expect(QuestionCache.count()).toBe(1)
-  })
-})
-
-describe('the question cache', () => {
-  beforeEach(() => {
-    close()
-    open({ file: ':memory:', ro: false })
-  })
-
-  afterEach(close)
-
-  it('decodes what the API sends and ignores what it already has', () => {
-    const b64 = (s: string) => Buffer.from(s, 'utf8').toString('base64')
-    const result = {
-      question: b64('Who wrote "Purple Rain"?'),
-      correct_answer: b64('Prince'),
-      incorrect_answers: [b64('Sting'), b64('Bowie'), b64('Cher')],
-      difficulty: b64('medium'),
-    }
-
-    expect(QuestionCache.store([result])).toBe(1)
-    // the same question again is not a second row: OpenTDB has no stable id,
-    // so the question text is the key a top-up dedupes on
-    expect(QuestionCache.store([result])).toBe(0)
-    expect(QuestionCache.count()).toBe(1)
-
-    const [taken] = QuestionCache.take(1)
-    expect(taken.question).toBe('Who wrote "Purple Rain"?')
-    expect(taken.correctAnswer).toBe('Prince')
-    expect(taken.incorrectAnswers).toEqual(['Sting', 'Bowie', 'Cher'])
-    expect(taken.difficulty).toBe('medium')
-  })
-
-  it('spends every unplayed question before repeating any', () => {
-    for (const q of ['a', 'b', 'c']) addQuestion(q)
-
-    const taken = QuestionCache.take(3)
-    expect(taken.map(t => t.question).sort()).toEqual(['a', 'b', 'c'])
-    expect(QuestionCache.countUnplayed()).toBe(0)
-  })
-
-  it('comes back to the question seen longest ago once none are unplayed', () => {
-    for (const q of ['a', 'b', 'c']) addQuestion(q)
-
-    // Stamped rather than played three times over: take() marks with
-    // Date.now(), three calls land in one millisecond, and the tie is broken
-    // by RANDOM() — which is right in a party, where rounds are minutes
-    // apart, and a coin flip in a test. This asserts the ordering rule.
-    db.run('UPDATE triviaQuestions SET dateUsed = 3000 WHERE question = ?', ['a'])
-    db.run('UPDATE triviaQuestions SET dateUsed = 1000 WHERE question = ?', ['b'])
-    db.run('UPDATE triviaQuestions SET dateUsed = 2000 WHERE question = ?', ['c'])
-
-    expect(QuestionCache.take(2).map(q => q.question)).toEqual(['b', 'c'])
-  })
-
-  it('prefers any unplayed question over the longest-unseen one', () => {
-    addQuestion('old')
-    addQuestion('fresh')
-    db.run('UPDATE triviaQuestions SET dateUsed = 1 WHERE question = ?', ['old'])
-
-    expect(QuestionCache.take(1)[0].question).toBe('fresh')
-  })
-
-  it('has nothing to give from an empty cache', () => {
-    expect(QuestionCache.take(5)).toEqual([])
-  })
-
-  it('gives what it has when asked for more than it holds', () => {
-    addQuestion('only one')
-    // a thin cache asks a short round rather than no round at all
-    expect(QuestionCache.take(5).map(q => q.question)).toEqual(['only one'])
-  })
-
-  it('marks a whole batch used at once', () => {
-    for (const q of ['a', 'b', 'c']) addQuestion(q)
-    QuestionCache.take(2)
-
-    // the two it handed out are spoken for, so a second room starting a round
-    // mid-way through this one cannot be given them again
-    expect(QuestionCache.countUnplayed()).toBe(1)
+    expect(Trivia.getRound(ROOM_ID)).not.toBeNull()
   })
 })
 
@@ -476,13 +476,13 @@ describe('a round of several questions', () => {
   const io = () => fakeIo()
 
   /** Start the round waiting on the room's pending trivia row. */
-  const start = () => {
+  const start = async () => {
     queueSong(ALICE)
     Trivia.syncQueue(ROOM_ID)
-    return Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
+    return await Trivia.startRound(fakeIo(), ROOM_ID, Queue.getPendingTriviaId(ROOM_ID)!)!
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     setupRoom()
     // one is seeded by setupRoom; a full round wants five
     for (const q of ['q2', 'q3', 'q4', 'q5', 'q6']) addQuestion(q)
@@ -490,8 +490,8 @@ describe('a round of several questions', () => {
 
   afterEach(teardownRoom)
 
-  it('asks five questions on one turn in the rotation', () => {
-    const first = start()
+  it('asks five questions on one turn in the rotation', async () => {
+    const first = await start()
     expect(first.questionNumber).toBe(1)
     expect(first.questionCount).toBe(TRIVIA_QUESTIONS_PER_ROUND)
 
@@ -509,8 +509,8 @@ describe('a round of several questions', () => {
     expect(new Set(asked).size).toBe(TRIVIA_QUESTIONS_PER_ROUND)
   })
 
-  it('holds the queue row until the last question is done', () => {
-    const first = start()
+  it('holds the queue row until the last question is done', async () => {
+    const first = await start()
     const queueId = first.queueId
 
     // four reveals in, the row is still the round's and nothing new is waiting
@@ -532,8 +532,8 @@ describe('a round of several questions', () => {
     expect(next).not.toBe(queueId)
   })
 
-  it('gives everyone a fresh answer on every question', () => {
-    const first = start()
+  it('gives everyone a fresh answer on every question', async () => {
+    const first = await start()
     Trivia.answer({ roomId: ROOM_ID, userId: ALICE, roundId: first.roundId, answerIdx: first.answers.indexOf('right') })
 
     Trivia.closeQuestion(io(), ROOM_ID)
@@ -544,8 +544,8 @@ describe('a round of several questions', () => {
     expect(Trivia.getScores(ROOM_ID)[0].numAnswered).toBe(2)
   })
 
-  it('refuses an answer aimed at the question just gone', () => {
-    const first = start()
+  it('refuses an answer aimed at the question just gone', async () => {
+    const first = await start()
     Trivia.closeQuestion(io(), ROOM_ID)
     Trivia.askQuestion(io(), ROOM_ID)
 
@@ -554,18 +554,18 @@ describe('a round of several questions', () => {
       .toThrow(/closed/)
   })
 
-  it('takes nothing at all while the answer is on screen', () => {
-    const first = start()
+  it('takes nothing at all while the answer is on screen', async () => {
+    const first = await start()
     Trivia.closeQuestion(io(), ROOM_ID)
 
     expect(() => Trivia.answer({ roomId: ROOM_ID, userId: ALICE, roundId: first.roundId, answerIdx: 0 }))
       .toThrow(/closed/)
   })
 
-  it('asks a short round rather than none when the cache is thin', () => {
-    db.run('DELETE FROM triviaQuestions WHERE question <> \'Who?\'')
+  it('asks a short round rather than none when few questions come back', async () => {
+    pool = pool.slice(0, 1)
 
-    const only = start()
+    const only = await start()
     expect(only.questionCount).toBe(1)
 
     const last = io()
@@ -573,8 +573,8 @@ describe('a round of several questions', () => {
     expect((last.emitted[0].payload as TriviaResult).isFinal).toBe(true)
   })
 
-  it('shows the answer first and the scoreboard after it', () => {
-    start()
+  it('shows the answer first and the scoreboard after it', async () => {
+    await start()
     const emitted = io()
 
     for (let i = 1; i < TRIVIA_QUESTIONS_PER_ROUND; i++) {
@@ -591,19 +591,33 @@ describe('a round of several questions', () => {
     expect(result.endsAt).toBeGreaterThan(result.scoresFrom)
   })
 
-  it('gives a question that is not the last no scoreboard beat at all', () => {
-    start()
-    const emitted = io()
-    Trivia.closeQuestion(emitted, ROOM_ID)
+  it('shows the standings after every question, and holds the last one longer', async () => {
+    await start()
+    const mid = io()
+    Trivia.closeQuestion(mid, ROOM_ID)
 
-    const result = emitted.emitted[0].payload as TriviaResult
-    expect(result.isFinal).toBe(false)
-    // nothing to hand over to: the next question follows the answer
-    expect(result.scoresFrom).toBe(result.endsAt)
+    const midResult = mid.emitted[0].payload as TriviaResult
+    expect(midResult.isFinal).toBe(false)
+    // a checkpoint scoreboard, so there is something to chase into question two
+    expect(midResult.endsAt).toBeGreaterThan(midResult.scoresFrom)
+
+    for (let i = 1; i < TRIVIA_QUESTIONS_PER_ROUND - 1; i++) {
+      Trivia.askQuestion(io(), ROOM_ID)
+      Trivia.closeQuestion(io(), ROOM_ID)
+    }
+
+    Trivia.askQuestion(io(), ROOM_ID)
+    const last = io()
+    Trivia.closeQuestion(last, ROOM_ID)
+
+    const lastResult = last.emitted[0].payload as TriviaResult
+    expect(lastResult.isFinal).toBe(true)
+    expect(lastResult.endsAt - lastResult.scoresFrom)
+      .toBeGreaterThan(midResult.endsAt - midResult.scoresFrom)
   })
 
-  it('ends the whole round when the room stops caring', () => {
-    start()
+  it('ends the whole round when the room stops caring', async () => {
+    await start()
     const emitted = io()
 
     // trivia switched off mid-round: closeRound ends it there and then
@@ -621,7 +635,7 @@ describe('a round of several questions', () => {
  * broadcasting the other four into a room that had stopped listening.
  */
 describe('asking twice for the same round', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     setupRoom()
     for (const q of ['q2', 'q3', 'q4', 'q5', 'q6']) addQuestion(q)
     queueSong(ALICE)
@@ -630,21 +644,21 @@ describe('asking twice for the same round', () => {
 
   afterEach(teardownRoom)
 
-  it('reports the second ask as in progress, never as unavailable', () => {
+  it('reports the second ask as in progress, never as unavailable', async () => {
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
 
     expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(false)
-    expect(Trivia.startRound(fakeIo(), ROOM_ID, queueId)).not.toBeNull()
+    expect(await Trivia.startRound(fakeIo(), ROOM_ID, queueId)).not.toBeNull()
 
     // the duplicate: a round is running, so the row is emphatically not
     // "nothing to play"
     expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(true)
-    expect(Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
+    expect(await Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
   })
 
-  it('still reports in progress between questions, while an answer is up', () => {
+  it('still reports in progress between questions, while an answer is up', async () => {
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
-    Trivia.startRound(fakeIo(), ROOM_ID, queueId)
+    await Trivia.startRound(fakeIo(), ROOM_ID, queueId)
     Trivia.closeQuestion(fakeIo(), ROOM_ID)
 
     // getRound is null during the reveal, which is why the check cannot be
@@ -653,26 +667,26 @@ describe('asking twice for the same round', () => {
     expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(true)
   })
 
-  it('reports unavailable only once the round has really finished', () => {
+  it('reports unavailable only once the round has really finished', async () => {
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
-    Trivia.startRound(fakeIo(), ROOM_ID, queueId)
+    await Trivia.startRound(fakeIo(), ROOM_ID, queueId)
     Trivia.closeRound(fakeIo(), ROOM_ID)
 
     expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(false)
-    expect(Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
+    expect(await Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
   })
 
-  it('reports unavailable for a row that has nothing to ask', () => {
+  it('reports unavailable for a row that has nothing to ask', async () => {
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
-    db.run('DELETE FROM triviaQuestions')
+    pool = []
 
     expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(false)
-    expect(Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
+    expect(await Trivia.startRound(fakeIo(), ROOM_ID, queueId)).toBeNull()
   })
 })
 
 describe('a room reset while trivia is running', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     setupRoom()
     for (const q of ['q2', 'q3', 'q4', 'q5', 'q6']) addQuestion(q)
     queueSong(ALICE)
@@ -681,9 +695,9 @@ describe('a room reset while trivia is running', () => {
 
   afterEach(teardownRoom)
 
-  it('leaves no round running on a queue that has been emptied', () => {
+  it('leaves no round running on a queue that has been emptied', async () => {
     const queueId = Queue.getPendingTriviaId(ROOM_ID)!
-    Trivia.startRound(fakeIo(), ROOM_ID, queueId)
+    await Trivia.startRound(fakeIo(), ROOM_ID, queueId)
     expect(Trivia.isRoundInProgress(ROOM_ID, queueId)).toBe(true)
 
     // what ROOM_RESET_REQUEST does: empty the queue, then stop the round
@@ -694,7 +708,7 @@ describe('a room reset while trivia is running', () => {
     expect(Trivia.getRound(ROOM_ID)).toBeNull()
   })
 
-  it('puts no round back into a room that was just emptied', () => {
+  it('puts no round back into a room that was just emptied', async () => {
     Queue.clear(ROOM_ID)
     Trivia.stopRoom(ROOM_ID)
 

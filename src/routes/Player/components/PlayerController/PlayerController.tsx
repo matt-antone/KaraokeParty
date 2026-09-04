@@ -22,6 +22,11 @@ interface PlayerControllerProps {
 // how long before a song ends to tease the next singer
 const UP_NEXT_SECS = 15
 
+/** How long the player holds a trivia row that has produced nothing before
+ *  moving on. A question arrives in well under a second, so this only ever
+ *  expires on a round that is genuinely lost. */
+const TRIVIA_STRANDED_MS = 20000
+
 const PlayerController = (props: PlayerControllerProps) => {
   const queue = useAppSelector(getRoundRobinQueue)
   const player = useAppSelector(state => state.player)
@@ -197,11 +202,33 @@ const PlayerController = (props: PlayerControllerProps) => {
   // on in the gap between asking and the first question arriving.
   useEffect(() => {
     if (!isTriviaRow) return
-    if (resolvedQueueId !== player.queueId) return
     if (liveTrivia.round || liveTrivia.result) return // reveal still on screen
 
-    handleLoadNext()
-  }, [handleLoadNext, isTriviaRow, liveTrivia.result, liveTrivia.round, player.queueId, resolvedQueueId])
+    if (resolvedQueueId === player.queueId) {
+      handleLoadNext()
+      return
+    }
+
+    // Nothing on screen and nothing resolved: the round this row was promised
+    // is not coming. A server restart takes its in-memory rounds with it, and
+    // the row was marked played the moment the round began, so no later
+    // request can revive it — the reply is "that is not the row waiting". The
+    // player was left holding a dead row with no timeout and no error, and the
+    // queue stopped for the rest of the night. A round is worth one gap, never
+    // the party.
+    if (!player.isPlaying) return
+
+    const timerID = setTimeout(() => loadNextRef.current(), TRIVIA_STRANDED_MS)
+    return () => clearTimeout(timerID)
+  }, [
+    handleLoadNext,
+    isTriviaRow,
+    liveTrivia.result,
+    liveTrivia.round,
+    player.isPlaying,
+    player.queueId,
+    resolvedQueueId,
+  ])
 
   // "lock in" the next user that isn't the currently up user, if possible
   useEffect(() => {

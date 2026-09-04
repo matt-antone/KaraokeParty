@@ -2,6 +2,7 @@ import React from 'react'
 import clsx from 'clsx'
 import AnswerKey, { type AnswerKeyState } from 'components/AnswerKey/AnswerKey'
 import useNow from 'lib/useNow'
+import serverNow from 'lib/serverNow'
 import PlayerHeadline from '../PlayerTextOverlay/PlayerHeadline/PlayerHeadline'
 import type { TriviaResult, TriviaRound } from 'shared/types'
 import styles from './PlayerTrivia.css'
@@ -26,14 +27,14 @@ interface PlayerTriviaProps {
  * colour and a numeral and nothing else, which is what makes the room look up.
  */
 const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
-  const now = useNow()
-  const secondsLeft = Math.max(0, Math.ceil((round.endsAt - now) / 1000))
+  const tick = useNow()
+  const secondsLeft = Math.max(0, Math.ceil((round.endsAt - serverNow(round, tick)) / 1000))
   const scores = result?.scores ?? []
 
   // Three beats, never two at once: the question, then the answer, then the
   // standings. The scoreboard waits for its own moment because reading which
   // one was right and finding yourself on a list are different jobs.
-  const isScoreboard = !!result && result.isFinal && now >= result.scoresFrom
+  const isScoreboard = !!result && serverNow(result, tick) >= result.scoresFrom
 
   const stateOf = (i: number): AnswerKeyState => {
     if (!result) return 'open'

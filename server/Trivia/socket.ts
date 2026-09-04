@@ -10,7 +10,7 @@ const ACTION_HANDLERS = {
   // The player reached a trivia row in the queue. It asks rather than starts:
   // the question, the shuffle and the countdown all have to be the room's, not
   // one client's, or two players in a room would disagree about the answer.
-  [TRIVIA_REQ_ROUND]: (sock, { payload }, acknowledge) => {
+  [TRIVIA_REQ_ROUND]: async (sock, { payload }, acknowledge) => {
     const { roomId } = sock.user
     const { queueId } = payload
 
@@ -19,9 +19,12 @@ const ACTION_HANDLERS = {
     // the first and moves on from the second; collapsing them into a single
     // falsy `isStarted` made a duplicate request — which React's StrictMode
     // guarantees in development — end the round after its first question.
+    // The questions are fetched when the round starts, so this acknowledgement
+    // waits on the network: 'started' means the first question is already on
+    // its way to the room.
     const status = Trivia.isRoundInProgress(roomId, queueId)
       ? 'inProgress'
-      : Trivia.startRound(sock.server, roomId, queueId)
+      : await Trivia.startRound(sock.server, roomId, queueId)
         ? 'started'
         : 'unavailable'
 
