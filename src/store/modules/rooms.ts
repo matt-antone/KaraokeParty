@@ -141,7 +141,12 @@ interface RoomsState {
 const initialState: RoomsState = {
   result: [],
   entities: {},
-  filterStatus: 'play',
+  // Show every room by default. This list is where the transport lives, so a
+  // filter that hides rooms by state hides the row the moment you act on it —
+  // press stop and the room you were holding vanishes, which reads as having
+  // deleted it. The filter stays for looking things up; it is not the default
+  // any more.
+  filterStatus: false,
   isEditorOpen: false,
 }
 
