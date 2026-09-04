@@ -39,20 +39,36 @@ const WORD_STEP = 70
  *  the card is up. The mark holds the stage for a whole handover, which is
  *  rarely 2.5s, and a meter frozen mid-reading reads as a broken screen.
  *
- *  Two sines per register at rates that share no period, so there is no seam
- *  to hide: the drift never repeats visibly and never restarts. Amplitude eases
- *  in from nothing, which is what keeps the still frame at REFERENCE_MS exactly
- *  the resting silhouette. */
-const IDLE_IN = 900
-const IDLE_AMP = 0.06
-/** rad/ms, one per register — deliberately not multiples of each other. */
-const IDLE_RATE = [0.0013, 0.0017, 0.0011, 0.0019]
+ *  It keeps time rather than wandering: four beats to the bar at 120, which is
+ *  a grid the room can count off the screen. */
+const BEAT = 60000 / 120
+const BAR = BEAT * 4
+/** How hard each beat of the bar lands. One is the downbeat, three answers it,
+ *  two and four are the backbeat. */
+const ACCENT = [1, 0.68, 0.88, 0.72]
+/** The register whose beat it is takes the whole hit; the other three feel it. */
+const OFFBEAT = 0.45
+/** Snap up, then fall — finishing just short of the next beat. The rest between
+ *  hits is what makes this read as time rather than as a wobble. At a fifth of
+ *  the beat the whole attack still reads as one punch. */
+const ATTACK = 110
+const FALL = BEAT * 0.92
+/** The bed the registers sit on between hits, and the top of the swing. Held
+ *  apart from REST and PEAK because those are a silhouette and these are a
+ *  movement — but the floor still clears the nameplate, which is the thing REST
+ *  was protecting. */
+const IDLE_LOW = [0.48, 0.52, 0.44, 0.5]
+const IDLE_HIGH = [0.88, 1, 0.74, 0.95]
+/** One bar to fade the movement in, so the still frame at REFERENCE_MS is
+ *  exactly the resting silhouette it has always been. */
+const IDLE_IN = BAR
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const span = (t: number, from: number, to: number) => clamp01((t - from) / (to - from))
 const outCubic = (t: number) => 1 - Math.pow(1 - t, 3)
 const outQuint = (t: number) => 1 - Math.pow(1 - t, 5)
+const smoothstep = (t: number) => t * t * (3 - 2 * t)
 
 interface Palette {
   bg: string
@@ -150,17 +166,29 @@ function level (i: number, t: number) {
   if (rise < 1) return PEAK[i] * outQuint(rise)
 
   const settled = lerp(PEAK[i], REST[i], outCubic(span(t, s + RISE, s + RISE + SETTLE)))
-  return clamp01(settled + drift(i, t))
+
+  // the sting hands over to the beat across one bar, so nothing snaps
+  const k = clamp01((t - REFERENCE_MS) / IDLE_IN)
+  return k > 0 ? lerp(settled, idle(i, t - REFERENCE_MS), k) : settled
 }
 
-/** The idle wander, zero until the sting is over. */
-function drift (i: number, t: number) {
-  const amp = IDLE_AMP * clamp01((t - REFERENCE_MS) / IDLE_IN)
-  if (amp <= 0) return 0
+/** Where register `i` stands `p` ms into the idle: on the bar, hit hardest on
+ *  its own beat. Reading left to right you can count the four. */
+function idle (i: number, p: number) {
+  const n = Math.floor(p / BEAT)
+  const since = p - n * BEAT
 
-  const p = t - REFERENCE_MS
-  const r = IDLE_RATE[i]
-  return amp * (Math.sin(p * r) * 0.6 + Math.sin(p * r * 0.37 + i) * 0.4)
+  // Both ends of a beat sit at the bed, so the swing changing on the bar line
+  // is never a jump — which is what lets the accents differ at all.
+  // smoothstep on the way up rather than an out-ease: an out-ease puts most of
+  // the swing in the first frame, which strobes instead of moving. The fall
+  // keeps its corner at the peak — that corner is what a hit looks like.
+  const attack = since < ATTACK
+    ? smoothstep(since / ATTACK)
+    : 1 - outCubic(span(since, ATTACK, FALL))
+
+  const swing = ACCENT[n % 4] * (n % 4 === i ? 1 : OFFBEAT)
+  return lerp(IDLE_LOW[i], IDLE_HIGH[i], swing * attack)
 }
 
 /** The peak-hold marker: rides the bar up, holds at the peak, then drops onto
