@@ -27,7 +27,7 @@
 .keys {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(5.5rem, 1fr);
+  grid-auto-rows: minmax(5.5rem, auto);
   gap: var(--gap-2);
   padding: var(--gap-2);
   border-radius: var(--radius-panel);
@@ -109,29 +109,3 @@
   color: var(--ink);
 }
 
-/* The right answer, once answering has closed. A plaque above the keys rather
-   than a line under them: it is the thing you came back to the phone for, and
-   the lit key alone made you map a colour to a word you never had. */
-.answer {
-  margin-bottom: var(--gap-3);
-  padding: var(--gap-2) var(--gap-3);
-  border-radius: var(--radius-panel);
-  /* A recess, like a field or the key tray under it — the deck's shape for a
-     readout. --faceplate would sit on the panel's own --brush and barely
-     separate; the standings can afford that because they are a list of rows,
-     and this is one line that has to land. */
-  background: var(--key-well);
-  box-shadow: var(--well);
-  text-align: center;
-}
-
-.answerLabel {
-  color: var(--ink-3);
-}
-
-.answerText {
-  margin-top: var(--gap-1);
-  font-size: var(--text-l);
-  font-weight: var(--weight-semibold);
-  color: var(--vu);
-}

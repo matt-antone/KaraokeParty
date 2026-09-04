@@ -24,54 +24,36 @@
   }
 }
 
-/* The numeral is the channel that works without colour, so it is set in the
-   mono face at a size you can read across a room, never below the label. */
-.numeral {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.5em;
-  font-family: var(--font-mono);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
-}
-
 .label {
   flex: 1;
-  text-align: left;
-  font-size: var(--text-l);
   font-weight: var(--weight-semibold);
 }
 
-/* A labelled key is the player screen's, and only ever the player screen's:
-   the phone passes no label. So this is the one block sized for a room rather
-   than a hand — in vh, like every other thing the TV shows, because 16px of
-   answer text is unreadable from a sofa. */
-.labelled {
-  gap: var(--gap-4);
+/* Sized for a room: in vh, like every other thing the TV shows, because 16px
+   of answer text is unreadable from a sofa. */
+.player {
   padding: 2.2vh var(--gap-4);
 
-  .numeral {
-    min-width: 1.4em;
-    font-size: 3.8vh;
-  }
-
   .label {
+    text-align: left;
     font-size: 2.9vh;
     line-height: 1.2;
   }
 }
 
-/* an unlabelled key is the phone's: nothing but colour and a numeral, so it
-   centres and grows to fill its half of the grid */
-.key:not(.labelled) {
+/* Sized for a hand, and centred in it: the key is thumbed at, so the text sits
+   in the middle of the target rather than along one edge of it. */
+.pad {
   justify-content: center;
   min-height: 0;
   height: 100%;
 
-  .numeral {
-    font-size: var(--display-m);
+  .label {
+    text-align: center;
+    font-size: var(--text-l);
+    line-height: 1.25;
+    /* four keys in a phone-sized grid, and OpenTDB writes some long ones */
+    overflow-wrap: anywhere;
   }
 }
 

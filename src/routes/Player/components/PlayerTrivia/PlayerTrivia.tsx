@@ -17,6 +17,23 @@ const SCOREBOARD_ROWS = 6
 const CHEER = 'assets/audience-applause.mp3'
 const GROAN = 'assets/losing-horns-1.mp3'
 
+/** One element per file, kept for the night. Built on demand rather than at
+ *  module scope: this module is imported by tests that render without a DOM,
+ *  where Audio does not exist. */
+const cues = new Map<string, HTMLAudioElement>()
+
+function cue (src: string): HTMLAudioElement {
+  let audio = cues.get(src)
+
+  if (!audio) {
+    audio = new Audio(src)
+    audio.preload = 'auto'
+    cues.set(src, audio)
+  }
+
+  return audio
+}
+
 /* OpenTDB is CC BY-SA 4.0. The attribution is a licence obligation, so it
    rides on the screen the questions appear on, not only in the docs — which
    means every beat of the round, and one copy of it. */
@@ -38,9 +55,9 @@ interface PlayerTriviaProps {
  * A trivia round on the TV. It takes the gap between two singers, so it is a
  * full takeover of the stage in the same way the intermission is.
  *
- * The four answers are the only place their text appears. The phones carry the
- * question and four numerals, never the answers, which is what makes the room
- * look up.
+ * The phones carry the same four answers now, so the room is not forced to
+ * look up to play — but this is where they are big enough to read together,
+ * and where the reveal happens for everyone at once.
  *
  * The stage is read in one order, and it is laid out in that order: what this
  * is and how long is left along the top, the question in the middle at the
@@ -67,8 +84,20 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
   // throughout: a player that will not autoplay still shows the number.
   useEffect(() => {
     if (!isTally || isScoreboard) return
-    void new Audio(numCorrect ? CHEER : GROAN).play().catch(() => {})
+
+    const audio = cue(numCorrect ? CHEER : GROAN)
+    audio.currentTime = 0
+    void audio.play().catch(() => {})
   }, [isTally, isScoreboard, numCorrect, result?.roundId])
+
+  // Both cues are fetched while the question is still being answered: the
+  // round is on screen for the whole countdown before either is wanted, and a
+  // party's wifi is the wrong thing to be waiting on at the moment the count
+  // lands. Which one plays is not known until then, so both are pulled.
+  useEffect(() => {
+    if (result) return
+    for (const src of [CHEER, GROAN]) cue(src).load()
+  }, [result, round.roundId])
 
   const stateOf = (i: number): AnswerKeyState => {
     if (!result) return 'open'
@@ -133,7 +162,7 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
 
       <div className={styles.answers}>
         {round.answers.map((answer, i) => (
-          <AnswerKey key={answer} index={i} label={answer} state={stateOf(i)} disabled />
+          <AnswerKey key={answer} index={i} label={answer} variant='player' state={stateOf(i)} disabled />
         ))}
       </div>
 
