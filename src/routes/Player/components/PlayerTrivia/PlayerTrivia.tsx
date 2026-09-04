@@ -2,7 +2,7 @@ import React from 'react'
 import clsx from 'clsx'
 import AnswerKey, { type AnswerKeyState } from 'components/AnswerKey/AnswerKey'
 import TriviaRail from 'components/TriviaRail/TriviaRail'
-import TriviaSplit from 'components/TriviaSplit/TriviaSplit'
+import TriviaTally from 'components/TriviaTally/TriviaTally'
 import useNow from 'lib/useNow'
 import serverNow from 'lib/serverNow'
 import type { TriviaResult, TriviaRound } from 'shared/types'
@@ -57,19 +57,17 @@ const PlayerTrivia = ({ round, result, width, height }: PlayerTriviaProps) => {
     return i === result.correctIdx ? 'correct' : 'wrong'
   }
 
-  // Between questions the room wants to know who got it, not where the night
-  // stands — the standings have four more questions to settle and the split
-  // has a shelf life of about ten seconds. The last question keeps the board:
-  // that one *is* the result.
+  // Between questions the room wants to know how it did, not where the night
+  // stands — the standings have four more questions to settle and this beat
+  // lasts three seconds. The last question keeps the board: that one *is* the
+  // result.
   if (isScoreboard && !result.isFinal) {
     return (
       <div style={{ width, height }} className={styles.container}>
         <TriviaRail round={round} label='who got it' variant='player' />
 
         <div className={styles.stage}>
-          {result.answered.length > 0
-            ? <TriviaSplit answered={result.answered} variant='player' />
-            : <div className={styles.question}>Nobody answered</div>}
+          <TriviaTally numCorrect={result.numCorrect} variant='player' />
         </div>
 
         {attribution}

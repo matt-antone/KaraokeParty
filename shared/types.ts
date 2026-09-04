@@ -239,15 +239,6 @@ export interface TriviaScore {
   numAnswered: number
 }
 
-/** One guest's answer to one question. The scoreboard says where the night
- *  stands; this says what just happened, which is the thing the room reacts
- *  to out loud. */
-export interface TriviaAnswered {
-  userId: number
-  name: string
-  isCorrect: boolean
-}
-
 export interface TriviaResult {
   roundId: number
   queueId: number
@@ -259,10 +250,9 @@ export interface TriviaResult {
   correctIdx: number
   /** Everyone who has answered at least once this room, best first. */
   scores: TriviaScore[]
-  /** Who answered *this* question, in the order they answered it, and whether
-   *  they got it. Nobody who sat the question out appears — the same rule
-   *  `scores` follows. */
-  answered: TriviaAnswered[]
+  /** How many of the room got *this* question. The scoreboard says where the
+   *  night stands; this is what the room reacts to out loud. */
+  numCorrect: number
   /** Epoch ms the scoreboard takes over from the answer. The two are separate
    *  beats — you read what it was, then you see where that put everyone —
    *  and showing them at once means neither lands. Every question gets both;
