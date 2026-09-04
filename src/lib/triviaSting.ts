@@ -35,6 +35,19 @@ const PLATE = [1150, 1400]
 const WORD_FROM = 1400
 const WORD_STEP = 70
 
+/** Once the sting has settled the registers keep level-checking for as long as
+ *  the card is up. The mark holds the stage for a whole handover, which is
+ *  rarely 2.5s, and a meter frozen mid-reading reads as a broken screen.
+ *
+ *  Two sines per register at rates that share no period, so there is no seam
+ *  to hide: the drift never repeats visibly and never restarts. Amplitude eases
+ *  in from nothing, which is what keeps the still frame at REFERENCE_MS exactly
+ *  the resting silhouette. */
+const IDLE_IN = 900
+const IDLE_AMP = 0.06
+/** rad/ms, one per register — deliberately not multiples of each other. */
+const IDLE_RATE = [0.0013, 0.0017, 0.0011, 0.0019]
+
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const span = (t: number, from: number, to: number) => clamp01((t - from) / (to - from))
@@ -136,7 +149,18 @@ function level (i: number, t: number) {
   const rise = span(t, s, s + RISE)
   if (rise < 1) return PEAK[i] * outQuint(rise)
 
-  return lerp(PEAK[i], REST[i], outCubic(span(t, s + RISE, s + RISE + SETTLE)))
+  const settled = lerp(PEAK[i], REST[i], outCubic(span(t, s + RISE, s + RISE + SETTLE)))
+  return clamp01(settled + drift(i, t))
+}
+
+/** The idle wander, zero until the sting is over. */
+function drift (i: number, t: number) {
+  const amp = IDLE_AMP * clamp01((t - REFERENCE_MS) / IDLE_IN)
+  if (amp <= 0) return 0
+
+  const p = t - REFERENCE_MS
+  const r = IDLE_RATE[i]
+  return amp * (Math.sin(p * r) * 0.6 + Math.sin(p * r * 0.37 + i) * 0.4)
 }
 
 /** The peak-hold marker: rides the bar up, holds at the peak, then drops onto
@@ -214,8 +238,10 @@ export default function createTriviaSting (
       ctx.fillRect(0, 0, W, H)
     }
 
-    // authored time: a caller's duration stretches the timeline, never trims it
-    const a = Math.min(at, DUR) * (REFERENCE_MS / DUR)
+    // authored time: a caller's duration stretches the timeline, never trims it.
+    // Unclamped, because past REFERENCE_MS the idle drift is the timeline — the
+    // plate wipe and the word saturate on their own.
+    const a = at * (REFERENCE_MS / DUR)
 
     const markW = isGlyph ? W : Math.min(W * 0.6, H * 1.16)
     const markH = isGlyph ? H : markW / 1.42
@@ -230,17 +256,26 @@ export default function createTriviaSting (
 
     for (let i = 0; i < 4; i++) {
       const bx = x0 + i * (barW + gapX)
-      const lit = Math.round(level(i, a) * SEG)
+      const raw = level(i, a) * SEG
+      const lit = Math.floor(raw)
+      const partial = raw - lit
 
       for (let s = 0; s < SEG; s++) {
         const sy = y0 + markH - (s + 1) * segH - s * seam
         const isLit = s < lit
         const stop = s / SEG >= HOT_FROM ? 1 : 0
-        const fill = isLit
-          ? (opts.isDim ? P.off : P.ans[i][stop])
-          : P.well
+        const on = opts.isDim ? P.off : P.ans[i][stop]
 
-        face(ctx, bx, sy, barW, segH, fill, isLit)
+        face(ctx, bx, sy, barW, segH, isLit ? on : P.well, isLit)
+
+        // The segment the bar is standing in, lit by how far into it the level
+        // has actually travelled. Without it the bar can only be at one of SEG
+        // heights, so every rise is a ladder of pops rather than a movement.
+        if (s === lit && partial > 0.02) {
+          ctx.globalAlpha = partial
+          face(ctx, bx, sy, barW, segH, on, true)
+          ctx.globalAlpha = 1
+        }
       }
 
       const pk = peakHold(i, a)
@@ -291,16 +326,10 @@ export default function createTriviaSting (
     frame(t)
   }
 
+  // No terminal frame: after DUR the registers go on level-checking, so the
+  // loop runs until destroy(). rAF is already parked while the tab is hidden.
   function loop (now: number) {
     t = now - startedAt
-
-    if (t >= DUR) {
-      t = DUR
-      req = null
-      frame(t)
-      return
-    }
-
     frame(t)
     req = requestAnimationFrame(loop)
   }
@@ -328,7 +357,7 @@ export default function createTriviaSting (
     },
     seek (ms: number) {
       stop()
-      t = Math.max(0, Math.min(DUR, ms))
+      t = Math.max(0, ms)
       frame(t)
     },
     hold () {
